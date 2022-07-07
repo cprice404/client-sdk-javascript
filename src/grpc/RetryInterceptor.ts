@@ -44,11 +44,22 @@ export interface RetryInterceptorOptions {
   loggerOptions?: LoggerOptions;
 }
 
+const RETRIES_ENABLED = true;
+// const RETRIES_ENABLED = false;
+
+export function createRetryInterceptorIfEnabled(options: RetryInterceptorOptions): Array<Interceptor> {
+  if (RETRIES_ENABLED) {
+    return [new RetryInterceptor(options).createRetryInterceptor()];
+  } else {
+    return [];
+  }
+}
+
 export class RetryInterceptor {
   private readonly logger: Logger;
 
   constructor(options?: RetryInterceptorOptions) {
-    this.logger = getLogger(this.constructor.name, options?.loggerOptions);
+    this.logger = getLogger(this, options?.loggerOptions);
   }
 
   // TODO: Retry interceptor behavior should be configurable, but we need to
@@ -58,7 +69,7 @@ export class RetryInterceptor {
   // https://github.com/momentohq/client-sdk-javascript/issues/80
   // TODO: we need to add backoff/jitter for the retries:
   // https://github.com/momentohq/client-sdk-javascript/issues/81
-  public addRetryInterceptor(): Interceptor {
+  public createRetryInterceptor(): Interceptor {
     const logger = this.logger;
 
     return (options, nextCall) => {
@@ -119,7 +130,7 @@ export class RetryInterceptor {
                 );
                 retry(savedSendMessage, savedMetadata);
               } else {
-                logger.debug(
+                logger.trace(
                   `Request path: ${options.method_definition.path}; response status code: ${status.code}; not eligible for retry.`
                 );
                 savedMessageNext(savedReceiveMessage);

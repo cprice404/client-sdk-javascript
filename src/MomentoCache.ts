@@ -11,7 +11,7 @@ import {GetResponse} from './messages/GetResponse';
 import {SetResponse} from './messages/SetResponse';
 import {version} from '../package.json';
 import {DeleteResponse} from './messages/DeleteResponse';
-import {RetryInterceptor} from './grpc/RetryInterceptor';
+import {createRetryInterceptorIfEnabled, RetryInterceptor} from './grpc/RetryInterceptor';
 import {getLogger, Logger, LoggerOptions} from './utils/logging';
 
 /**
@@ -45,7 +45,7 @@ export class MomentoCache {
    */
   constructor(props: MomentoCacheProps) {
     this.loggerOptions = props.loggerOptions;
-    this.logger = getLogger(this.constructor.name, props.loggerOptions);
+    this.logger = getLogger(this, props.loggerOptions);
     this.validateRequestTimeout(props.requestTimeoutMs);
     this.logger.debug(
       `Creating cache client using endpoint: '${props.endpoint}`
@@ -83,8 +83,8 @@ export class MomentoCache {
     ttl?: number
   ): Promise<SetResponse> {
     this.ensureValidSetRequest(key, value, ttl || this.defaultTtlSeconds);
-    this.logger.debug(
-      `Issuing 'set' request; key: ${key.toString()}, value: ${value.toString()}, ttl: ${
+    this.logger.trace(
+      `Issuing 'set' request; key: ${key.toString()}, value length: ${value.length}, ttl: ${
         ttl?.toString() ?? 'null'
       }`
     );
@@ -132,7 +132,7 @@ export class MomentoCache {
     key: string | Uint8Array
   ): Promise<DeleteResponse> {
     this.ensureValidKey(key);
-    this.logger.debug(`Issuing 'delete' request; key: ${key.toString()}`);
+    this.logger.trace(`Issuing 'delete' request; key: ${key.toString()}`);
     return await this.sendDelete(cacheName, this.convert(key));
   }
 
@@ -165,9 +165,9 @@ export class MomentoCache {
     key: string | Uint8Array
   ): Promise<GetResponse> {
     this.ensureValidKey(key);
-    this.logger.debug(`Issuing 'get' request; key: ${key.toString()}`);
+    this.logger.trace(`Issuing 'get' request; key: ${key.toString()}`);
     const result = await this.sendGet(cacheName, this.convert(key));
-    this.logger.debug(`'get' request result: ${JSON.stringify(result)}`);
+    this.logger.trace(`'get' request result: ${result.status}`);
     return result;
   }
 
@@ -233,9 +233,9 @@ export class MomentoCache {
     return [
       new HeaderInterceptor(headers).addHeadersInterceptor(),
       ClientTimeoutInterceptor(this.requestTimeoutMs),
-      new RetryInterceptor({
+      ...createRetryInterceptorIfEnabled({
         loggerOptions: this.loggerOptions,
-      }).addRetryInterceptor(),
+      })
     ];
   }
 
