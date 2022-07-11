@@ -46,22 +46,26 @@ export function getLogger(
 }
 
 class PinoLogger implements Logger {
+  private static _root_logger: pino.Logger;
   private readonly _logger: pino.Logger;
 
   constructor(name: string, options: LoggerOptions) {
-    const pinoLevel: pino.LevelWithSilent = pinoLogLevelFromLogLevel(
-      options.level ?? LogLevel.INFO
-    );
+    if (PinoLogger._root_logger === undefined) {
+      const pinoLevel: pino.LevelWithSilent = pinoLogLevelFromLogLevel(
+        options.level ?? LogLevel.INFO
+      );
 
-    const transport = pinoTransportFromLogFormat(
-      options.format ?? LogFormat.CONSOLE
-    );
+      const transport = pinoTransportFromLogFormat(
+        options.format ?? LogFormat.CONSOLE
+      );
 
-    this._logger = pino.pino({
-      name: name,
-      level: pinoLevel,
-      transport: transport,
-    });
+      PinoLogger._root_logger = pino.pino({
+        level: pinoLevel,
+        transport: transport,
+      });
+    }
+
+    this._logger = PinoLogger._root_logger.child({name: name});
   }
 
   error(msg: string): void {

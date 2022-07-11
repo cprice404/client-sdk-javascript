@@ -48,7 +48,7 @@ export interface RetryInterceptorOptions {
 // align on basic API design first: https://github.com/momentohq/client-sdk-javascript/issues/79 .
 // For now, for convenience during development, you can toggle this hard-coded
 // variable to enable/disable it.
-const RETRIES_ENABLED = true;
+const RETRIES_ENABLED = false;
 
 export function createRetryInterceptorIfEnabled(
   options: RetryInterceptorOptions

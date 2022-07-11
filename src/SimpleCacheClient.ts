@@ -37,7 +37,8 @@ export interface SimpleCacheClientOptions {
  * @class SimpleCacheClient
  */
 export class SimpleCacheClient {
-  private readonly dataClient: MomentoCache;
+  private readonly dataClients: Array<MomentoCache>;
+  private nextDataClientIndex: number;
   private readonly controlClient: Momento;
   private readonly logger: Logger;
 
@@ -58,13 +59,19 @@ export class SimpleCacheClient {
     const claims = decodeJwt(authToken);
     const controlEndpoint = claims.cp;
     const dataEndpoint = claims.c;
-    this.dataClient = new MomentoCache({
-      authToken,
-      defaultTtlSeconds,
-      endpoint: dataEndpoint,
-      requestTimeoutMs: options?.requestTimeoutMs,
-      loggerOptions: options?.loggerOptions,
-    });
+
+    const numClients = 20;
+    this.dataClients = [...Array(numClients).keys()].map(
+      () =>
+        new MomentoCache({
+          authToken,
+          defaultTtlSeconds,
+          endpoint: dataEndpoint,
+          requestTimeoutMs: options?.requestTimeoutMs,
+          loggerOptions: options?.loggerOptions,
+        })
+    );
+    this.nextDataClientIndex = 0;
 
     this.controlClient = new Momento({
       endpoint: controlEndpoint,
@@ -85,7 +92,8 @@ export class SimpleCacheClient {
     cacheName: string,
     key: string | Uint8Array
   ): Promise<GetResponse> {
-    return await this.dataClient.get(cacheName, key);
+    const client = this.getNextDataClient();
+    return await client.get(cacheName, key);
   }
 
   /**
@@ -105,7 +113,8 @@ export class SimpleCacheClient {
     value: string | Uint8Array,
     ttl?: number
   ): Promise<SetResponse> {
-    return await this.dataClient.set(cacheName, key, value, ttl);
+    const client = this.getNextDataClient();
+    return await client.set(cacheName, key, value, ttl);
   }
 
   /**
@@ -120,7 +129,8 @@ export class SimpleCacheClient {
     cacheName: string,
     key: string | Uint8Array
   ): Promise<DeleteResponse> {
-    return await this.dataClient.delete(cacheName, key);
+    const client = this.getNextDataClient();
+    return await client.delete(cacheName, key);
   }
 
   /**
@@ -165,9 +175,10 @@ export class SimpleCacheClient {
   public async createSigningKey(
     ttlMinutes: number
   ): Promise<CreateSigningKeyResponse> {
+    const client = this.getNextDataClient();
     return await this.controlClient.createSigningKey(
       ttlMinutes,
-      this.dataClient.getEndpoint()
+      client.getEndpoint()
     );
   }
 
@@ -195,9 +206,24 @@ export class SimpleCacheClient {
   public async listSigningKeys(
     nextToken?: string
   ): Promise<ListSigningKeysResponse> {
+    const client = this.getNextDataClient();
     return await this.controlClient.listSigningKeys(
-      this.dataClient.getEndpoint(),
+      client.getEndpoint(),
       nextToken
     );
+  }
+
+  private getNextDataClient(): MomentoCache {
+    // this.logger.warn(
+    //   `GETTING NEXT CLIENT, INDEX: ${this.nextDataClientIndex}, LENGTH: ${this.dataClients.length}`
+    // );
+    if (this.nextDataClientIndex >= this.dataClients.length) {
+      // this.logger.warn('RESETTING CLIENT INDEX TO ZERO');
+      this.nextDataClientIndex = 0;
+    }
+    const client = this.dataClients[this.nextDataClientIndex];
+    // this.logger.warn(`WILL RETURN DATA CLIENT: ${String(client)}`);
+    this.nextDataClientIndex++;
+    return client;
   }
 }

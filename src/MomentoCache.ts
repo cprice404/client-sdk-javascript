@@ -29,6 +29,8 @@ type MomentoCacheProps = {
 };
 
 export class MomentoCache {
+  private static _allInterceptorsExceptHeaderInterceptor: Interceptor[];
+
   private readonly client: cache.cache_client.ScsClient;
   private readonly textEncoder: TextEncoder;
   private readonly defaultTtlSeconds: number;
@@ -38,7 +40,7 @@ export class MomentoCache {
   private static readonly DEFAULT_REQUEST_TIMEOUT_MS: number = 5 * 1000;
   private readonly logger: Logger;
   private readonly loggerOptions: LoggerOptions | undefined;
-  private readonly allInterceptorsExceptHeaderInterceptor: Interceptor[];
+  // private readonly allInterceptorsExceptHeaderInterceptor: Interceptor[];
 
   /**
    * @param {MomentoCacheProps} props
@@ -48,7 +50,7 @@ export class MomentoCache {
     this.logger = getLogger(this, props.loggerOptions);
     this.validateRequestTimeout(props.requestTimeoutMs);
     this.logger.debug(
-      `Creating cache client using endpoint: '${props.endpoint}`
+      `Creating cache client using endpoint: '${props.endpoint}'`
     );
     this.client = new cache.cache_client.ScsClient(
       props.endpoint,
@@ -60,7 +62,6 @@ export class MomentoCache {
       props.requestTimeoutMs || MomentoCache.DEFAULT_REQUEST_TIMEOUT_MS;
     this.authToken = props.authToken;
     this.endpoint = props.endpoint;
-
     // The first interceptor in our list is a Header interceptor, which
     // includes a header for the cache name.  The cache name is part of the
     // get/set API calls, so we cannot construct that interceptor here in the
@@ -69,12 +70,28 @@ export class MomentoCache {
     // that we only construct these once and re-use them, because some of them are
     // very heavy-weight (in terms of memory usage, EventEmitter registrations on the
     // `process` object, etc.).
-    this.allInterceptorsExceptHeaderInterceptor = [
-      ClientTimeoutInterceptor(this.requestTimeoutMs),
-      ...createRetryInterceptorIfEnabled({
-        loggerOptions: this.loggerOptions,
-      }),
-    ];
+    if (MomentoCache._allInterceptorsExceptHeaderInterceptor === undefined) {
+      this.logger.warn('CREATING ALL INTERCEPTORS EXCEPT HEADER INTERCEPTOR');
+      MomentoCache._allInterceptorsExceptHeaderInterceptor = [
+        ClientTimeoutInterceptor(this.requestTimeoutMs),
+        ...createRetryInterceptorIfEnabled({
+          loggerOptions: this.loggerOptions,
+        }),
+      ];
+    }
+    // console.log(
+    //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    //   `STATIC INTERCEPTORS IS CURRENTLY: ${MomentoCache._allInterceptorsExceptHeaderInterceptor}`
+    // );
+    // throw new Error('derp');
+    //
+    // if (MomentoCache._allInterceptorsExceptHeaderInterceptor)
+    // this.allInterceptorsExceptHeaderInterceptor = [
+    //   ClientTimeoutInterceptor(this.requestTimeoutMs),
+    //   ...createRetryInterceptorIfEnabled({
+    //     loggerOptions: this.loggerOptions,
+    //   }),
+    // ];
   }
 
   public getEndpoint(): string {
@@ -247,7 +264,7 @@ export class MomentoCache {
     ];
     return [
       new HeaderInterceptor(headers).addHeadersInterceptor(),
-      ...this.allInterceptorsExceptHeaderInterceptor,
+      ...MomentoCache._allInterceptorsExceptHeaderInterceptor,
     ];
   }
 
