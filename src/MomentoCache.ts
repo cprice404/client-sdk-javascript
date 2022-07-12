@@ -56,8 +56,9 @@ export class MomentoCache {
       props.endpoint,
       ChannelCredentials.createSsl(),
       {
-        // 'grpc-node.max_session_memory': 1024,
-        // 'grpc.use_local_subchannel_pool': 1,
+        'grpc-node.max_session_memory': 1024,
+        'grpc.use_local_subchannel_pool': 1,
+        'grpc.max_concurrent_streams': 10_000,
       }
     );
     this.textEncoder = new TextEncoder();

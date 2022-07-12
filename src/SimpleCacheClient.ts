@@ -60,7 +60,7 @@ export class SimpleCacheClient {
     const controlEndpoint = claims.cp;
     const dataEndpoint = claims.c;
 
-    const numClients = 20;
+    const numClients = 1;
     this.dataClients = [...Array(numClients).keys()].map(
       () =>
         new MomentoCache({
