@@ -44,6 +44,7 @@ export class Momento {
       new HeaderInterceptor(headers).addHeadersInterceptor(),
       ClientTimeoutInterceptor(Momento.REQUEST_TIMEOUT_MS),
       ...createRetryInterceptorIfEnabled({
+        requestTimeoutMs: Momento.REQUEST_TIMEOUT_MS,
         loggerOptions: props.loggerOptions,
       }),
     ];

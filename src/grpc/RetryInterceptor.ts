@@ -41,6 +41,7 @@ const retryableGrpcStatusCodes: Array<Status> = [
 ];
 
 export interface RetryInterceptorOptions {
+  requestTimeoutMs: number;
   loggerOptions?: LoggerOptions;
 }
 
@@ -48,7 +49,7 @@ export interface RetryInterceptorOptions {
 // align on basic API design first: https://github.com/momentohq/client-sdk-javascript/issues/79 .
 // For now, for convenience during development, you can toggle this hard-coded
 // variable to enable/disable it.
-const RETRIES_ENABLED = false;
+const RETRIES_ENABLED = true;
 
 export function createRetryInterceptorIfEnabled(
   options: RetryInterceptorOptions
@@ -61,9 +62,11 @@ export function createRetryInterceptorIfEnabled(
 }
 
 export class RetryInterceptor {
+  private readonly requestTimeOutMs: number;
   private readonly logger: Logger;
 
-  constructor(options?: RetryInterceptorOptions) {
+  constructor(options: RetryInterceptorOptions) {
+    this.requestTimeOutMs = options?.requestTimeoutMs;
     this.logger = getLogger(this, options?.loggerOptions);
   }
 
@@ -73,6 +76,7 @@ export class RetryInterceptor {
   // TODO: we need to add backoff/jitter for the retries:
   // https://github.com/momentohq/client-sdk-javascript/issues/81
   public createRetryInterceptor(): Interceptor {
+    const requestTimeoutMs = this.requestTimeOutMs;
     const logger = this.logger;
 
     return (options, nextCall) => {
@@ -98,6 +102,12 @@ export class RetryInterceptor {
             ) {
               let retries = 0;
               const retry = function (message: any, metadata: Metadata) {
+                const deadline = new Date(Date.now());
+                deadline.setMilliseconds(
+                  deadline.getMilliseconds() + requestTimeoutMs
+                );
+                options.deadline = deadline;
+
                 retries++;
                 const newCall = nextCall(options);
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -107,15 +117,19 @@ export class RetryInterceptor {
                     savedReceiveMessage = message;
                   },
                   onReceiveStatus: function (status) {
+                    const requestId: string = JSON.stringify(
+                      metadata.get('request-id')
+                    );
+
                     if (retryableGrpcStatusCodes.includes(status.code)) {
                       if (retries <= maxRetry) {
                         logger.debug(
-                          `Request path: ${options.method_definition.path}; retryable status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
+                          `Request path: ${options.method_definition.path} (id: ${requestId}); retryable status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
                         );
                         retry(message, metadata);
                       } else {
                         logger.debug(
-                          `Request path: ${options.method_definition.path}; retryable status code: ${status.code}; number of retries (${retries}) has exceeded max (${maxRetry}), not retrying.`
+                          `Request path: ${options.method_definition.path} (id: ${requestId}); retryable status code: ${status.code}; number of retries (${retries}) has exceeded max (${maxRetry}), not retrying.`
                         );
                         savedMessageNext(savedReceiveMessage);
                         next(status);
@@ -128,8 +142,11 @@ export class RetryInterceptor {
                 });
               };
               if (retryableGrpcStatusCodes.includes(status.code)) {
+                const requestId: string = JSON.stringify(
+                  metadata.get('request-id')
+                );
                 logger.debug(
-                  `Request path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
+                  `Request path: ${options.method_definition.path} (id: ${requestId}); response status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
                 );
                 retry(savedSendMessage, savedMetadata);
               } else {

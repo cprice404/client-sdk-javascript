@@ -56,8 +56,8 @@ export class MomentoCache {
       props.endpoint,
       ChannelCredentials.createSsl(),
       {
-        'grpc-node.max_session_memory': 1024,
-        'grpc.use_local_subchannel_pool': 1,
+        // 'grpc-node.max_session_memory': 1024,
+        // 'grpc.use_local_subchannel_pool': 1,
       }
     );
     this.textEncoder = new TextEncoder();
@@ -79,6 +79,7 @@ export class MomentoCache {
       MomentoCache._allInterceptorsExceptHeaderInterceptor = [
         ClientTimeoutInterceptor(this.requestTimeoutMs),
         ...createRetryInterceptorIfEnabled({
+          requestTimeoutMs: this.requestTimeoutMs,
           loggerOptions: this.loggerOptions,
         }),
       ];

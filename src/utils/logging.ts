@@ -65,7 +65,12 @@ class PinoLogger implements Logger {
       });
     }
 
-    this._logger = PinoLogger._root_logger.child({name: name});
+    // this._logger = PinoLogger._root_logger.child({name: name});
+    this._logger = pino.pino({
+      name: name,
+      level: LogLevel.INFO,
+      transport: pinoTransportFromLogFormat(LogFormat.CONSOLE),
+    });
   }
 
   error(msg: string): void {
