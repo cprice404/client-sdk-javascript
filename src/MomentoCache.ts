@@ -54,7 +54,11 @@ export class MomentoCache {
     );
     this.client = new cache.cache_client.ScsClient(
       props.endpoint,
-      ChannelCredentials.createSsl()
+      ChannelCredentials.createSsl(),
+      {
+        'grpc-node.max_session_memory': 1024,
+        'grpc.use_local_subchannel_pool': 1,
+      }
     );
     this.textEncoder = new TextEncoder();
     this.defaultTtlSeconds = props.defaultTtlSeconds;
