@@ -7,7 +7,12 @@ import {createRetryInterceptorIfEnabled} from './grpc/retry-interceptor';
 import {CacheGetStatus, momentoResultConverter} from './messages/Result';
 import {InvalidArgumentError, UnknownServiceError} from './errors';
 import {cacheServiceErrorMapper} from './cache-service-error-mapper';
-import {ChannelCredentials, Interceptor, Metadata} from '@grpc/grpc-js';
+import {
+  ChannelCredentials,
+  ChannelOptions,
+  Interceptor,
+  Metadata,
+} from '@grpc/grpc-js';
 import {GetResponse} from './messages/GetResponse';
 import {SetResponse} from './messages/SetResponse';
 import {version} from '../package.json';
@@ -25,6 +30,7 @@ type MomentoCacheProps = {
   endpoint: string;
   defaultTtlSeconds: number;
   requestTimeoutMs?: number;
+  channelOptions: Partial<ChannelOptions>;
 };
 
 export class MomentoCache {
@@ -50,17 +56,18 @@ export class MomentoCache {
     this.client = new cache.cache_client.ScsClient(
       props.endpoint,
       ChannelCredentials.createSsl(),
-      {
-        // default value for max session memory is 10mb.  Under high load, it is easy to exceed this,
-        // after which point all requests will fail with a client-side RESOURCE_EXHAUSTED exception.
-        // This needs to be tunable: https://github.com/momentohq/dev-eco-issue-tracker/issues/85
-        'grpc-node.max_session_memory': 256,
-        // This flag controls whether channels use a shared global pool of subchannels, or whether
-        // each channel gets its own subchannel pool.  The default value is 0, meaning a single global
-        // pool.  Setting it to 1 provides significant performance improvements when we instantiate more
-        // than one grpc client.
-        'grpc.use_local_subchannel_pool': 1,
-      }
+      props.channelOptions
+      // {
+      //   // default value for max session memory is 10mb.  Under high load, it is easy to exceed this,
+      //   // after which point all requests will fail with a client-side RESOURCE_EXHAUSTED exception.
+      //   // This needs to be tunable: https://github.com/momentohq/dev-eco-issue-tracker/issues/85
+      //   'grpc-node.max_session_memory': 256,
+      //   // This flag controls whether channels use a shared global pool of subchannels, or whether
+      //   // each channel gets its own subchannel pool.  The default value is 0, meaning a single global
+      //   // pool.  Setting it to 1 provides significant performance improvements when we instantiate more
+      //   // than one grpc client.
+      //   'grpc.use_local_subchannel_pool': 1,
+      // }
     );
     this.textEncoder = new TextEncoder();
     this.defaultTtlSeconds = props.defaultTtlSeconds;

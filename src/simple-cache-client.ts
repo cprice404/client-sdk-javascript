@@ -17,6 +17,7 @@ import {
   LoggerOptions,
 } from './utils/logging';
 import {range} from './utils/collections';
+import {ChannelOptions} from '@grpc/grpc-js';
 
 export interface SimpleCacheClientOptions {
   /**
@@ -30,6 +31,9 @@ export interface SimpleCacheClientOptions {
    * output.
    */
   loggerOptions?: LoggerOptions;
+
+  numChannels: number;
+  channelOptions: Partial<ChannelOptions>;
 }
 
 /**
@@ -59,7 +63,7 @@ export class SimpleCacheClient {
   constructor(
     authToken: string,
     defaultTtlSeconds: number,
-    options?: SimpleCacheClientOptions
+    options: SimpleCacheClientOptions
   ) {
     initializeMomentoLogging(options?.loggerOptions);
     this.logger = getLogger(this);
@@ -74,14 +78,15 @@ export class SimpleCacheClient {
     // The choice of 6 as the initial value is a rough guess at a reasonable default for the short-term,
     // based on load testing results captured in:
     // https://github.com/momentohq/oncall-tracker/issues/186
-    const numClients = 6;
-    this.dataClients = range(numClients).map(
+    // const numClients = 6;
+    this.dataClients = range(options.numChannels).map(
       () =>
         new MomentoCache({
           authToken,
           defaultTtlSeconds,
           endpoint: dataEndpoint,
-          requestTimeoutMs: options?.requestTimeoutMs,
+          requestTimeoutMs: options.requestTimeoutMs,
+          channelOptions: options.channelOptions,
         })
     );
     // we will round-robin the requests through all of our clients.  Since javascript is single-threaded,
