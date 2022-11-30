@@ -23,13 +23,14 @@ const CACHE_NAME = 'default-cache';
 const CACHE_KEY = 'foooooo';
 
 const GLOBAL_AUTH_TOKEN = getEnvVarOrThrowError('MOMENTO_AUTH_TOKEN')
+console.log(`CONSTRUCTING CACHE CLIENT`)
 const GLOBAL_CACHE_CLIENT = new SimpleCacheClient(GLOBAL_AUTH_TOKEN, 60, {requestTimeoutMs: 50_000})
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
   console.log(`EVENT IS: ${JSON.stringify(event, null, 2)}`)
   console.log(`EVENT REQUEST CONTEXT: ${JSON.stringify(context, null ,2)}`)
 
-  
+
   //
   // const authToken = getEnvVarOrThrowError('MOMENTO_AUTH_TOKEN')
   // const cacheClient = new SimpleCacheClient(authToken, 60, {requestTimeoutMs: 50_000})
