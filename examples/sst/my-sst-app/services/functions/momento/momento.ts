@@ -13,7 +13,7 @@ import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';
 import {DeleteCacheResponse} from './messages/DeleteCacheResponse';
 import {CreateCacheResponse} from './messages/CreateCacheResponse';
 import {ListCachesResponse} from './messages/ListCachesResponse';
-import {version} from '../../../package.json';
+// import {version} from '../../../package.json';
 import {CreateSigningKeyResponse} from './messages/CreateSigningKeyResponse';
 import {RevokeSigningKeyResponse} from './messages/RevokeSigningKeyResponse';
 import {ListSigningKeysResponse} from './messages/ListSigningKeysResponse';
@@ -35,6 +35,7 @@ export class Momento {
    */
   constructor(props: MomentoProps) {
     this.logger = getLogger(this);
+    const version = '90210';
     const headers = [
       new Header('Authorization', props.authToken),
       new Header('Agent', `javascript:${version}`),

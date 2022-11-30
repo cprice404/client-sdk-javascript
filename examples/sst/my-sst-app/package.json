@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@gomomento/generated-types": "0.13.0",
-    "@grpc/grpc-js": "1.5.10",
+    "@grpc/grpc-js": "1.7.3",
     "@serverless-stack/node": "^1.18.4",
     "jwt-decode": "3.1.2",
     "pino": "8.1.0"

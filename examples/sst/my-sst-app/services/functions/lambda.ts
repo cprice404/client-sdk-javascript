@@ -1,5 +1,5 @@
 import {APIGatewayProxyHandlerV2} from "aws-lambda";
-import {CacheGetStatus, SimpleCacheClient} from "./momento";
+import {CacheGetStatus, LogLevel, SimpleCacheClient} from "./momento";
 
 
 function getEnvVarOrThrowError(envVarName: string): string {
@@ -10,7 +10,7 @@ function getEnvVarOrThrowError(envVarName: string): string {
   return result;
 }
 
-async function getCacheValue(cacheClient: SimpleCacheClient): string {
+async function getCacheValue(cacheClient: SimpleCacheClient): Promise<string> {
   const cachedValue = await cacheClient.get(CACHE_NAME, CACHE_KEY);
   if (cachedValue.status === CacheGetStatus.Hit) {
     return cachedValue.text()!!;
@@ -24,7 +24,25 @@ const CACHE_KEY = 'foooooo';
 
 const GLOBAL_AUTH_TOKEN = getEnvVarOrThrowError('MOMENTO_AUTH_TOKEN')
 console.log(`CONSTRUCTING CACHE CLIENT`)
-const GLOBAL_CACHE_CLIENT = new SimpleCacheClient(GLOBAL_AUTH_TOKEN, 60, {requestTimeoutMs: 50_000})
+const GLOBAL_CACHE_CLIENT = new SimpleCacheClient(GLOBAL_AUTH_TOKEN, 60, {
+  requestTimeoutMs: 50_000,
+  loggerOptions: {
+    level: LogLevel.TRACE
+  }
+})
+
+
+const BACKGROUND_LOOP_INTERVAL = 5_000;
+let backgroundTaskCounter = 0;
+
+function backgroundLoop() {
+  backgroundTaskCounter++
+  console.log(`Background task running! Counter is: ${backgroundTaskCounter}`)
+  setTimeout(backgroundLoop, BACKGROUND_LOOP_INTERVAL)
+}
+
+console.log('Setting up background loop thingy')
+backgroundLoop()
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
   console.log(`EVENT IS: ${JSON.stringify(event, null, 2)}`)

@@ -10,7 +10,7 @@ import {cacheServiceErrorMapper} from './cache-service-error-mapper';
 import {ChannelCredentials, Interceptor, Metadata} from '@grpc/grpc-js';
 import {GetResponse} from './messages/GetResponse';
 import {SetResponse} from './messages/SetResponse';
-import {version} from '../../../package.json';
+// import {version} from '../../package.json';
 import {DeleteResponse} from './messages/DeleteResponse';
 import {getLogger, Logger} from './utils/logging';
 
@@ -60,8 +60,15 @@ export class MomentoCache {
         // pool.  Setting it to 1 provides significant performance improvements when we instantiate more
         // than one grpc client.
         'grpc.use_local_subchannel_pool': 1,
+        // ensure we send a keepalive ping once every 5 minutes.  This is crucial for lambda environments
+        // where a connection that is idle for 15 minutes will be closed without the client realizing it,
+        // which will in turn cause very confusing timeouts.
+        // 'grpc.keepalive_time_ms': 5 * 60 * 1000,
+        // 'grpc.keepalive_timeout_ms': 30 * 60 * 1000,
+        // 'grpc.keepalive_permit_without_calls': 1,
       }
     );
+
     this.textEncoder = new TextEncoder();
     this.defaultTtlSeconds = props.defaultTtlSeconds;
     this.requestTimeoutMs =
@@ -194,6 +201,7 @@ export class MomentoCache {
     const metadata = this.createMetadata(cacheName);
 
     return await new Promise((resolve, reject) => {
+      console.log(`Current channel state: ${this.client.getChannel().getConnectivityState(false)}`)
       this.client.Get(
         request,
         metadata,
@@ -239,6 +247,7 @@ export class MomentoCache {
   };
 
   private initializeInterceptors(): Interceptor[] {
+    const version = '90210';
     const headers = [
       new Header('Authorization', this.authToken),
       new Header('Agent', `javascript:${version}`),
