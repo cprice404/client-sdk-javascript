@@ -20,6 +20,7 @@
     "vitest": "^0.25.3"
   },
   "dependencies": {
+    "@gomomento/sdk": "0.15.2",
     "@grpc/grpc-js": "1.7.3",
     "@serverless-stack/node": "^1.18.4",
     "@types/google-protobuf": "3.15.6",

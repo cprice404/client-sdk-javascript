@@ -1,5 +1,5 @@
 import {APIGatewayProxyHandlerV2} from "aws-lambda";
-import {CacheGetStatus, LogLevel, SimpleCacheClient} from "./momento";
+import {CacheGetStatus, LogLevel, SimpleCacheClient} from "@gomomento/sdk";
 
 
 function getEnvVarOrThrowError(envVarName: string): string {
