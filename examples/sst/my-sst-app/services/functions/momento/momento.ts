@@ -1,4 +1,5 @@
-import {control} from '@gomomento/generated-types';
+// import {control} from '@gomomento/generated-types';
+import * as control from '../momento-generated-types/controlclient';
 import {Header, HeaderInterceptor} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
 import {createRetryInterceptorIfEnabled} from './grpc/retry-interceptor';

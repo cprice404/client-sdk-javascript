@@ -1,4 +1,5 @@
-import {cache} from '@gomomento/generated-types';
+// import {cache} from '@gomomento/generated-types';
+import * as cache from '../momento-generated-types/cacheclient';
 // older versions of node don't have the global util variables https://github.com/nodejs/node/issues/20365
 import {TextEncoder} from 'util';
 import {Header, HeaderInterceptor} from './grpc/headers-interceptor';
@@ -13,6 +14,7 @@ import {SetResponse} from './messages/SetResponse';
 // import {version} from '../../package.json';
 import {DeleteResponse} from './messages/DeleteResponse';
 import {getLogger, Logger} from './utils/logging';
+import {cache_client} from "../momento-generated-types/cacheclient";
 
 /**
  * @property {string} authToken - momento jwt token
@@ -27,8 +29,63 @@ type MomentoCacheProps = {
   requestTimeoutMs?: number;
 };
 
+interface ScsClientWrapper {
+  getClient(): cache.cache_client.ScsClient;
+}
+
+class IdleScsClientWrapper implements ScsClientWrapper {
+  private readonly clientFactoryFn: () => cache.cache_client.ScsClient;
+  private client: cache_client.ScsClient;
+
+  private readonly maxIdleMillis: number;
+  private lastAccessTime: number;
+
+  constructor(endpoint: string, maxIdleMillis: number) {
+    this.clientFactoryFn = () =>
+      new cache.cache_client.ScsClient(
+        endpoint,
+        ChannelCredentials.createSsl(),
+        {
+          // default value for max session memory is 10mb.  Under high load, it is easy to exceed this,
+          // after which point all requests will fail with a client-side RESOURCE_EXHAUSTED exception.
+          // This needs to be tunable: https://github.com/momentohq/dev-eco-issue-tracker/issues/85
+          'grpc-node.max_session_memory': 256,
+          // This flag controls whether channels use a shared global pool of subchannels, or whether
+          // each channel gets its own subchannel pool.  The default value is 0, meaning a single global
+          // pool.  Setting it to 1 provides significant performance improvements when we instantiate more
+          // than one grpc client.
+          'grpc.use_local_subchannel_pool': 1,
+          // ensure we send a keepalive ping once every 5 minutes.  This is crucial for lambda environments
+          // where a connection that is idle for 15 minutes will be closed without the client realizing it,
+          // which will in turn cause very confusing timeouts.
+          // 'grpc.keepalive_time_ms': 5 * 60 * 1000,
+          // 'grpc.keepalive_timeout_ms': 30 * 60 * 1000,
+          // 'grpc.keepalive_permit_without_calls': 1,
+        }
+      );
+    this.client = this.clientFactoryFn();
+    this.maxIdleMillis = maxIdleMillis;
+    this.lastAccessTime = Date.now();
+  }
+
+  getClient(): cache_client.ScsClient {
+    console.log('Checking to see if max idle limit exceeded');
+    if (this.idleLimitExceeded()) {
+      console.log('Max idle limit exceeded, resetting client');
+      this.client.close();
+      this.client = this.clientFactoryFn();
+    }
+    this.lastAccessTime = Date.now();
+    return this.client;
+  }
+
+  private idleLimitExceeded(): boolean {
+    return (Date.now() - this.lastAccessTime) > this.maxIdleMillis;
+  }
+}
+
 export class MomentoCache {
-  private readonly client: cache.cache_client.ScsClient;
+  private clientWrapper: ScsClientWrapper;
   private readonly textEncoder: TextEncoder;
   private readonly defaultTtlSeconds: number;
   private readonly requestTimeoutMs: number;
@@ -37,6 +94,7 @@ export class MomentoCache {
   private static readonly DEFAULT_REQUEST_TIMEOUT_MS: number = 5 * 1000;
   private readonly logger: Logger;
   private readonly interceptors: Interceptor[];
+  // private readonly clientFactoryFn: () => cache.cache_client.ScsClient;
 
   /**
    * @param {MomentoCacheProps} props
@@ -47,27 +105,10 @@ export class MomentoCache {
     this.logger.debug(
       `Creating cache client using endpoint: '${props.endpoint}'`
     );
-    this.client = new cache.cache_client.ScsClient(
-      props.endpoint,
-      ChannelCredentials.createSsl(),
-      {
-        // default value for max session memory is 10mb.  Under high load, it is easy to exceed this,
-        // after which point all requests will fail with a client-side RESOURCE_EXHAUSTED exception.
-        // This needs to be tunable: https://github.com/momentohq/dev-eco-issue-tracker/issues/85
-        'grpc-node.max_session_memory': 256,
-        // This flag controls whether channels use a shared global pool of subchannels, or whether
-        // each channel gets its own subchannel pool.  The default value is 0, meaning a single global
-        // pool.  Setting it to 1 provides significant performance improvements when we instantiate more
-        // than one grpc client.
-        'grpc.use_local_subchannel_pool': 1,
-        // ensure we send a keepalive ping once every 5 minutes.  This is crucial for lambda environments
-        // where a connection that is idle for 15 minutes will be closed without the client realizing it,
-        // which will in turn cause very confusing timeouts.
-        // 'grpc.keepalive_time_ms': 5 * 60 * 1000,
-        // 'grpc.keepalive_timeout_ms': 30 * 60 * 1000,
-        // 'grpc.keepalive_permit_without_calls': 1,
-      }
-    );
+
+    // TODO: MAKE THIS CONFIGURABLE
+    const maxIdleMillis = 5 * 60 * 1_000;
+    this.clientWrapper = new IdleScsClientWrapper(props.endpoint, maxIdleMillis);
 
     this.textEncoder = new TextEncoder();
     this.defaultTtlSeconds = props.defaultTtlSeconds;
@@ -121,6 +162,7 @@ export class MomentoCache {
     value: Uint8Array,
     ttl: number
   ): Promise<SetResponse> {
+    console.log(`Current channel state: ${this.clientWrapper.getClient().getChannel().getConnectivityState(false)}`)
     const request = new cache.cache_client._SetRequest({
       cache_body: value,
       cache_key: key,
@@ -128,7 +170,7 @@ export class MomentoCache {
     });
     const metadata = this.createMetadata(cacheName);
     return await new Promise((resolve, reject) => {
-      this.client.Set(
+      this.clientWrapper.getClient().Set(
         request,
         metadata,
         {
@@ -163,7 +205,7 @@ export class MomentoCache {
     });
     const metadata = this.createMetadata(cacheName);
     return await new Promise((resolve, reject) => {
-      this.client.Delete(
+      this.clientWrapper.getClient().Delete(
         request,
         metadata,
         {
@@ -201,8 +243,8 @@ export class MomentoCache {
     const metadata = this.createMetadata(cacheName);
 
     return await new Promise((resolve, reject) => {
-      console.log(`Current channel state: ${this.client.getChannel().getConnectivityState(false)}`)
-      this.client.Get(
+      console.log(`Current channel state: ${this.clientWrapper.getClient().getChannel().getConnectivityState(false)}`)
+      this.clientWrapper.getClient().Get(
         request,
         metadata,
         {

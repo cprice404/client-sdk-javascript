@@ -13,9 +13,13 @@ function getEnvVarOrThrowError(envVarName: string): string {
 async function getCacheValue(cacheClient: SimpleCacheClient): Promise<string> {
   const cachedValue = await cacheClient.get(CACHE_NAME, CACHE_KEY);
   if (cachedValue.status === CacheGetStatus.Hit) {
+    console.log(`got a hit on first try!`);
     return cachedValue.text()!!;
   }
-  await cacheClient.set(CACHE_NAME, CACHE_KEY, 'baaaaaaaar');
+  console.log(`didn't get a hit on first try, attempting set`)
+  const setResponse = await cacheClient.set(CACHE_NAME, CACHE_KEY, 'baaaaaaaar');
+  console.log(`set response: ${setResponse}`);
+  console.log(`back from set, attempting get`)
   return (await cacheClient.get(CACHE_NAME, CACHE_KEY)).text()!!
 }
 

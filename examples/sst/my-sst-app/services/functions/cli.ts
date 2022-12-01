@@ -35,10 +35,18 @@ const GLOBAL_CACHE_CLIENT = new SimpleCacheClient(GLOBAL_AUTH_TOKEN, 60, {
 const BACKGROUND_LOOP_INTERVAL = 5_000;
 let backgroundTaskCounter = 0;
 
+function something(): string {
+  return "taco";
+}
+
 function backgroundLoop() {
   backgroundTaskCounter++
   console.log(`Background task running! Counter is: ${backgroundTaskCounter}`)
   setTimeout(backgroundLoop, BACKGROUND_LOOP_INTERVAL)
+
+  if (const foo = something()) {
+
+  }
 }
 
 console.log('Setting up background loop thingy')
