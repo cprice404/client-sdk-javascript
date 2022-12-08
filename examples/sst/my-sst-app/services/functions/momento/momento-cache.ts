@@ -69,14 +69,15 @@ class IdleScsClientWrapper implements ScsClientWrapper {
   }
 
   getClient(): cache_client.ScsClient {
-    console.log('Checking to see if max idle limit exceeded');
-    if (this.idleLimitExceeded()) {
-      console.log('Max idle limit exceeded, resetting client');
-      this.client.close();
-      this.client = this.clientFactoryFn();
-    }
-    this.lastAccessTime = Date.now();
     return this.client;
+    // console.log('Checking to see if max idle limit exceeded');
+    // if (this.idleLimitExceeded()) {
+    //   console.log('Max idle limit exceeded, resetting client');
+    //   this.client.close();
+    //   this.client = this.clientFactoryFn();
+    // }
+    // this.lastAccessTime = Date.now();
+    // return this.client;
   }
 
   private idleLimitExceeded(): boolean {

@@ -44,7 +44,7 @@ const retryableGrpcStatusCodes: Array<Status> = [
 // https://github.com/momentohq/dev-eco-issue-tracker/issues/85
 // For now, for convenience during development, you can toggle this hard-coded
 // variable to enable/disable it.
-const RETRIES_ENABLED = false;
+const RETRIES_ENABLED = true;
 const maxRetry = 3;
 
 export function createRetryInterceptorIfEnabled(): Array<Interceptor> {
