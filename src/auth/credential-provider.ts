@@ -24,31 +24,25 @@ export interface CredentialProvider {
 }
 
 /**
- * Reads and parses a momento auth token stored as an environment variable.
+ * Reads and parses a momento auth token stored in a String
  * @export
  * @class EnvMomentoTokenProvider
  */
-export class EnvMomentoTokenProvider implements CredentialProvider {
+export class StringMomentoTokenProvider implements CredentialProvider {
   private readonly authToken: string;
   private readonly controlEndpoint: string;
   private readonly cacheEndpoint: string;
 
   /**
-   * @param {string} envVariableName the name of the environment variable from which the auth token will be read
+   * @param {string} authToken the momento auth token
    * @param {string} [controlEndpoint] optionally overrides the default controlEndpoint
    * @param {string} [cacheEndpoint] optionally overrides the default cacheEndpoint
    */
   constructor(
-    envVariableName: string,
+    authToken: string,
     controlEndpoint?: string,
     cacheEndpoint?: string
   ) {
-    const authToken = process.env[envVariableName];
-    if (!authToken) {
-      throw new Error(
-        `Missing required environment variable ${envVariableName}`
-      );
-    }
     this.authToken = authToken;
     const claims = decodeJwt(authToken);
     this.controlEndpoint = controlEndpoint ?? claims.cp;
@@ -65,5 +59,31 @@ export class EnvMomentoTokenProvider implements CredentialProvider {
 
   getControlEndpoint(): string {
     return this.controlEndpoint;
+  }
+}
+
+/**
+ * Reads and parses a momento auth token stored as an environment variable.
+ * @export
+ * @class EnvMomentoTokenProvider
+ */
+export class EnvMomentoTokenProvider extends StringMomentoTokenProvider {
+  /**
+   * @param {string} envVariableName the name of the environment variable from which the auth token will be read
+   * @param {string} [controlEndpoint] optionally overrides the default controlEndpoint
+   * @param {string} [cacheEndpoint] optionally overrides the default cacheEndpoint
+   */
+  constructor(
+    envVariableName: string,
+    controlEndpoint?: string,
+    cacheEndpoint?: string
+  ) {
+    const authToken = process.env[envVariableName];
+    if (!authToken) {
+      throw new Error(
+        `Missing required environment variable ${envVariableName}`
+      );
+    }
+    super(authToken, controlEndpoint, cacheEndpoint);
   }
 }
