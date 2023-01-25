@@ -14,6 +14,7 @@ import {
 } from '@grpc/grpc-js';
 import {Status} from '@grpc/grpc-js/build/src/constants';
 import {getLogger, Logger} from '../utils/logging';
+import {RetryStrategy} from '../config/retry/retry-strategy';
 
 const retryableGrpcStatusCodes: Array<Status> = [
   // including all the status codes for reference, but
@@ -38,18 +39,22 @@ const retryableGrpcStatusCodes: Array<Status> = [
   // Status.UNAUTHENTICATED
 ];
 
-// TODO: Retry interceptor behavior should be configurable, but we need to
-// align on basic API design first:
-// https://github.com/momentohq/client-sdk-javascript/issues/79
-// https://github.com/momentohq/dev-eco-issue-tracker/issues/85
+// TODO: we need to wire this up to the RetryStrategy from the Configuration object.
+// Waiting to do that until we have addressed the bugs described in:
+//
+// https://github.com/momentohq/client-sdk-javascript/issues/121
+// https://github.com/momentohq/client-sdk-javascript/issues/166
+//
 // For now, for convenience during development, you can toggle this hard-coded
 // variable to enable/disable it.
 const RETRIES_ENABLED = true;
 const maxRetry = 3;
 
-export function createRetryInterceptorIfEnabled(): Array<Interceptor> {
+export function createRetryInterceptorIfEnabled(
+  retryStrategy: RetryStrategy
+): Array<Interceptor> {
   if (RETRIES_ENABLED) {
-    return [new RetryInterceptor().createRetryInterceptor()];
+    return [new RetryInterceptor(retryStrategy).createRetryInterceptor()];
   } else {
     return [];
   }
@@ -57,9 +62,11 @@ export function createRetryInterceptorIfEnabled(): Array<Interceptor> {
 
 export class RetryInterceptor {
   private readonly logger: Logger;
+  private readonly retryStrategy: RetryStrategy;
 
-  constructor() {
+  constructor(retryStrategy: RetryStrategy) {
     this.logger = getLogger(this);
+    this.retryStrategy = retryStrategy;
   }
 
   // TODO: We need to send retry count information to the server so that we
@@ -101,6 +108,11 @@ export class RetryInterceptor {
                     savedReceiveMessage = message;
                   },
                   onReceiveStatus: function (status) {
+                    // TODO: This is where we will wire up the RetryStrategy; we will call determineWhenToRetryRequest
+                    // and use that to make the decision as to whether to retry.  We will need to add a setTimeout with
+                    // a callback in order to implement the delay.  But let's get the bugs fixed in this implementation
+                    // first :)
+
                     if (retryableGrpcStatusCodes.includes(status.code)) {
                       if (retries <= maxRetry) {
                         logger.debug(
