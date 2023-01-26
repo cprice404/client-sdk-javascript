@@ -108,7 +108,6 @@ export class RetryInterceptor {
                     savedReceiveMessage = message;
                   },
                   onReceiveStatus: function (status) {
-
                     // TODO: This is where we will wire up the RetryStrategy; we will call determineWhenToRetryRequest
                     // and use that to make the decision as to whether to retry.  We will need to add a setTimeout with
                     // a callback in order to implement the delay.  But let's get the bugs fixed in this implementation
