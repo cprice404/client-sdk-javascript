@@ -10,6 +10,8 @@ import {
   EnvMomentoTokenProvider,
   Configurations,
   LoggerOptions,
+  CacheDictionaryIncrement,
+  CacheDictionarySetField,
 } from '@gomomento/sdk';
 
 const cacheName = 'cache';
@@ -33,59 +35,85 @@ const momento = new SimpleCacheClient({
 });
 
 const main = async () => {
-  const createCacheResponse = await momento.createCache(cacheName);
-  if (createCacheResponse instanceof CreateCache.AlreadyExists) {
-    console.log('cache already exists');
-  } else if (createCacheResponse instanceof CreateCache.Error) {
-    throw createCacheResponse.innerException();
-  }
-
-  console.log('Listing caches:');
-  let token: string | undefined;
-  do {
-    const listResponse = await momento.listCaches(token);
-    if (listResponse instanceof ListCaches.Error) {
-      console.log(`Error listing caches: ${listResponse.message()}`);
-      break;
-    } else if (listResponse instanceof ListCaches.Success) {
-      listResponse.getCaches().forEach(cacheInfo => {
-        console.log(`${cacheInfo.getName()}`);
-      });
-      token = listResponse.getNextToken();
-    }
-  } while (token !== undefined);
-
-  const exampleTtlSeconds = 10;
-  console.log(
-    `Storing key=${cacheKey}, value=${cacheValue}, ttl=${exampleTtlSeconds}`
-  );
-  const setResponse = await momento.set(
+  const dictionarySetResult = await momento.dictionarySetField(
     cacheName,
-    cacheKey,
-    cacheValue,
-    exampleTtlSeconds
+    'my_dictionary',
+    'my_counter',
+    '9223372036854775807'
   );
-  if (setResponse instanceof CacheSet.Success) {
-    console.log('Key stored successfully with value ' + cacheValue);
-  } else if (setResponse instanceof CacheSet.Error) {
-    console.log('Error setting key: ' + setResponse.message());
+  if (dictionarySetResult instanceof CacheDictionarySetField.Success) {
+    console.log('Set the initial counter value in the dictionary!');
   }
 
-  const getResponse = await momento.get(cacheName, cacheKey);
-  if (getResponse instanceof CacheGet.Hit) {
-    console.log(`cache hit: ${String(getResponse.valueString())}`);
-  } else if (getResponse instanceof CacheGet.Miss) {
-    console.log('cache miss');
-  } else if (getResponse instanceof CacheGet.Error) {
-    console.log(`Error: ${getResponse.message()}`);
+  const dictionaryIncrementResult = await momento.dictionaryIncrement(
+    cacheName,
+    'my_dictionary',
+    'my_counter',
+    1
+  );
+  if (dictionaryIncrementResult instanceof CacheDictionaryIncrement.Success) {
+    console.log('Increment succeeded!');
+  } else if (
+    dictionaryIncrementResult instanceof CacheDictionaryIncrement.Error
+  ) {
+    console.log(
+      `Increment failed! ${dictionaryIncrementResult.errorCode()}: ${dictionaryIncrementResult.toString()}`
+    );
   }
 
-  const deleteResponse = await momento.delete(cacheName, cacheKey);
-  if (deleteResponse instanceof CacheDelete.Error) {
-    console.log(`Error deleting cache key: ${deleteResponse.message()}`);
-  } else if (deleteResponse instanceof CacheDelete.Success) {
-    console.log('Deleted key from cache');
-  }
+  // const createCacheResponse = await momento.createCache(cacheName);
+  // if (createCacheResponse instanceof CreateCache.AlreadyExists) {
+  //   console.log('cache already exists');
+  // } else if (createCacheResponse instanceof CreateCache.Error) {
+  //   throw createCacheResponse.innerException();
+  // }
+  //
+  // console.log('Listing caches:');
+  // let token: string | undefined;
+  // do {
+  //   const listResponse = await momento.listCaches(token);
+  //   if (listResponse instanceof ListCaches.Error) {
+  //     console.log(`Error listing caches: ${listResponse.message()}`);
+  //     break;
+  //   } else if (listResponse instanceof ListCaches.Success) {
+  //     listResponse.getCaches().forEach(cacheInfo => {
+  //       console.log(`${cacheInfo.getName()}`);
+  //     });
+  //     token = listResponse.getNextToken();
+  //   }
+  // } while (token !== undefined);
+  //
+  // const exampleTtlSeconds = 10;
+  // console.log(
+  //   `Storing key=${cacheKey}, value=${cacheValue}, ttl=${exampleTtlSeconds}`
+  // );
+  // const setResponse = await momento.set(
+  //   cacheName,
+  //   cacheKey,
+  //   cacheValue,
+  //   exampleTtlSeconds
+  // );
+  // if (setResponse instanceof CacheSet.Success) {
+  //   console.log('Key stored successfully with value ' + cacheValue);
+  // } else if (setResponse instanceof CacheSet.Error) {
+  //   console.log('Error setting key: ' + setResponse.message());
+  // }
+  //
+  // const getResponse = await momento.get(cacheName, cacheKey);
+  // if (getResponse instanceof CacheGet.Hit) {
+  //   console.log(`cache hit: ${String(getResponse.valueString())}`);
+  // } else if (getResponse instanceof CacheGet.Miss) {
+  //   console.log('cache miss');
+  // } else if (getResponse instanceof CacheGet.Error) {
+  //   console.log(`Error: ${getResponse.message()}`);
+  // }
+  //
+  // const deleteResponse = await momento.delete(cacheName, cacheKey);
+  // if (deleteResponse instanceof CacheDelete.Error) {
+  //   console.log(`Error deleting cache key: ${deleteResponse.message()}`);
+  // } else if (deleteResponse instanceof CacheDelete.Success) {
+  //   console.log('Deleted key from cache');
+  // }
 };
 
 main()
