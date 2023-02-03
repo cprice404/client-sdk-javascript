@@ -26,6 +26,9 @@ export class FixedCountRetryStrategy implements RetryStrategy {
   determineWhenToRetryRequest(
     props: DeterminewhenToRetryRequestProps
   ): number | null {
+    console.log('FIXED RETRY STRATEGY DETERMINE WHEN');
+    this.logger.warn('FOOOOOO');
+    console.log('FIXED RETRY STRATEGY LOGGER SHOULD HAVE LOGGED');
     this.logger.debug(
       `Determining whether request is eligible for retry; status code: ${props.grpcStatus.code}, request type: ${props.grpcRequest.path}, attemptNumber: ${props.attemptNumber}, maxAttempts: ${this.maxAttempts}`
     );
@@ -34,7 +37,7 @@ export class FixedCountRetryStrategy implements RetryStrategy {
       return null;
     }
     if (props.attemptNumber > this.maxAttempts) {
-      this.logger.debug(`Exceeded max retry count (${this.maxAttempts})`);
+      this.logger.debug(`Exceeded max attempt count (${this.maxAttempts})`);
       // null means do not retry
       return null;
     }

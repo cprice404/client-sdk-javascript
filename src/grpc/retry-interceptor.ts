@@ -15,6 +15,7 @@ import {
 // import {Status} from '@grpc/grpc-js/build/src/constants';
 import {getLogger, Logger} from '../utils/logging';
 import {RetryStrategy} from '../config/retry/retry-strategy';
+import {Status} from '@grpc/grpc-js/build/src/constants';
 //
 // const retryableGrpcStatusCodes: Array<Status> = [
 //   // including all the status codes for reference, but
@@ -100,9 +101,12 @@ export class RetryInterceptor {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               next: (arg0: any) => void
             ) {
-              let retries = 0;
+              console.log(
+                `RECEIVED STATUS WITH CODE ${status.code} for request with path ${options.method_definition.path}`
+              );
+              let attempts = 1;
               const retry = function (message: unknown, metadata: Metadata) {
-                retries++;
+                attempts++;
                 const newCall = nextCall(options);
                 newCall.start(metadata, {
                   onReceiveMessage: function (message) {
@@ -113,17 +117,17 @@ export class RetryInterceptor {
                       retryStrategy.determineWhenToRetryRequest({
                         grpcStatus: status,
                         grpcRequest: options.method_definition,
-                        attemptNumber: retries,
+                        attemptNumber: attempts,
                       });
 
                     if (whenToRetry === null) {
                       logger.debug(
-                        `Request not eligible for retry: path: ${options.method_definition.path}; retryable status code: ${status.code}; number of retries (${retries}).`
+                        `Request not eligible for retry: path: ${options.method_definition.path}; retryable status code: ${status.code}; number of attempts (${attempts}).`
                       );
                       savedMessageNext(savedReceiveMessage);
                       next(status);
                     } else {
-                      `Request eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}); will retry in ${whenToRetry}ms`;
+                      `Request eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}; number of attempts (${attempts}); will retry in ${whenToRetry}ms`;
                       setTimeout(() => retry(message, metadata), whenToRetry);
                     }
                   },
@@ -131,23 +135,30 @@ export class RetryInterceptor {
                 newCall.sendMessage(savedSendMessage);
                 newCall.halfClose();
               };
-              const whenToRetry = retryStrategy.determineWhenToRetryRequest({
-                grpcStatus: status,
-                grpcRequest: options.method_definition,
-                attemptNumber: retries,
-              });
-              if (whenToRetry === null) {
-                logger.trace(
-                  `Request not eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}.`
-                );
+
+              console.log('CHECKING INITIAL STATUS TO SEE IF WE NEED TO RETRY');
+              if (status.code === Status.OK) {
                 savedMessageNext(savedReceiveMessage);
                 next(status);
               } else {
-                `Request eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}); will retry in ${whenToRetry}ms`;
-                setTimeout(
-                  () => retry(savedSendMessage, savedMetadata),
-                  whenToRetry
-                );
+                const whenToRetry = retryStrategy.determineWhenToRetryRequest({
+                  grpcStatus: status,
+                  grpcRequest: options.method_definition,
+                  attemptNumber: attempts,
+                });
+                if (whenToRetry === null) {
+                  logger.trace(
+                    `Request not eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}.`
+                  );
+                  savedMessageNext(savedReceiveMessage);
+                  next(status);
+                } else {
+                  `Request eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}; number of attempts (${attempts}); will retry in ${whenToRetry}ms`;
+                  setTimeout(
+                    () => retry(savedSendMessage, savedMetadata),
+                    whenToRetry
+                  );
+                }
               }
               //
               //

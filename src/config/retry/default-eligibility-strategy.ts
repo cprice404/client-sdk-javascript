@@ -28,7 +28,37 @@ const retryableGrpcStatusCodes: Array<Status> = [
   // Status.UNAUTHENTICATED
 ];
 
-const retryableRequestTypes: Array<string> = [];
+const retryableRequestTypes: Array<string> = [
+  '/cache_client.Scs/Set',
+  '/cache_client.Scs/Get',
+  '/cache_client.Scs/Delete',
+  '/cache_client.Scs/DictionarySet',
+  // not idempotent: '/cache_client.Scs/DictionaryIncrement',
+  // TODO REMOVE
+  '/cache_client.Scs/DictionaryIncrement',
+  // TODO REMOVE
+  '/cache_client.Scs/DictionaryGet',
+  '/cache_client.Scs/DictionaryFetch',
+  '/cache_client.Scs/DictionaryDelete',
+  '/cache_client.Scs/SetUnion',
+  '/cache_client.Scs/SetDifference',
+  '/cache_client.Scs/SetFetch',
+  // not idempotent: '/cache_client.Scs/ListPushFront',
+  // not idempotent: '/cache_client.Scs/ListPushBack',
+  // not idempotent: '/cache_client.Scs/ListPopFront',
+  // not idempotent: '/cache_client.Scs/ListPopBack',
+  '/cache_client.Scs/ListFetch',
+  /*
+   *  Warning: in the future, this may not be idempotent
+   *  Currently it supports removing all occurrences of a value.
+   *  In the future, we may also add "the first/last N occurrences of a value".
+   *  In the latter case it is not idempotent.
+   */
+  '/cache_client.Scs/ListRemove',
+  '/cache_client.Scs/ListLength',
+  // not idempotent: '/cache_client.Scs/ListConcatenateFront',
+  // not idempotent: '/cache_client.Scs/ListConcatenateBack'
+];
 
 //
 // private readonly HashSet<Type> _retryableRequestTypes = new HashSet<Type>
