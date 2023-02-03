@@ -67,6 +67,7 @@ class PinoLogger implements Logger {
 
   constructor(name: string) {
     if (PinoLogger._root_logger === undefined) {
+      console.log('CREATING PINO LOGGER');
       const pinoLevel: pino.LevelWithSilent = pinoLogLevelFromLogLevel(
         _MOMENTO_LOGGING_OPTIONS.level
       );
@@ -74,6 +75,7 @@ class PinoLogger implements Logger {
       const transport = pinoTransportFromLogFormat(
         _MOMENTO_LOGGING_OPTIONS.format
       );
+      // console.log(`TRANSPORT: ${transport}`);
 
       PinoLogger._root_logger = pino.pino({
         level: pinoLevel,
@@ -93,6 +95,7 @@ class PinoLogger implements Logger {
   }
 
   info(msg: string): void {
+    console.log('LOGGER.INFO');
     this._logger.info(msg);
   }
 
@@ -132,6 +135,7 @@ function pinoTransportFromLogFormat(
   | TransportPipelineOptions {
   switch (format) {
     case LogFormat.CONSOLE:
+      console.log('USING PINO PRETTY LOG FORMAT');
       return {
         target: 'pino-pretty',
         options: {
