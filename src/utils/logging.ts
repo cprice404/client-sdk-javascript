@@ -42,6 +42,12 @@ const _MOMENTO_LOGGING_OPTIONS: InitializedLoggerOptions = {
 };
 
 export function initializeMomentoLogging(options?: LoggerOptions) {
+  console.log(`DEBUG: INITIALIZING LOGGING: ${JSON.stringify(options)}`);
+  const bunkLogger = pino.pino({level: 'debug'});
+  bunkLogger.warn('DEBUG: HELLO FROM BUNK LOGGER.WARN');
+  bunkLogger.info('DEBUG: HELLO FROM BUNK LOGGER.INFO');
+  bunkLogger.debug('DEBUG: HELLO FROM BUNK LOGGER.DEBUG');
+
   if (options?.level !== undefined) {
     _MOMENTO_LOGGING_OPTIONS.level = options.level;
   }
