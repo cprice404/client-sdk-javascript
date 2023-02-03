@@ -12,52 +12,52 @@ import {
   Metadata,
   StatusObject,
 } from '@grpc/grpc-js';
-import {Status} from '@grpc/grpc-js/build/src/constants';
+// import {Status} from '@grpc/grpc-js/build/src/constants';
 import {getLogger, Logger} from '../utils/logging';
 import {RetryStrategy} from '../config/retry/retry-strategy';
-
-const retryableGrpcStatusCodes: Array<Status> = [
-  // including all the status codes for reference, but
-  // commenting out the ones we don't want to retry on for now.
-
-  // Status.OK,
-  // Status.CANCELLED,
-  // Status.UNKNOWN,
-  // Status.INVALID_ARGUMENT,
-  // Status.DEADLINE_EXCEEDED,
-  // Status.NOT_FOUND,
-  // Status.ALREADY_EXISTS,
-  // Status.PERMISSION_DENIED,
-  // Status.RESOURCE_EXHAUSTED,
-  // Status.FAILED_PRECONDITION,
-  // Status.ABORTED,
-  // Status.OUT_OF_RANGE,
-  // Status.UNIMPLEMENTED,
-  Status.INTERNAL,
-  Status.UNAVAILABLE,
-  // Status.DATA_LOSS,
-  // Status.UNAUTHENTICATED
-];
-
-// TODO: we need to wire this up to the RetryStrategy from the Configuration object.
-// Waiting to do that until we have addressed the bugs described in:
 //
-// https://github.com/momentohq/client-sdk-javascript/issues/121
-// https://github.com/momentohq/client-sdk-javascript/issues/166
+// const retryableGrpcStatusCodes: Array<Status> = [
+//   // including all the status codes for reference, but
+//   // commenting out the ones we don't want to retry on for now.
 //
-// For now, for convenience during development, you can toggle this hard-coded
-// variable to enable/disable it.
-const RETRIES_ENABLED = true;
-const maxRetry = 3;
+//   // Status.OK,
+//   // Status.CANCELLED,
+//   // Status.UNKNOWN,
+//   // Status.INVALID_ARGUMENT,
+//   // Status.DEADLINE_EXCEEDED,
+//   // Status.NOT_FOUND,
+//   // Status.ALREADY_EXISTS,
+//   // Status.PERMISSION_DENIED,
+//   // Status.RESOURCE_EXHAUSTED,
+//   // Status.FAILED_PRECONDITION,
+//   // Status.ABORTED,
+//   // Status.OUT_OF_RANGE,
+//   // Status.UNIMPLEMENTED,
+//   Status.INTERNAL,
+//   Status.UNAVAILABLE,
+//   // Status.DATA_LOSS,
+//   // Status.UNAUTHENTICATED
+// ];
+
+// // TODO: we need to wire this up to the RetryStrategy from the Configuration object.
+// // Waiting to do that until we have addressed the bugs described in:
+// //
+// // https://github.com/momentohq/client-sdk-javascript/issues/121
+// // https://github.com/momentohq/client-sdk-javascript/issues/166
+// //
+// // For now, for convenience during development, you can toggle this hard-coded
+// // variable to enable/disable it.
+// const RETRIES_ENABLED = true;
+// const maxRetry = 3;
 
 export function createRetryInterceptorIfEnabled(
   retryStrategy: RetryStrategy
 ): Array<Interceptor> {
-  if (RETRIES_ENABLED) {
-    return [new RetryInterceptor(retryStrategy).createRetryInterceptor()];
-  } else {
-    return [];
-  }
+  // if (RETRIES_ENABLED) {
+  return [new RetryInterceptor(retryStrategy).createRetryInterceptor()];
+  // } else {
+  //   return [];
+  // }
 }
 
 export class RetryInterceptor {
@@ -76,6 +76,7 @@ export class RetryInterceptor {
   // https://github.com/momentohq/client-sdk-javascript/issues/81
   public createRetryInterceptor(): Interceptor {
     const logger = this.logger;
+    const retryStrategy = this.retryStrategy;
 
     return (options, nextCall) => {
       let savedMetadata: Metadata;
@@ -108,45 +109,60 @@ export class RetryInterceptor {
                     savedReceiveMessage = message;
                   },
                   onReceiveStatus: function (status) {
-                    // TODO: This is where we will wire up the RetryStrategy; we will call determineWhenToRetryRequest
-                    // and use that to make the decision as to whether to retry.  We will need to add a setTimeout with
-                    // a callback in order to implement the delay.  But let's get the bugs fixed in this implementation
-                    // first :)
+                    const whenToRetry =
+                      retryStrategy.determineWhenToRetryRequest({
+                        grpcStatus: status,
+                        grpcRequest: options.method_definition,
+                        attemptNumber: retries,
+                      });
 
-                    if (retryableGrpcStatusCodes.includes(status.code)) {
-                      if (retries <= maxRetry) {
-                        logger.debug(
-                          `Request path: ${options.method_definition.path}; retryable status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
-                        );
-                        retry(message, metadata);
-                      } else {
-                        logger.debug(
-                          `Request path: ${options.method_definition.path}; retryable status code: ${status.code}; number of retries (${retries}) has exceeded max (${maxRetry}), not retrying.`
-                        );
-                        savedMessageNext(savedReceiveMessage);
-                        next(status);
-                      }
-                    } else {
+                    if (whenToRetry === null) {
+                      logger.debug(
+                        `Request not eligible for retry: path: ${options.method_definition.path}; retryable status code: ${status.code}; number of retries (${retries}).`
+                      );
                       savedMessageNext(savedReceiveMessage);
-                      next({code: status.code});
+                      next(status);
+                    } else {
+                      `Request eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}); will retry in ${whenToRetry}ms`;
+                      setTimeout(() => retry(message, metadata), whenToRetry);
                     }
                   },
                 });
                 newCall.sendMessage(savedSendMessage);
                 newCall.halfClose();
               };
-              if (retryableGrpcStatusCodes.includes(status.code)) {
-                logger.debug(
-                  `Request path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
-                );
-                retry(savedSendMessage, savedMetadata);
-              } else {
+              const whenToRetry = retryStrategy.determineWhenToRetryRequest({
+                grpcStatus: status,
+                grpcRequest: options.method_definition,
+                attemptNumber: retries,
+              });
+              if (whenToRetry === null) {
                 logger.trace(
-                  `Request path: ${options.method_definition.path}; response status code: ${status.code}; not eligible for retry.`
+                  `Request not eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}.`
                 );
                 savedMessageNext(savedReceiveMessage);
                 next(status);
+              } else {
+                `Request eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}); will retry in ${whenToRetry}ms`;
+                setTimeout(
+                  () => retry(savedSendMessage, savedMetadata),
+                  whenToRetry
+                );
               }
+              //
+              //
+              // if (retryableGrpcStatusCodes.includes(status.code)) {
+              //   logger.debug(
+              //     `Request path: ${options.method_definition.path}; response status code: ${status.code}; number of retries (${retries}) is less than max (${maxRetry}), retrying.`
+              //   );
+              //   retry(savedSendMessage, savedMetadata);
+              // } else {
+              //   logger.trace(
+              //     `Request path: ${options.method_definition.path}; response status code: ${status.code}; not eligible for retry.`
+              //   );
+              //   savedMessageNext(savedReceiveMessage);
+              //   next(status);
+              // }
             },
           };
           next(metadata, newListener);

@@ -15,7 +15,7 @@ const defaultLoggerOptions: LoggerOptions = {
   level: LogLevel.WARN,
   format: LogFormat.CONSOLE,
 };
-const defaultRetryStrategy = new FixedCountRetryStrategy(3);
+const defaultRetryStrategy = new FixedCountRetryStrategy({maxAttempts: 3});
 
 /**
  * Laptop config provides defaults suitable for a medium-to-high-latency dev environment.  Permissive timeouts, retries, and

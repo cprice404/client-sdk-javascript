@@ -11,7 +11,7 @@ describe('configuration.ts', () => {
     level: LogLevel.WARN,
     format: LogFormat.CONSOLE,
   };
-  const testRetryStrategy = new FixedCountRetryStrategy(1);
+  const testRetryStrategy = new FixedCountRetryStrategy({maxAttempts: 1});
   const testGrpcConfiguration = new StaticGrpcConfiguration({
     deadlineMillis: 90210,
     maxSessionMemoryMb: 90211,
@@ -46,7 +46,7 @@ describe('configuration.ts', () => {
   });
 
   it('should support overriding retry strategy', () => {
-    const newRetryStrategy = new FixedCountRetryStrategy(42);
+    const newRetryStrategy = new FixedCountRetryStrategy({maxAttempts: 42});
     const configWithNewRetryStrategy =
       testConfiguration.withRetryStrategy(newRetryStrategy);
     expect(configWithNewRetryStrategy.getLoggerOptions()).toEqual(
