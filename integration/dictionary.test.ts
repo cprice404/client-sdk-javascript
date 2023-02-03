@@ -219,9 +219,7 @@ describe('Integration tests for dictionary operations', () => {
       );
       expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
       const hitResponse = response as CacheDictionaryFetch.Hit;
-      expect(hitResponse.valueDictionaryStringString()).toEqual(
-        contentDictionary
-      );
+      expect(hitResponse.valueMapStringString()).toEqual(contentDictionary);
     });
 
     it('should return expected toString value with dictionaryFetch', async () => {
@@ -268,7 +266,7 @@ describe('Integration tests for dictionary operations', () => {
       );
       expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
       const hitResponse = response as CacheDictionaryFetch.Hit;
-      expect(hitResponse.valueDictionaryUint8ArrayUint8Array()).toEqual(
+      expect(hitResponse.valueMapUint8ArrayUint8Array()).toEqual(
         contentDictionary
       );
     });
@@ -301,7 +299,69 @@ describe('Integration tests for dictionary operations', () => {
       expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
       const hitResponse = response as CacheDictionaryFetch.Hit;
 
-      expect(hitResponse.valueDictionaryStringUint8Array()).toEqual(
+      expect(hitResponse.valueMapStringUint8Array()).toEqual(contentDictionary);
+    });
+
+    it('should return a Record of string field and string value with dictionaryFetch', async () => {
+      const dictionaryName = v4();
+      const field1 = 'foo';
+      const value1 = v4();
+      const field2 = 'bar';
+      const value2 = v4();
+      const contentDictionary = {
+        foo: value1,
+        bar: value2,
+      };
+
+      const setResponse = await Momento.dictionarySetFields(
+        IntegrationTestCacheName,
+        dictionaryName,
+        new Map([
+          [field1, value1],
+          [field2, value2],
+        ])
+      );
+      expect(setResponse).toBeInstanceOf(CacheDictionarySetFields.Success);
+
+      const response = await Momento.dictionaryFetch(
+        IntegrationTestCacheName,
+        dictionaryName
+      );
+      expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
+      const hitResponse = response as CacheDictionaryFetch.Hit;
+
+      expect(hitResponse.valueRecordStringString()).toEqual(contentDictionary);
+    });
+
+    it('should return a Record of string field and Uint8 value with dictionaryFetch', async () => {
+      const dictionaryName = v4();
+      const field1 = 'foo';
+      const value1 = new TextEncoder().encode(v4());
+      const field2 = 'bar';
+      const value2 = new TextEncoder().encode(v4());
+      const contentDictionary = {
+        foo: value1,
+        bar: value2,
+      };
+
+      const setResponse = await Momento.dictionarySetFields(
+        IntegrationTestCacheName,
+        dictionaryName,
+        new Map([
+          [field1, value1],
+          [field2, value2],
+        ])
+      );
+      expect(setResponse).toBeInstanceOf(CacheDictionarySetFields.Success);
+
+      const response = await Momento.dictionaryFetch(
+        IntegrationTestCacheName,
+        dictionaryName
+      );
+      expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
+      const hitResponse = response as CacheDictionaryFetch.Hit;
+
+      expect(hitResponse.valueRecordStringUint8Array()).toEqual(
         contentDictionary
       );
     });
