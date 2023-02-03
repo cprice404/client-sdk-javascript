@@ -21,6 +21,10 @@ class _Hit extends Response {
     this.items = items;
   }
 
+  public valueMap(): Map<string, string> {
+    return this.valueMapStringString();
+  }
+
   public valueMapUint8ArrayUint8Array(): Map<Uint8Array, Uint8Array> {
     return this.items.reduce((acc, item) => {
       acc.set(item.field, item.value);
@@ -40,6 +44,10 @@ class _Hit extends Response {
       acc.set(TEXT_DECODER.decode(item.field), item.value);
       return acc;
     }, new Map<string, Uint8Array>());
+  }
+
+  public valueRecord(): Record<string, string> {
+    return this.valueRecordStringString();
   }
 
   public valueRecordStringString(): Record<string, string> {
