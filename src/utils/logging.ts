@@ -12,24 +12,24 @@ export interface Logger {
   debug(msg: string): void;
   trace(msg: string): void;
 }
-
-export enum LogLevel {
-  TRACE = 'trace',
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-}
-
-export enum LogFormat {
-  CONSOLE = 'console',
-  JSON = 'json',
-}
-
-export interface LoggerOptions {
-  level?: LogLevel;
-  format?: LogFormat;
-}
+//
+// export enum LogLevel {
+//   TRACE = 'trace',
+//   DEBUG = 'debug',
+//   INFO = 'info',
+//   WARN = 'warn',
+//   ERROR = 'error',
+// }
+//
+// export enum LogFormat {
+//   CONSOLE = 'console',
+//   JSON = 'json',
+// }
+//
+// export interface LoggerOptions {
+//   level?: LogLevel;
+//   format?: LogFormat;
+// }
 
 interface InitializedLoggerOptions {
   level: LogLevel;
