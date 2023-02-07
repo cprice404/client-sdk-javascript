@@ -9,6 +9,8 @@ import {
   Configurations,
   MomentoLoggerFactory,
   DefaultMomentoLoggerFactory,
+  LoggingMiddleware,
+  ExampleAsyncMiddleware,
 } from '@gomomento/sdk';
 
 const cacheName = 'cache';
@@ -23,7 +25,11 @@ const loggerFactory: MomentoLoggerFactory = new DefaultMomentoLoggerFactory();
 
 const defaultTtl = 60;
 const momento = new SimpleCacheClient({
-  configuration: Configurations.Laptop.latest(loggerFactory),
+  configuration: Configurations.Laptop.latest(loggerFactory).withMiddlewares([
+    new LoggingMiddleware(loggerFactory),
+    new ExampleAsyncMiddleware(loggerFactory),
+    new LoggingMiddleware(loggerFactory),
+  ]),
   credentialProvider: credentialsProvider,
   defaultTtlSeconds: defaultTtl,
 });
@@ -55,14 +61,11 @@ const main = async () => {
   console.log(
     `Storing key=${cacheKey}, value=${cacheValue}, ttl=${exampleTtlSeconds}`
   );
-  const setResponse = await momento.set(
-    cacheName,
-    cacheKey,
-    cacheValue,
-    exampleTtlSeconds
-  );
+  const setResponse = await momento.set(cacheName, cacheKey, cacheValue, {
+    ttl: exampleTtlSeconds,
+  });
   if (setResponse instanceof CacheSet.Success) {
-    console.log(`Key stored successfully!`);
+    console.log('Key stored successfully!');
   } else if (setResponse instanceof CacheSet.Error) {
     console.log(`Error setting key: ${setResponse.message()}`);
   }

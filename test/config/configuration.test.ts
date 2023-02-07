@@ -6,6 +6,7 @@ import {
 import {FixedCountRetryStrategy} from '../../src/config/retry/fixed-count-retry-strategy';
 import {NoopMomentoLoggerFactory} from '../../src/config/logging/noop-momento-logger';
 import {DefaultMomentoLoggerFactory} from '../../src';
+import {Middleware} from '../../src/config/middleware/middleware';
 
 describe('configuration.ts', () => {
   const testLoggerFactory = new DefaultMomentoLoggerFactory();
@@ -22,10 +23,12 @@ describe('configuration.ts', () => {
     grpcConfiguration: testGrpcConfiguration,
     maxIdleMillis: testMaxIdleMillis,
   });
+  const testMiddlewares: Middleware[] = [];
   const testConfiguration = new SimpleCacheConfiguration({
     loggerFactory: testLoggerFactory,
     retryStrategy: testRetryStrategy,
     transportStrategy: testTransportStrategy,
+    middlewares: testMiddlewares,
   });
 
   it('should support overriding logger options', () => {
