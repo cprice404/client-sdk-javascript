@@ -68,6 +68,8 @@ export {
   DefaultMomentoLoggerLevel,
 } from './config/logging/default-momento-logger';
 
+export {LoggingMiddleware} from './config/middleware/logging-middleware';
+
 export {
   CollectionTtl,
   Configurations,

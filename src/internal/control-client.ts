@@ -1,7 +1,7 @@
 import {control} from '@gomomento/generated-types';
 import grpcControl = control.control_client;
-import {Header, HeaderInterceptorProvider} from '../grpc/headers-interceptor';
-import {ClientTimeoutInterceptor} from '../grpc/client-timeout-interceptor';
+import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
+import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
 import {Status} from '@grpc/grpc-js/build/src/constants';
 import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';

@@ -2,9 +2,9 @@ import {cache} from '@gomomento/generated-types';
 import grpcCache = cache.cache_client;
 // older versions of node don't have the global util variables https://github.com/nodejs/node/issues/20365
 import {TextEncoder} from 'util';
-import {Header, HeaderInterceptorProvider} from '../grpc/headers-interceptor';
-import {ClientTimeoutInterceptor} from '../grpc/client-timeout-interceptor';
-import {createRetryInterceptorIfEnabled} from '../grpc/retry-interceptor';
+import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
+import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
+import {createRetryInterceptorIfEnabled} from './grpc/retry-interceptor';
 import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor, Metadata} from '@grpc/grpc-js';
 import {
@@ -51,7 +51,7 @@ import {
 } from './utils/validators';
 import {SimpleCacheClientProps} from '../simple-cache-client-props';
 import {Middleware} from '../config/middleware/middleware';
-import {middlewaresInterceptor} from '../grpc/middlewares-interceptor';
+import {middlewaresInterceptor} from './grpc/middlewares-interceptor';
 
 export class CacheClient {
   private readonly clientWrapper: GrpcClientWrapper<grpcCache.ScsClient>;
