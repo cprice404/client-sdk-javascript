@@ -12,34 +12,39 @@ export class ExampleAsyncMiddlewareRequestHandler
   }
 
   async onRequestMetadata(metadata: Metadata): Promise<Metadata> {
-    this.logger.info('ExampleAsyncMiddleware.onRequestMetadata');
+    this.logger.info('ExampleAsyncMiddleware.onRequestMetadata enter');
     await delay(500);
+    this.logger.info('ExampleAsyncMiddleware.onRequestMetadata exit');
     return metadata;
   }
 
   async onRequestBody(request: any): Promise<any> {
-    this.logger.info('ExampleAsyncMiddleware.onRequestBody');
+    this.logger.info('ExampleAsyncMiddleware.onRequestBody enter');
     await delay(500);
+    this.logger.info('ExampleAsyncMiddleware.onRequestBody exit');
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return request;
   }
 
   async onResponseMetadata(metadata: Metadata): Promise<Metadata> {
-    this.logger.info('ExampleAsyncMiddleware.onResponseMetadata');
+    this.logger.info('ExampleAsyncMiddleware.onResponseMetadata enter');
     await delay(500);
+    this.logger.info('ExampleAsyncMiddleware.onResponseMetadata exit');
     return metadata;
   }
 
   async onResponseBody(response: any): Promise<any> {
-    this.logger.info('ExampleAsyncMiddleware.onResponseBody');
+    this.logger.info('ExampleAsyncMiddleware.onResponseBody enter');
     await delay(500);
+    this.logger.info('ExampleAsyncMiddleware.onResponseBody exit');
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return response;
   }
 
   async onResponseStatus(status: StatusObject): Promise<StatusObject> {
-    this.logger.info('ExampleAsyncMiddleware.onResponseStatus');
+    this.logger.info('ExampleAsyncMiddleware.onResponseStatus enter');
     await delay(500);
+    this.logger.info('ExampleAsyncMiddleware.onResponseStatus exit');
     return status;
   }
 }

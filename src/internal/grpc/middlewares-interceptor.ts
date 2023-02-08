@@ -54,6 +54,7 @@ export function middlewaresInterceptor(
             //   )}`
             // );
             applyMiddlewareHandlers(
+              'onResponseMetadata',
               middlewareRequestHandlers.reverse(),
               (h: MiddlewareRequestHandler) => (m: Metadata) =>
                 h.onResponseMetadata(m),
@@ -100,6 +101,7 @@ export function middlewaresInterceptor(
             // );
 
             applyMiddlewareHandlers(
+              'onResponseBody',
               middlewareRequestHandlers.reverse(),
               (h: MiddlewareRequestHandler) => (request: any) =>
                 h.onResponseBody(request),
@@ -128,6 +130,7 @@ export function middlewaresInterceptor(
             // next(status);
 
             applyMiddlewareHandlers(
+              'onResponseStatus',
               middlewareRequestHandlers.reverse(),
               (h: MiddlewareRequestHandler) => (s: StatusObject) =>
                 h.onResponseStatus(s),
@@ -152,6 +155,7 @@ export function middlewaresInterceptor(
         //   });
 
         applyMiddlewareHandlers(
+          'onRequestMetadata',
           middlewareRequestHandlers,
           (h: MiddlewareRequestHandler) => (m: Metadata) =>
             h.onRequestMetadata(m),
@@ -184,6 +188,7 @@ export function middlewaresInterceptor(
         //   });
 
         applyMiddlewareHandlers(
+          'onRequestBody',
           middlewareRequestHandlers,
           (h: MiddlewareRequestHandler) => (request: any) =>
             h.onRequestBody(request),
@@ -215,6 +220,7 @@ export function middlewaresInterceptor(
 }
 
 function applyMiddlewareHandlers<T>(
+  name: string,
   handlers: MiddlewareRequestHandler[],
   middlewareHandlerReduceFn: (
     h: MiddlewareRequestHandler
@@ -225,6 +231,7 @@ function applyMiddlewareHandlers<T>(
   const middlewarePromise: (t: T) => Promise<T> = handlers
     .map(middlewareHandlerReduceFn)
     .reduce((previous, current) => (t: T) => {
+      console.warn(`REDUCING PREVIOUS AND CURRENT: ${name}`);
       const prevMetadataPromise = previous(t);
       return prevMetadataPromise
         .then(newMetadata => current(newMetadata))
@@ -234,7 +241,12 @@ function applyMiddlewareHandlers<T>(
     });
 
   middlewarePromise(originalInput)
-    .then(newMetadata => nextFn(newMetadata))
+    .then(newMetadata => {
+      console.log(
+        `APPLY MIDDLEWARE HANDLERS; PROMISE COMPLETE, CALLING ORIGINAL NEXT FN: ${name}`
+      );
+      nextFn(newMetadata);
+    })
     .catch(e => {
       throw e;
     });

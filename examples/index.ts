@@ -28,6 +28,7 @@ const momento = new SimpleCacheClient({
   configuration: Configurations.Laptop.latest(loggerFactory).withMiddlewares([
     new LoggingMiddleware(loggerFactory),
     new ExampleAsyncMiddleware(loggerFactory),
+    new LoggingMiddleware(loggerFactory),
   ]),
   credentialProvider: credentialsProvider,
   defaultTtlSeconds: defaultTtl,
