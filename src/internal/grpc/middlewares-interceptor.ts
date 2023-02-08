@@ -228,26 +228,47 @@ function applyMiddlewareHandlers<T>(
   originalInput: T,
   nextFn: (t: T) => void
 ) {
-  const middlewarePromise: (t: T) => Promise<T> = handlers
-    .map(middlewareHandlerReduceFn)
-    .reduce((previous, current) => (t: T) => {
-      console.warn(`REDUCING PREVIOUS AND CURRENT: ${name}`);
-      const prevMetadataPromise = previous(t);
-      return prevMetadataPromise
-        .then(newMetadata => current(newMetadata))
-        .catch(e => {
-          throw e;
-        });
-    });
+  // const middlewarePromise: (t: T) => Promise<T> = handlers
+  //   .map(middlewareHandlerReduceFn)
+  //   .reduce((previous, current) => (t: T) => {
+  //     console.warn(`REDUCING PREVIOUS AND CURRENT: ${name}`);
+  //     const prevMetadataPromise = previous(t);
+  //     return prevMetadataPromise
+  //       .then(newMetadata => current(newMetadata))
+  //       .catch(e => {
+  //         throw e;
+  //       });
+  //   });
+  let remainingHandlers = handlers;
+  let middlewarePromise: Promise<T> = Promise.resolve(originalInput);
+  while (remainingHandlers.length > 0) {
+    const nextHandler = middlewareHandlerReduceFn(remainingHandlers[0]);
+    middlewarePromise = middlewarePromise
+      .then(newT => nextHandler(newT))
+      .catch(e => {
+        throw e;
+      });
+    remainingHandlers = remainingHandlers.slice(1);
+  }
 
-  middlewarePromise(originalInput)
-    .then(newMetadata => {
-      console.log(
-        `APPLY MIDDLEWARE HANDLERS; PROMISE COMPLETE, CALLING ORIGINAL NEXT FN: ${name}`
-      );
-      nextFn(newMetadata);
-    })
+  middlewarePromise
+    .then(newT => nextFn(newT))
     .catch(e => {
       throw e;
     });
+
+  // middlewareHandlerReduceFn(nextHandler)(t);
+
+  //
+  //
+  // middlewarePromise(originalInput)
+  //   .then(newMetadata => {
+  //     console.log(
+  //       `APPLY MIDDLEWARE HANDLERS; PROMISE COMPLETE, CALLING ORIGINAL NEXT FN: ${name}`
+  //     );
+  //     nextFn(newMetadata);
+  //   })
+  //   .catch(e => {
+  //     throw e;
+  //   });
 }
