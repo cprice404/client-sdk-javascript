@@ -10,6 +10,7 @@ import {
   MomentoLoggerFactory,
   DefaultMomentoLoggerFactory,
   LoggingMiddleware,
+  ExampleAsyncMiddleware,
 } from '@gomomento/sdk';
 
 const cacheName = 'cache';
@@ -25,7 +26,8 @@ const loggerFactory: MomentoLoggerFactory = new DefaultMomentoLoggerFactory();
 const defaultTtl = 60;
 const momento = new SimpleCacheClient({
   configuration: Configurations.Laptop.latest(loggerFactory).withMiddlewares([
-    new LoggingMiddleware(loggerFactory),
+    // new LoggingMiddleware(loggerFactory),
+    new ExampleAsyncMiddleware(loggerFactory),
   ]),
   credentialProvider: credentialsProvider,
   defaultTtlSeconds: defaultTtl,
