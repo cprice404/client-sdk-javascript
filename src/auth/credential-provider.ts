@@ -1,4 +1,6 @@
 import {decodeJwt} from '../internal/utils/jwt';
+import {fromEntries} from "../internal/utils/object";
+// import {fromEntries} from '../internal/utils/object';
 
 /**
  * Encapsulates arguments for instantiating an EnvMomentoTokenProvider
@@ -51,7 +53,7 @@ export interface StringMomentoTokenProviderProps
  * @class StringMomentoTokenProvider
  */
 export class StringMomentoTokenProvider implements CredentialProvider {
-  private readonly authToken: string;
+  private readonly authTokenStupidMapHolder: Map<string, string>;
   private readonly controlEndpoint: string;
   private readonly cacheEndpoint: string;
 
@@ -59,14 +61,17 @@ export class StringMomentoTokenProvider implements CredentialProvider {
    * @param {StringMomentoTokenProviderProps} props configuration options for the token provider
    */
   constructor(props: StringMomentoTokenProviderProps) {
-    this.authToken = props.authToken;
+    this.authTokenStupidMapHolder = new Map<string, string>([
+      ['authToken', props.authToken],
+    ]);
     const claims = decodeJwt(props.authToken);
     this.controlEndpoint = props.controlEndpoint ?? claims.cp;
     this.cacheEndpoint = props.cacheEndpoint ?? claims.c;
   }
 
   getAuthToken(): string {
-    return this.authToken;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.authTokenStupidMapHolder.get('authToken')!;
   }
 
   getCacheEndpoint(): string {
@@ -75,6 +80,13 @@ export class StringMomentoTokenProvider implements CredentialProvider {
 
   getControlEndpoint(): string {
     return this.controlEndpoint;
+  }
+
+  valueOf(): object {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const entries = Object.entries(this).filter(([k, v]) => k !== 'authToken');
+    const clone = fromEntries(entries);
+    return clone.valueOf();
   }
 }
 

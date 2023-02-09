@@ -10,6 +10,7 @@ const testCacheEndpoint = 'cache-endpoint.not.a.domain';
 
 describe('StringMomentoTokenProvider', () => {
   it('parses a valid token', () => {
+    console.log('foo');
     const authProvider = new StringMomentoTokenProvider({authToken: testToken});
     expect(authProvider.getAuthToken()).toEqual(testToken);
     expect(authProvider.getControlEndpoint()).toEqual(testControlEndpoint);
