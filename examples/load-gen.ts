@@ -12,10 +12,12 @@ import {
   MomentoLoggerFactory,
   SimpleCacheClient,
   TimeoutError,
+  LoggingMiddleware,
 } from '@gomomento/sdk';
 import * as hdr from 'hdr-histogram-js';
 import {range} from './utils/collections';
 import {delay} from './utils/time';
+import {ExperimentalMetricsCsvMiddleware} from '../src/config/middleware/experimental-metrics-csv-middleware';
 
 interface BasicLoadGenOptions {
   loggerFactory: MomentoLoggerFactory;
@@ -72,9 +74,12 @@ class BasicLoadGen {
 
   async run(): Promise<void> {
     const momento = new SimpleCacheClient({
-      configuration: Configurations.Laptop.v1(
-        this.loggerFactory
-      ).withClientTimeoutMillis(this.options.requestTimeoutMs),
+      configuration: Configurations.Laptop.v1(this.loggerFactory)
+        .withClientTimeoutMillis(this.options.requestTimeoutMs)
+        .withMiddlewares([
+          // new LoggingMiddleware(this.loggerFactory),
+          new ExperimentalMetricsCsvMiddleware('foo'),
+        ]),
       credentialProvider: new EnvMomentoTokenProvider({
         environmentVariableName: 'MOMENTO_AUTH_TOKEN',
       }),
