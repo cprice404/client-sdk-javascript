@@ -12,12 +12,12 @@ import {
   MomentoLoggerFactory,
   SimpleCacheClient,
   TimeoutError,
-  LoggingMiddleware,
+  ExperimentalRequestLoggingMiddleware,
+  ExperimentalMetricsCsvMiddleware,
 } from '@gomomento/sdk';
 import * as hdr from 'hdr-histogram-js';
 import {range} from './utils/collections';
 import {delay} from './utils/time';
-import {ExperimentalMetricsCsvMiddleware} from '../src/config/middleware/experimental-metrics-csv-middleware';
 
 interface BasicLoadGenOptions {
   loggerFactory: MomentoLoggerFactory;
@@ -77,8 +77,11 @@ class BasicLoadGen {
       configuration: Configurations.Laptop.v1(this.loggerFactory)
         .withClientTimeoutMillis(this.options.requestTimeoutMs)
         .withMiddlewares([
-          // new LoggingMiddleware(this.loggerFactory),
-          new ExperimentalMetricsCsvMiddleware('foo'),
+          // new ExperimentalRequestLoggingMiddleware(this.loggerFactory),
+          new ExperimentalMetricsCsvMiddleware(
+            'loadgen_metrics.csv',
+            this.loggerFactory
+          ),
         ]),
       credentialProvider: new EnvMomentoTokenProvider({
         environmentVariableName: 'MOMENTO_AUTH_TOKEN',
@@ -436,7 +439,7 @@ const loadGeneratorOptions: BasicLoadGenOptions = {
    * is more contention between the concurrent function calls, client-side latencies
    * may increase.
    */
-  numberOfConcurrentRequests: 10,
+  numberOfConcurrentRequests: 100,
   /**
    * Controls how long the load test will run, in milliseconds. We will execute operations
    * for this long and the exit.

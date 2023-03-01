@@ -3,7 +3,7 @@ import {Middleware, MiddlewareRequestHandler} from './middleware';
 import {Metadata, StatusObject} from '@grpc/grpc-js';
 import {Message} from 'google-protobuf';
 
-export class LoggingMiddlewareRequestHandler
+class ExperimentalLoggingMiddlewareRequestHandler
   implements MiddlewareRequestHandler
 {
   private readonly logger: MomentoLogger;
@@ -41,13 +41,13 @@ export class LoggingMiddlewareRequestHandler
     return Promise.resolve(metadata);
   }
 
-  onResponseBody(response: Message): Promise<Message> {
+  onResponseBody(response: Message | null): Promise<Message | null> {
     this.logger.debug(
       'Logging middleware: request %s onResponseBody: response type: %s, response size: %s',
       this.requestId,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      response.constructor.name,
-      response.serializeBinary().length
+      response?.constructor?.name ?? 'null',
+      response?.serializeBinary()?.length ?? 0
     );
     return Promise.resolve(response);
   }
@@ -63,7 +63,22 @@ export class LoggingMiddlewareRequestHandler
   }
 }
 
-export class LoggingMiddleware implements Middleware {
+/**
+ * This middleware implements per-request logging which can be used for
+ * debugging.  The log format is currently considered experimental; in a
+ * future release, once the log format is considered stable, this class will
+ * be renamed to remove the Experimental prefix.
+ *
+ * WARNING: enabling this middleware may have minor performance implications,
+ * so enable with caution.
+ *
+ * In order for this middleware to produce output you will need to have
+ * set up your {Configuration} with a {MomentoLoggerFactory} instance that
+ * is configured to log at DEBUG level or lower.  See `advanced.ts` in the
+ * examples directory for an example of how to set up your {Configuration} to
+ * enable this middleware.
+ */
+export class ExperimentalRequestLoggingMiddleware implements Middleware {
   private readonly logger: MomentoLogger;
   private nextRequestId: number;
   constructor(loggerFactory: MomentoLoggerFactory) {
@@ -74,7 +89,7 @@ export class LoggingMiddleware implements Middleware {
   onNewRequest(): MiddlewareRequestHandler {
     this.logger.warn('LOGGING MIDDLEWARE.onNewRequest');
     this.nextRequestId++;
-    return new LoggingMiddlewareRequestHandler(
+    return new ExperimentalLoggingMiddlewareRequestHandler(
       this.logger,
       this.nextRequestId.toString()
     );
