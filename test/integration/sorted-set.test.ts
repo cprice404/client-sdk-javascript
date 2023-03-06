@@ -187,7 +187,7 @@ describe('Integration tests for sorted set operations', () => {
     });
   };
 
-  describe('#sortedSetFetch', () => {
+  describe('#sortedSetFetchByIndex', () => {
     const responder = (props: ValidateSortedSetProps) => {
       return Momento.dictionaryFetch(props.cacheName, props.sortedSetName);
     };
@@ -195,37 +195,36 @@ describe('Integration tests for sorted set operations', () => {
     itBehavesLikeItValidates(responder);
     itBehavesLikeItMissesWhenSortedSetDoesNotExist(responder);
 
-    /*
-    it('should return expected toString value with dictionaryFetch', async () => {
-      const dictionaryName = v4();
-      await Momento.dictionarySetField(
+    it('should return expected toString value with sortedSetFetch', async () => {
+      const sortedSetName = v4();
+      await Momento.sortedSetPutElement(
         IntegrationTestCacheName,
-        dictionaryName,
+        sortedSetName,
         'a',
-        'b'
+        42
       );
-      const response = await Momento.dictionaryFetch(
+      const response = await Momento.sortedSetFetchByIndex(
         IntegrationTestCacheName,
-        dictionaryName
+        sortedSetName
       );
-      expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
-      expect((response as CacheDictionaryFetch.Hit).toString()).toEqual(
-        'Hit: valueDictionaryStringString: a: b'
+      expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+      expect((response as CacheSortedSetFetch.Hit).toString()).toEqual(
+        'Hit: valueArrayStringElements: a: b'
       );
     });
 
-    it('should provide value accessors for string fields with dictionaryFetch', async () => {
+    it('should provide value accessors for string elements', async () => {
       const textEncoder = new TextEncoder();
 
-      const dictionaryName = v4();
+      const sortedSetName = v4();
       const field1 = 'foo';
-      const value1 = v4();
+      const score1 = 90210;
       const field2 = 'bar';
-      const value2 = v4();
+      const score2 = 42;
 
-      await Momento.dictionarySetFields(
+      await Momento.sortedSetPutElement(
         IntegrationTestCacheName,
-        dictionaryName,
+        sortedSetName,
         new Map([
           [field1, value1],
           [field2, value2],
@@ -234,7 +233,7 @@ describe('Integration tests for sorted set operations', () => {
 
       const response = await Momento.dictionaryFetch(
         IntegrationTestCacheName,
-        dictionaryName
+        sortedSetName
       );
       expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
       const hitResponse = response as CacheDictionaryFetch.Hit;
@@ -275,6 +274,8 @@ describe('Integration tests for sorted set operations', () => {
       );
       expect(hitResponse.valueRecord()).toEqual(expectedStringStringRecord);
     });
+
+    /*
 
     it('should provide value accessors for bytes fields with dictionaryFetch', async () => {
       const textEncoder = new TextEncoder();
