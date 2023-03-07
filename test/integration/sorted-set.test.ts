@@ -296,34 +296,90 @@ describe('Integration tests for sorted set operations', () => {
           {value: 'jalapeno', score: 1_000_000},
         ]);
       });
-      //
-      // it('should fetch only the specified range if end index is specified', async () => {
-      //   expect(true).toEqual(false);
-      // });
-      //
-      // it('should fetch only the specified range if both start and end index are specified', async () => {
-      //   expect(true).toEqual(false);
-      // });
-      //
-      // it('should fetch in ascending order if order is explicitly specified', async () => {
-      //   expect(true).toEqual(false);
-      // });
-      //
-      // it('should fetch in descending order if specified', async () => {
-      //   expect(true).toEqual(false);
-      // });
-      //
-      // it('should support descending order with a start index', async () => {
-      //   expect(true).toEqual(false);
-      // });
-      //
-      // it('should support descending order with a end index', async () => {
-      //   expect(true).toEqual(false);
-      // });
-      //
-      // it('should support descending order with a start and end index', async () => {
-      //   expect(true).toEqual(false);
-      // });
+
+      it('should fetch only the specified range if end index is specified', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            endIndex: 3,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'foo', score: 1},
+          {value: 'bar', score: 2},
+          {value: 'baz', score: 42},
+        ]);
+      });
+
+      it('should fetch only the specified range if both start and end index are specified', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            startIndex: 1,
+            endIndex: 5,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'bar', score: 2},
+          {value: 'baz', score: 42},
+          {value: 'habanero', score: 68},
+          {value: 'bam', score: 1000},
+        ]);
+      });
+
+      it('should return an empty list if start index is out of bounds', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            startIndex: 10,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([]);
+      });
+
+      it('should return all the remaining elements if end index is out of bounds', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should something something if start index is negative', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should something something if end index is negative', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should fetch in ascending order if order is explicitly specified', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should fetch in descending order if specified', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should support descending order with a start index', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should support descending order with a end index', async () => {
+        expect(true).toEqual(false);
+      });
+
+      it('should support descending order with a start and end index', async () => {
+        expect(true).toEqual(false);
+      });
     });
 
     it('should return a miss if the sorted set does not exist', async () => {
