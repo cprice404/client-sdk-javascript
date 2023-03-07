@@ -1,17 +1,17 @@
 import {v4} from 'uuid';
 import {sleep} from '../../src/internal/utils/sleep';
 import {
+  CacheDelete,
+  CacheSortedSetFetch,
   CollectionTtl,
   MomentoErrorCode,
-  CacheSortedSetFetch,
-  CacheDelete,
 } from '../../src';
 import {
   ItBehavesLikeItValidatesCacheName,
-  ValidateCacheProps,
-  ValidateSortedSetProps,
-  ValidateSortedSetChangerProps,
   SetupIntegrationTest,
+  ValidateCacheProps,
+  ValidateSortedSetChangerProps,
+  ValidateSortedSetProps,
 } from './integration-setup';
 import {
   IResponseError,
@@ -19,6 +19,7 @@ import {
   IResponseSuccess,
   ResponseBase,
 } from '../../src/messages/responses/response-base';
+import {SortedSetOrder} from '../../src/utils/cache-call-options';
 
 const {Momento, IntegrationTestCacheName} = SetupIntegrationTest();
 
@@ -350,35 +351,233 @@ describe('Integration tests for sorted set operations', () => {
       });
 
       it('should return all the remaining elements if end index is out of bounds', async () => {
-        expect(true).toEqual(false);
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            startIndex: 5,
+            endIndex: 100,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'burrito', score: 9000},
+          {value: 'taco', score: 90210},
+          {value: 'jalapeno', score: 1_000_000},
+        ]);
       });
 
-      it('should something something if start index is negative', async () => {
-        expect(true).toEqual(false);
+      it('should return the last elements if start index is negative', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            startIndex: -5,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'habanero', score: 68},
+          {value: 'bam', score: 1000},
+          {value: 'burrito', score: 9000},
+          {value: 'taco', score: 90210},
+          {value: 'jalapeno', score: 1_000_000},
+        ]);
       });
 
-      it('should something something if end index is negative', async () => {
-        expect(true).toEqual(false);
+      it('should return all but the last elements if end index is negative', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            endIndex: -2,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'foo', score: 1},
+          {value: 'bar', score: 2},
+          {value: 'baz', score: 42},
+          {value: 'habanero', score: 68},
+          {value: 'bam', score: 1000},
+          {value: 'burrito', score: 9000},
+        ]);
+      });
+
+      it('should return a range from the end of the set if both start and end index are negative', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            startIndex: -5,
+            endIndex: -2,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'habanero', score: 68},
+          {value: 'bam', score: 1000},
+          {value: 'burrito', score: 9000},
+        ]);
       });
 
       it('should fetch in ascending order if order is explicitly specified', async () => {
-        expect(true).toEqual(false);
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Ascending,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'foo', score: 1},
+          {value: 'bar', score: 2},
+          {value: 'baz', score: 42},
+          {value: 'habanero', score: 68},
+          {value: 'bam', score: 1000},
+          {value: 'burrito', score: 9000},
+          {value: 'taco', score: 90210},
+          {value: 'jalapeno', score: 1_000_000},
+        ]);
       });
 
       it('should fetch in descending order if specified', async () => {
-        expect(true).toEqual(false);
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Descending,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'jalapeno', score: 1_000_000},
+          {value: 'taco', score: 90210},
+          {value: 'burrito', score: 9000},
+          {value: 'bam', score: 1000},
+          {value: 'habanero', score: 68},
+          {value: 'baz', score: 42},
+          {value: 'bar', score: 2},
+          {value: 'foo', score: 1},
+        ]);
       });
 
       it('should support descending order with a start index', async () => {
-        expect(true).toEqual(false);
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Descending,
+            startIndex: 5,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'baz', score: 42},
+          {value: 'bar', score: 2},
+          {value: 'foo', score: 1},
+        ]);
       });
 
       it('should support descending order with a end index', async () => {
-        expect(true).toEqual(false);
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Descending,
+            endIndex: 3,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'jalapeno', score: 1_000_000},
+          {value: 'taco', score: 90210},
+          {value: 'burrito', score: 9000},
+        ]);
       });
 
       it('should support descending order with a start and end index', async () => {
-        expect(true).toEqual(false);
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Descending,
+            startIndex: 3,
+            endIndex: 5,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
+        const hitResponse = response as CacheSortedSetFetch.Hit;
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'bam', score: 1000},
+          {value: 'habanero', score: 68},
+        ]);
+      });
+
+      it('should error if start index is greater than end index', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Descending,
+            startIndex: 5,
+            endIndex: 3,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Error);
+        const errorResponse = response as CacheSortedSetFetch.Error;
+        expect(errorResponse.errorCode()).toEqual(
+          MomentoErrorCode.INVALID_ARGUMENT_ERROR
+        );
+        expect(errorResponse.message()).toEqual(
+          'Invalid argument passed to Momento client: start index must be less than end index'
+        );
+        expect(errorResponse.toString()).toEqual(
+          'Invalid argument passed to Momento client: start index must be less than end index'
+        );
+      });
+
+      it('should error if negative start index is less than negative end index', async () => {
+        const response = await Momento.sortedSetFetchByIndex(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            order: SortedSetOrder.Descending,
+            startIndex: -3,
+            endIndex: -5,
+          }
+        );
+
+        expect(response).toBeInstanceOf(CacheSortedSetFetch.Error);
+        const errorResponse = response as CacheSortedSetFetch.Error;
+        expect(errorResponse.errorCode()).toEqual(
+          MomentoErrorCode.INVALID_ARGUMENT_ERROR
+        );
+        expect(errorResponse.message()).toEqual(
+          'Invalid argument passed to Momento client: negative start index must be less than negative end index'
+        );
+        expect(errorResponse.toString()).toEqual(
+          'Invalid argument passed to Momento client: negative start index must be less than negative end index'
+        );
       });
     });
 

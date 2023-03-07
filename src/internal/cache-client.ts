@@ -61,7 +61,7 @@ import {
   validateSetName,
   validateSortedSetName,
   validateSortedSetOffset,
-  validateSortedSetCount,
+  validateSortedSetCount, validateSortedSetIndices,
 } from './utils/validators';
 import {SimpleCacheClientProps} from '../simple-cache-client-props';
 import {Middleware} from '../config/middleware/middleware';
@@ -1805,6 +1805,7 @@ export class CacheClient {
     try {
       validateCacheName(cacheName);
       validateSortedSetName(sortedSetName);
+      validateSortedSetIndices(startIndex, endIndex);
     } catch (err) {
       return new CacheSortedSetFetch.Error(normalizeSdkError(err as Error));
     }
