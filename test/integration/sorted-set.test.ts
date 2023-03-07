@@ -4,7 +4,7 @@ import {
   CollectionTtl,
   MomentoErrorCode,
   CacheSortedSetFetch,
-  CacheDelete, CacheSortedSetPutElements,
+  CacheDelete,
 } from '../../src';
 import {
   ItBehavesLikeItValidatesCacheName,
@@ -258,24 +258,27 @@ describe('Integration tests for sorted set operations', () => {
     describe('when fetching with ranges and order', () => {
       const sortedSetName = v4();
 
-      const sortedSetPopulatedPromise = Momento.sortedSetPutElements(
-        IntegrationTestCacheName,
-        sortedSetName,
-        {
-          bam: 1000,
-          foo: 1,
-          taco: 90210,
-          bar: 2,
-          burrito: 9000,
-          baz: 42,
-          habanero: 68,
-          jalapeno: 1_000_000,
-        }
-      );
+      beforeAll(done => {
+        const setupPromise = Momento.sortedSetPutElements(
+          IntegrationTestCacheName,
+          sortedSetName,
+          {
+            bam: 1000,
+            foo: 1,
+            taco: 90210,
+            bar: 2,
+            burrito: 9000,
+            baz: 42,
+            habanero: 68,
+            jalapeno: 1_000_000,
+          }
+        );
+        setupPromise.then(() => {
+          done();
+        });
+      });
 
       it('should fetch only the specified range if start index is specified', async () => {
-        const putResult = await sortedSetPopulatedPromise;
-        expect(putResult).toBeInstanceOf(CacheSortedSetPutElements.Success);
         const response = await Momento.sortedSetFetchByIndex(
           IntegrationTestCacheName,
           sortedSetName,
@@ -286,7 +289,12 @@ describe('Integration tests for sorted set operations', () => {
 
         expect(response).toBeInstanceOf(CacheSortedSetFetch.Hit);
         const hitResponse = response as CacheSortedSetFetch.Hit;
-        expect(hitResponse.valueArray).toEqual([]);
+        expect(hitResponse.valueArray()).toEqual([
+          {value: 'bam', score: 1000},
+          {value: 'burrito', score: 9000},
+          {value: 'taco', score: 90210},
+          {value: 'jalapeno', score: 1_000_000},
+        ]);
       });
       //
       // it('should fetch only the specified range if end index is specified', async () => {
