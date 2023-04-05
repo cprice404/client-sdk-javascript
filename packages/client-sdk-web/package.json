@@ -13,14 +13,16 @@
     "url": "https://github.com/momentohq/client-sdk-nodejs"
   },
   "scripts": {
+    "build-deps": "cd ../common && npm install && npm run build && cd ../common-integration-tests && npm install && npm run build",
     "prebuild": "eslint . --ext .ts",
     "test": "jest",
     "unit-test": "jest unit --passWithNoTests --silent=false",
     "integration-test": "jest integration --passWithNoTests --silent=false",
+    "build-and-run-integration-tests": "cd ../common-integration-tests && npm run build && cd - && npm run integration-test",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
     "watch": "tsc -w",
-    "build": "rm -rf dist && tsc"
+    "build": "cd ../common && npm run build && cd ../common-integration-tests && npm run build && rm -rf dist && tsc"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -51,7 +53,7 @@
     "@gomomento/common": "file:../common",
     "@gomomento/generated-types-webtext": "0.54.3",
     "google-protobuf": "^3.21.2",
-    "grpc-web": "1.4.2",
+    "grpc-web": "^1.4.2",
     "jwt-decode": "3.1.2"
   },
   "engines": {

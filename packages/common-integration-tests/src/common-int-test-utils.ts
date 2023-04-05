@@ -16,6 +16,13 @@
 //
 // import {v4} from 'uuid';
 
+import {
+  IResponseError,
+  ResponseBase,
+} from '@gomomento/common/dist/src/messages/responses/response-base';
+import {DeleteCache, MomentoErrorCode} from '@gomomento/common';
+import {ICacheClient} from '@gomomento/common/dist/src/internal/clients/cache/ICacheClient';
+
 export function testCacheName(): string {
   const name = process.env.TEST_CACHE_NAME || 'js-integration-test-default';
   return name;
@@ -87,13 +94,6 @@ export async function WithCache(
 //   const client = momentoClientForTesting();
 //   return {Momento: client, IntegrationTestCacheName: cacheName};
 // }
-
-import {
-  IResponseError,
-  ResponseBase,
-} from '@gomomento/common/dist/src/messages/responses/response-base';
-import {DeleteCache, MomentoErrorCode} from '@gomomento/common';
-import {ICacheClient} from '@gomomento/common/dist/src/internal/clients/cache/ICacheClient';
 
 export interface ValidateCacheProps {
   cacheName: string;
