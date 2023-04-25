@@ -1334,6 +1334,7 @@ export class DataClient<
     request.setDictionaryName(dictionaryName);
     request.setFieldsList(fields);
     const metadata = this.createMetadata(cacheName);
+    console.log(`IN DICTIONARY GET FIELDS; cache name: ${cacheName}`);
 
     return await new Promise(resolve => {
       this.clientWrapper.dictionaryGet(
@@ -1345,6 +1346,10 @@ export class DataClient<
         (err, resp) => {
           const found = resp?.getFound();
           if (found) {
+            console.log(
+              // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+              `\n\n\nDICTIONARY GET FIELDS RESPONSE: ${found.getItemsList()}\n\n\n`
+            );
             const items = found.getItemsList().map(item => {
               const result = this.convertECacheResult(item.getResult());
               return new _DictionaryGetResponsePart(
@@ -1361,6 +1366,8 @@ export class DataClient<
           } else if (resp?.getMissing()) {
             resolve(new CacheDictionaryGetFields.Miss());
           } else {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            console.log(`\n\n\nDICTIONARY GET FIELDS GOT AN ERROR: ${err}`);
             resolve(
               new CacheDictionaryGetFields.Error(cacheServiceErrorMapper(err))
             );

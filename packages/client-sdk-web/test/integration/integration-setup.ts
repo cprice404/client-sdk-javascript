@@ -30,6 +30,7 @@ export function SetupIntegrationTest(): {
   });
 
   afterAll(async () => {
+    console.log('INTEGRATION SETUP AFTER ALL');
     // Use a fresh client to avoid test interference with teardown.
     const momento = momentoClientForTesting();
     const deleteResponse = await momento.deleteCache(cacheName);
