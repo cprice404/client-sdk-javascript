@@ -13,6 +13,10 @@ function momentoClientForTesting() {
   });
 }
 
+export function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function SetupIntegrationTest(): {
   Momento: CacheClient;
   IntegrationTestCacheName: string;
@@ -24,6 +28,11 @@ export function SetupIntegrationTest(): {
     const momento = momentoClientForTesting();
     await deleteCacheIfExists(momento, cacheName);
     const createResponse = await momento.createCache(cacheName);
+
+    console.log(
+      `\n\n\nCACHE CREATE RESPONSE: ${createResponse.toString()}\n\n\n`
+    );
+    await delay(5_000);
     if (createResponse instanceof CreateCache.Error) {
       throw createResponse.innerException();
     }
