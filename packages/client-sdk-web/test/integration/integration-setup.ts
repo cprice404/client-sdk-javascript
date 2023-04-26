@@ -29,9 +29,9 @@ export function SetupIntegrationTest(): {
     await deleteCacheIfExists(momento, cacheName);
     const createResponse = await momento.createCache(cacheName);
 
-    console.log(
-      `\n\n\nCACHE CREATE RESPONSE: ${createResponse.toString()}\n\n\n`
-    );
+    // console.log(
+    //   `\n\n\nCACHE CREATE RESPONSE: ${createResponse.toString()}\n\n\n`
+    // );
     await delay(5_000);
     if (createResponse instanceof CreateCache.Error) {
       throw createResponse.innerException();
@@ -39,7 +39,7 @@ export function SetupIntegrationTest(): {
   });
 
   afterAll(async () => {
-    console.log('INTEGRATION SETUP AFTER ALL');
+    // console.log('INTEGRATION SETUP AFTER ALL');
     // Use a fresh client to avoid test interference with teardown.
     const momento = momentoClientForTesting();
     const deleteResponse = await momento.deleteCache(cacheName);

@@ -416,30 +416,26 @@ export function runDictionaryTests(
       it('return expected toString value', async () => {
         const dictionaryName = v4();
 
-        const listCachesResponse = await Momento.listCaches();
-        console.log(
-          `\n\n\nLIST CACHES RESPONSE: ${listCachesResponse.toString()}\n\n\n\n`
-        );
+        // const listCachesResponse = await Momento.listCaches();
+        // console.log(
+        //   `\n\n\nLIST CACHES RESPONSE: ${listCachesResponse.toString()}\n\n\n\n`
+        // );
 
-        const setResponse = await Momento.set(
-          IntegrationTestCacheName,
-          'foo',
-          'FOO'
-        );
-        console.log(`\n\nSET RESPONSE: ${setResponse.toString()}\n\n`);
+        // await Momento.set(IntegrationTestCacheName, 'foo', 'FOO');
+        // console.log(`\n\nSET RESPONSE: ${setResponse.toString()}\n\n`);
 
-        console.log(
-          `\n\n\nTEST ABOUT TO CALL DICTIONARY SET FIELD ON CACHE: ${IntegrationTestCacheName}\n\n\n\n`
-        );
-        const firstDictionarySetResponse = await Momento.dictionarySetField(
+        // console.log(
+        //   `\n\n\nTEST ABOUT TO CALL DICTIONARY SET FIELD ON CACHE: ${IntegrationTestCacheName}\n\n\n\n`
+        // );
+        await Momento.dictionarySetField(
           IntegrationTestCacheName,
           dictionaryName,
           'a',
           'b'
         );
-        console.log(
-          `\n\n\nFIRST DICTIONARY SET RESPONSE: ${firstDictionarySetResponse.toString()}\n\n`
-        );
+        // console.log(
+        //   `\n\n\nFIRST DICTIONARY SET RESPONSE: ${firstDictionarySetResponse.toString()}\n\n`
+        // );
         await Momento.dictionarySetField(
           IntegrationTestCacheName,
           dictionaryName,
@@ -452,22 +448,22 @@ export function runDictionaryTests(
           ['a', 'c']
         );
 
-        console.log('\n\n\nDOING ANOTHER SET\n\n\n');
-
-        const finalSetResponse = await Momento.dictionarySetField(
-          IntegrationTestCacheName,
-          dictionaryName,
-          'h',
-          'i'
-        );
-
-        console.log(`
-
-
-DID ANOTHER SET: ${finalSetResponse.toString()}
-
-
-`);
+        // console.log('\n\n\nDOING ANOTHER SET\n\n\n');
+        //
+        //         const finalSetResponse = await Momento.dictionarySetField(
+        //           IntegrationTestCacheName,
+        //           dictionaryName,
+        //           'h',
+        //           'i'
+        //         );
+        //
+        //         console.log(`
+        //
+        //
+        // DID ANOTHER SET: ${finalSetResponse.toString()}
+        //
+        //
+        // `);
 
         expect(getResponse).toBeInstanceOf(CacheDictionaryGetFields.Hit);
         expect(
