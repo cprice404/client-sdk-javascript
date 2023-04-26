@@ -45,6 +45,6 @@ function createDataClient(props: CacheClientProps): IDataClient {
       getLoggerFactory: () => new DefaultMomentoLoggerFactory(),
     },
     credentialProvider: props.credentialProvider,
-    defaultTtlSeconds: 60,
+    defaultTtlSeconds: 60 * 20,
   });
 }
