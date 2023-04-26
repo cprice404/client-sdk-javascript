@@ -19,7 +19,7 @@ import {
 //   // ValidateDictionaryChangerProps,
 //   // uint8ArrayForTest,
 // } from './common-int-test-utils';
-import {TextEncoder} from 'util';
+// import {TextEncoder} from 'util';
 // import {
 //   IResponseError,
 //   IResponseMiss,
@@ -28,6 +28,7 @@ import {TextEncoder} from 'util';
 // } from '@gomomento/core/dist/src/messages/responses/response-base';
 // import {sleep} from '@gomomento/core/dist/src/internal/utils';
 import {ICacheClient} from '@gomomento/core/dist/src/internal/clients/cache';
+import {uint8ArrayForTest} from './common-int-test-utils';
 
 export function runDictionaryTests(
   Momento: ICacheClient,
@@ -216,7 +217,18 @@ export function runDictionaryTests(
     });
 
     it('should provide value accessors for string fields with dictionaryFetch', async () => {
-      const textEncoder = new TextEncoder();
+      const map1 = new Map<string, string>([
+        ['foo', 'FOO'],
+        ['bar', 'BAR'],
+      ]);
+      const map2 = new Map<string, string>([
+        ['foo', 'FOO'],
+        ['bar', 'BAR'],
+      ]);
+      expect(map1).toEqual(map2);
+      console.log('MAPS ARE EQUAL YO!!!!\n\n\n\n\n\n\n');
+
+      // const textEncoder = new TextEncoder();
 
       const dictionaryName = v4();
       const field1 = 'foo';
@@ -240,9 +252,12 @@ export function runDictionaryTests(
       expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
       const hitResponse = response as CacheDictionaryFetch.Hit;
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const expectedStringBytesMap = new Map<string, Uint8Array>([
-        ['foo', textEncoder.encode(value1)],
-        ['bar', textEncoder.encode(value2)],
+        // ['foo', textEncoder.encode(value1)],
+        // ['bar', textEncoder.encode(value2)],
+        ['foo', uint8ArrayForTest(value1)],
+        ['bar', uint8ArrayForTest(value2)],
       ]);
 
       const expectedStringStringMap = new Map<string, string>([
@@ -252,6 +267,7 @@ export function runDictionaryTests(
 
       expect(hitResponse.valueMapStringUint8Array()).toEqual(
         expectedStringBytesMap
+        // map2
       );
       expect(hitResponse.valueMapStringString()).toEqual(
         expectedStringStringMap
@@ -259,8 +275,10 @@ export function runDictionaryTests(
       expect(hitResponse.valueMap()).toEqual(expectedStringStringMap);
 
       const expectedStringBytesRecord = {
-        foo: textEncoder.encode(value1),
-        bar: textEncoder.encode(value2),
+        // foo: textEncoder.encode(value1),
+        // bar: textEncoder.encode(value2),
+        foo: uint8ArrayForTest(value1),
+        bar: uint8ArrayForTest(value2),
       };
 
       const expectedStringStringRecord = {
@@ -278,12 +296,18 @@ export function runDictionaryTests(
     });
 
     it('should provide value accessors for bytes fields with dictionaryFetch', async () => {
-      const textEncoder = new TextEncoder();
+      // const textEncoder = new TextEncoder();
+
+      // const dictionaryName = v4();
+      // const field1 = textEncoder.encode(v4());
+      // const value1 = v4();
+      // const field2 = textEncoder.encode(v4());
+      // const value2 = v4();
 
       const dictionaryName = v4();
-      const field1 = textEncoder.encode(v4());
+      const field1 = uint8ArrayForTest(v4());
       const value1 = v4();
-      const field2 = textEncoder.encode(v4());
+      const field2 = uint8ArrayForTest(v4());
       const value2 = v4();
 
       await Momento.dictionarySetFields(
@@ -303,8 +327,10 @@ export function runDictionaryTests(
       const hitResponse = response as CacheDictionaryFetch.Hit;
 
       const expectedBytesBytesMap = new Map<Uint8Array, Uint8Array>([
-        [field1, textEncoder.encode(value1)],
-        [field2, textEncoder.encode(value2)],
+        // [field1, textEncoder.encode(value1)],
+        // [field2, textEncoder.encode(value2)],
+        [field1, uint8ArrayForTest(value1)],
+        [field2, uint8ArrayForTest(value2)],
       ]);
 
       expect(hitResponse.valueMapUint8ArrayUint8Array()).toEqual(
@@ -353,6 +379,7 @@ export function runDictionaryTests(
         IntegrationTestCacheName,
         dictionaryName
       );
+      console.log(`\n\nFETCH RESPONSE: ${response.toString()}\n\n`);
       expect(response).toBeInstanceOf(CacheDictionaryFetch.Miss);
     });
   });
