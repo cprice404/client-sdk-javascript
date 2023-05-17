@@ -26,6 +26,7 @@ export class InternalAuthClient implements IAuthClient {
   private readonly interceptors: Interceptor[];
 
   constructor(props: AuthClientProps) {
+    this.creds = props.credentialProvider;
     const headers = [new Header('Agent', `nodejs:${version}`)];
     this.interceptors = [
       new HeaderInterceptorProvider(headers).createHeadersInterceptor(),
@@ -38,6 +39,9 @@ export class InternalAuthClient implements IAuthClient {
     // token: string,
     expiresIn: ExpiresIn
   ): Promise<GenerateAuthToken.Response> {
+    console.log(
+      `GENERATE AUTH TOKEN, CREDS: ${JSON.stringify(this.creds, null, 2)}`
+    );
     const authClient = new grpcAuth.AuthClient(
       this.creds.getControlEndpoint(),
       ChannelCredentials.createSsl()
@@ -46,6 +50,11 @@ export class InternalAuthClient implements IAuthClient {
     const request = new grpcAuth._GenerateApiTokenRequest({
       session_token: this.creds.getAuthToken(),
     });
+
+    console.log(
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      `GENERATE AUTH TOKEN: DOES THE PASSED-IN EXPIRESIN EXPIRE? ${expiresIn.doesExpire()}`
+    );
 
     if (expiresIn.doesExpire()) {
       try {
@@ -61,6 +70,11 @@ export class InternalAuthClient implements IAuthClient {
       request.never = new Never();
     }
 
+    console.log(
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      `HERE IS THE FINAL REQUEST: expires: ${request.expires}, never: ${request.never}`
+    );
+
     return await new Promise<GenerateAuthToken.Response>(resolve => {
       authClient.GenerateApiToken(
         request,
@@ -69,6 +83,7 @@ export class InternalAuthClient implements IAuthClient {
           if (err || !resp) {
             resolve(new GenerateAuthToken.Error(cacheServiceErrorMapper(err)));
           } else {
+            console.log(`GOT A RESPONSE; VALID UNTIL: ${resp.valid_until}`);
             resolve(
               new GenerateAuthToken.Success(
                 resp.api_key,

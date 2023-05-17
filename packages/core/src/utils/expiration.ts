@@ -2,6 +2,8 @@ abstract class Expiration {
   private readonly _doesExpire: boolean;
 
   constructor(doesExpire: boolean) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    console.log(`CONSTRUCTION EXPIRATION WITH DOESEXPIRE: ${doesExpire}`);
     this._doesExpire = doesExpire;
   }
 
@@ -98,7 +100,9 @@ export class ExpiresAt extends Expiration {
   private readonly validUntil: number;
 
   private constructor(epochTimestamp: number | undefined) {
-    super(epochTimestamp !== undefined);
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    console.log(`CONSTRUCTING EXPIRESAT WITH TIMESTAMP: ${epochTimestamp}`);
+    super(epochTimestamp !== undefined && epochTimestamp !== 0);
     if (this.doesExpire()) {
       this.validUntil = epochTimestamp as number;
     } else {

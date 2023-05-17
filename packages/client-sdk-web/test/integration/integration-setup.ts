@@ -9,10 +9,7 @@ import {
   DeleteCache,
   NoopMomentoLoggerFactory,
 } from '@gomomento/sdk-core';
-import {
-  ITopicClient,
-  IAuthClient,
-} from '@gomomento/sdk-core/dist/src/internal/clients';
+import {ITopicClient} from '@gomomento/sdk-core/dist/src/internal/clients';
 
 const credsProvider = CredentialProvider.fromEnvironmentVariable({
   environmentVariableName: 'TEST_AUTH_TOKEN',
@@ -31,10 +28,6 @@ function momentoTopicClientForTesting(): ITopicClient {
     },
     credentialProvider: credsProvider,
   });
-}
-
-function momentoAuthClientForTesting(): IAuthClient {
-  return new AuthClient({credentialProvider: credsProvider});
 }
 
 export function SetupIntegrationTest(): {
@@ -77,9 +70,24 @@ export function SetupTopicIntegrationTest(): {
 }
 
 export function SetupAuthClientIntegrationTest(): {
-  authClient: IAuthClient;
+  sessionTokenAuthClient: AuthClient;
+  authTokenAuthClientFactory: (authToken: string) => AuthClient;
 } {
   return {
-    authClient: momentoAuthClientForTesting(),
+    sessionTokenAuthClient: new AuthClient({
+      credentialProvider: CredentialProvider.fromEnvironmentVariable({
+        environmentVariableName: 'TEST_SESSION_TOKEN',
+        // session tokens don't include cache/control endpoints, so we must provide them.  In this case we just hackily
+        // steal them from the auth-token-based creds provider.
+        cacheEndpoint: credsProvider.getCacheEndpoint(),
+        controlEndpoint: credsProvider.getControlEndpoint(),
+      }),
+    }),
+    authTokenAuthClientFactory: authToken =>
+      new AuthClient({
+        credentialProvider: CredentialProvider.fromString({
+          authToken: authToken,
+        }),
+      }),
   };
 }

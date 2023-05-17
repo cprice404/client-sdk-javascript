@@ -1,7 +1,7 @@
-import {SetupAuthIntegrationTest} from '../integration-setup';
+import {SetupAuthClientIntegrationTest} from '../integration-setup';
 import {runAuthClientTests} from '@gomomento/common-integration-tests';
 
-// const {authClient, sessionToken, controlEndpoint} = SetupAuthIntegrationTest();
-const {authClient} = SetupAuthIntegrationTest();
+const {sessionTokenAuthClient, authTokenAuthClientFactory} =
+  SetupAuthClientIntegrationTest();
 
-runAuthClientTests(authClient);
+runAuthClientTests(sessionTokenAuthClient, authTokenAuthClientFactory);

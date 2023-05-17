@@ -48,12 +48,6 @@ function momentoClientForTesting(): CacheClient {
   return new CacheClient(IntegrationTestCacheClientProps);
 }
 
-function momentoAuthClientForTesting(): AuthClient {
-  return new AuthClient({
-    credentialProvider: IntegrationTestCacheClientProps.credentialProvider,
-  });
-}
-
 function momentoTopicClientForTesting(): TopicClient {
   return new TopicClient({
     configuration: IntegrationTestCacheClientProps.configuration,
@@ -100,20 +94,32 @@ export function SetupTopicIntegrationTest(): {
   return {topicClient, Momento, IntegrationTestCacheName};
 }
 
-export function SetupAuthIntegrationTest(): {
-  authClient: AuthClient;
-  sessionToken: string;
-  controlEndpoint: string;
+export function SetupAuthClientIntegrationTest(): {
+  sessionTokenAuthClient: AuthClient;
+  authTokenAuthClientFactory: (authToken: string) => AuthClient;
 } {
-  const sessionToken = process.env.TEST_SESSION_TOKEN;
-  if (sessionToken === undefined) {
-    throw new Error('Missing required env var TEST_SESSION_TOKEN');
-  }
-
   return {
-    authClient: momentoAuthClientForTesting(),
-    sessionToken: sessionToken,
-    controlEndpoint: credsProvider.getControlEndpoint(),
+    sessionTokenAuthClient: new AuthClient({
+      credentialProvider: CredentialProvider.fromEnvironmentVariable({
+        environmentVariableName: 'TEST_SESSION_TOKEN',
+        // session tokens don't include cache/control endpoints, so we must provide them.  In this case we just hackily
+        // steal them from the auth-token-based creds provider.
+        cacheEndpoint: credsProvider.getCacheEndpoint(),
+        controlEndpoint: credsProvider.getControlEndpoint(),
+      }),
+    }),
+    authTokenAuthClientFactory: authToken => {
+      console.log('FACTORY FN CONSTRUCTING AUTH CLIENT');
+      const creds = CredentialProvider.fromString({
+        authToken: authToken,
+      });
+      console.log(`FACTORY CREDS: ${JSON.stringify(creds, null, 2)}`);
+      return new AuthClient({
+        credentialProvider: CredentialProvider.fromString({
+          authToken: authToken,
+        }),
+      });
+    },
   };
 }
 
