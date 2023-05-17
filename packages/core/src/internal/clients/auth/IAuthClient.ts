@@ -1,5 +1,5 @@
 import {
-  CredentialProvider,
+  // CredentialProvider,
   ExpiresIn,
   GenerateAuthToken,
   RefreshAuthToken,
@@ -7,13 +7,13 @@ import {
 
 export interface IAuthClient {
   generateAuthToken(
-    controlEndpoint: string,
-    token: string,
+    // controlEndpoint: string,
+    // token: string,
     expiresIn: ExpiresIn
   ): Promise<GenerateAuthToken.Response>;
 
   refreshAuthToken(
-    credentialProvider: CredentialProvider,
+    // credentialProvider: CredentialProvider,
     refreshToken: string
   ): Promise<RefreshAuthToken.Response>;
 }

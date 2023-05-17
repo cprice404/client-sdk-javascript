@@ -1,7 +1,7 @@
 import {
   GenerateAuthToken,
   ExpiresIn,
-  CredentialProvider,
+  // CredentialProvider,
   RefreshAuthToken,
 } from '../../../index';
 import {IAuthClient} from './IAuthClient';
@@ -18,23 +18,23 @@ export abstract class AbstractAuthClient implements IAuthClient {
   }
 
   public async generateAuthToken(
-    controlEndpoint: string,
-    token: string,
+    // controlEndpoint: string,
+    // token: string,
     expiresIn: ExpiresIn
   ): Promise<GenerateAuthToken.Response> {
     return await this.authClient.generateAuthToken(
-      controlEndpoint,
-      token,
+      // controlEndpoint,
+      // token,
       expiresIn
     );
   }
 
   public async refreshAuthToken(
-    credentialProvider: CredentialProvider,
+    // credentialProvider: CredentialProvider,
     refreshToken: string
   ): Promise<RefreshAuthToken.Response> {
     return await this.authClient.refreshAuthToken(
-      credentialProvider,
+      // credentialProvider,
       refreshToken
     );
   }

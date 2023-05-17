@@ -8,14 +8,21 @@ import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import Never = _GenerateApiTokenRequest.Never;
 import Expires = _GenerateApiTokenRequest.Expires;
 import {CredentialProvider, ExpiresAt, ExpiresIn} from '@gomomento/sdk-core';
+import {IAuthClient} from '@gomomento/sdk-core/dist/src/internal/clients';
+import {AuthClientProps} from '../auth-client-props';
 
 export class InternalWebGrpcAuthClient<
   REQ extends Request<REQ, RESP>,
   RESP extends UnaryResponse<REQ, RESP>
-> {
+> implements IAuthClient
+{
+  private readonly creds: CredentialProvider;
   private readonly interceptors: UnaryInterceptor<REQ, RESP>[];
-  constructor() {
+
+  constructor(props: AuthClientProps) {
+    this.creds = props.credentialProvider;
     const headers = [new Header('Agent', `nodejs:${version}`)];
+
     this.interceptors = [
       new HeaderInterceptorProvider<REQ, RESP>(
         headers
@@ -24,19 +31,19 @@ export class InternalWebGrpcAuthClient<
   }
 
   public async generateAuthToken(
-    controlEndpoint: string,
-    token: string,
+    // controlEndpoint: string,
+    // token: string,
     expiresIn: ExpiresIn
   ): Promise<GenerateAuthToken.Response> {
     const request = new _GenerateApiTokenRequest();
-    request.setSessionToken(token);
+    request.setSessionToken(this.creds.getAuthToken());
     if (expiresIn.doesExpire()) {
       request.setExpires(new Expires().setValidForSeconds(expiresIn.seconds()));
     } else {
       request.setNever(new Never());
     }
     const clientAuthWrapper = new auth.AuthClient(
-      `https://${controlEndpoint}`,
+      `https://${this.creds.getControlEndpoint()}`,
       null,
       {
         unaryInterceptors: this.interceptors,
@@ -61,7 +68,7 @@ export class InternalWebGrpcAuthClient<
   }
 
   public refreshAuthToken(
-    _credentialProvider: CredentialProvider,
+    // _credentialProvider: CredentialProvider,
     _refreshToken: string
   ): Promise<RefreshAuthToken.Response> {
     throw new Error('not implemented');

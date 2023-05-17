@@ -50,7 +50,7 @@ import * as TopicPublish from './messages/responses/topic-publish';
 import * as TopicSubscribe from './messages/responses/topic-subscribe';
 import {TopicItem} from './messages/responses/topic-item';
 
-// AuthClient Response Types
+// InternalAuthClient Response Types
 import * as GenerateAuthToken from './messages/responses/generate-auth-token';
 import * as RefreshAuthToken from './messages/responses/refresh-auth-token';
 
@@ -172,7 +172,7 @@ export {
   TopicSubscribe,
   TopicItem,
   SubscribeCallOptions,
-  // AuthClient Response Types
+  // InternalAuthClient Response Types
   GenerateAuthToken,
   RefreshAuthToken,
   // Errors

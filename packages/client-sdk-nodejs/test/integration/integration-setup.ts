@@ -49,7 +49,9 @@ function momentoClientForTesting(): CacheClient {
 }
 
 function momentoAuthClientForTesting(): AuthClient {
-  return new AuthClient();
+  return new AuthClient({
+    credentialProvider: IntegrationTestCacheClientProps.credentialProvider,
+  });
 }
 
 function momentoTopicClientForTesting(): TopicClient {
