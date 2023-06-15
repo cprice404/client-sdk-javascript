@@ -1,7 +1,12 @@
 import {TopicClient, TopicItem, TopicSubscribe, CredentialProvider, TopicConfigurations} from '@gomomento/sdk-web';
 import {ensureCacheExists} from './utils/cache';
+// import * as globalJsdom from 'global-jsdom';
+
+// import {JSDOM, ResourceLoader, VirtualConsole} from 'jsdom';
 
 async function main() {
+  initJSDom();
+
   const clargs = process.argv.slice(2);
   if (clargs.length !== 2) {
     console.error('Usage: topic-subscribe.ts <cacheName> <topicName>');
@@ -53,6 +58,48 @@ function handleError(error: TopicSubscribe.Error) {
 
   // optionally: unsubscribe from the topic subscription
   //subscription.unsubscribe();
+}
+
+// The `Window` interface does not have an `Error.stackTraceLimit` property, but
+// `JSDOMEnvironment` assumes it is there.
+// type Win = Window &
+//   Global.Global & {
+//     Error: {
+//       stackTraceLimit: number;
+//     };
+//   };
+
+function initJSDom() {
+  //
+  // const virtualConsole = new VirtualConsole();
+  // virtualConsole.sendTo(context.console, {omitJSDOMErrors: true});
+  // virtualConsole.on('jsdomError', error => {
+  //   context.console.error(error);
+  // });
+  //
+  // const dom = new JSDOM(
+  //   '<!DOCTYPE html>',
+  //   // typeof projectConfig.testEnvironmentOptions.html === 'string'
+  //   //   ? projectConfig.testEnvironmentOptions.html
+  //   //   : '<!DOCTYPE html>',
+  //   {
+  //     pretendToBeVisual: true,
+  //     resources:
+  //       // typeof projectConfig.testEnvironmentOptions.userAgent === 'string'
+  //       //   ? new ResourceLoader({
+  //       //     userAgent: projectConfig.testEnvironmentOptions.userAgent,
+  //       //   })
+  //       //   : undefined,
+  //       undefined,
+  //     runScripts: 'dangerously',
+  //     url: 'http://localhost/',
+  //     virtualConsole,
+  //     // ...projectConfig.testEnvironmentOptions,
+  //   }
+  // );
+  // // const global = (this.global = this.dom.window as unknown as Win);
+  // // this.global = dom.window as unknown as Win);
+  // global.window = dom.window as unknown;
 }
 
 main()

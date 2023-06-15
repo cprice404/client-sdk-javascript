@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jsdom": "21.1.1",
     "@types/node": "^16.11.4",
     "@types/node-fetch": "2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.59.7",
@@ -32,6 +33,7 @@
   "dependencies": {
     "@gomomento/sdk-web": "1.25.1",
     "hdr-histogram-js": "3.0.0",
+    "jsdom": "22.1.0",
     "node-fetch": "2.6.7",
     "pino-pretty": "^8.1.0",
     "xhr2": "^0.2.1"
