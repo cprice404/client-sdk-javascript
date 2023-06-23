@@ -1,0 +1,17 @@
+version: '2'
+services:
+  apache:
+    image: my-vite-apache
+    hostname: apache
+    networks:
+      - my-vite-apache
+    ports:
+      - 8080:80
+  chromiumlauncher:
+    image: my-chromium-launcher
+    hostname: chromiumlauncher
+    networks:
+      - my-vite-apache
+networks:
+  my-vite-apache:
+    driver: bridge
