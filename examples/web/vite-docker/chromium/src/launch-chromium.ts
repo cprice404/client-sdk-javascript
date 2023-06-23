@@ -5,9 +5,26 @@ async function launchChromium(): Promise<void> {
   console.log('hello world');
 
   const browser = await playwright.chromium.launch({headless: true});
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await page.goto('http://apache');
+  // TODO: make configurable
+  const numBrowsers = 10;
+  // TODO: this only works in the docker compose setup, needs to use service discovery to work in ECS
+  const url = 'http://apache';
+  const browserContexts = await Promise.all(
+    range(numBrowsers).map(() => browser.newContext())
+  );
+  console.log(`Created ${numBrowsers} browsers`);
+
+  // const context = await browser.newContext();
+  await Promise.all(
+    browserContexts.map(async (context, index) => {
+      console.log(`Browser ${index} loading page`);
+      const page = await context.newPage();
+      await page.goto(url);
+      console.log(`Browser ${index} done loading page`);
+    })
+  );
+
+  console.log('Closing browser');
   await browser.close();
 
   //
@@ -40,6 +57,10 @@ async function launchChromium(): Promise<void> {
 // function delay(ms: number) {
 //   return new Promise(resolve => setTimeout(resolve, ms));
 // }
+
+function range(count: number): Array<number> {
+  return [...Array(count).keys()];
+}
 
 launchChromium().catch(e => {
   throw e;
