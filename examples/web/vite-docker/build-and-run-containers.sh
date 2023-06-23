@@ -4,6 +4,8 @@ set -e
 set -x
 
 pushd vite-project
+  npm install
+  npm run build
   docker build -t my-vite-apache .
 popd
 
