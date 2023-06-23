@@ -2,7 +2,7 @@ version: '2'
 services:
   apache:
     image: my-vite-apache
-    hostname: apache
+    hostname: webserver
     networks:
       - my-vite-apache
     ports:
