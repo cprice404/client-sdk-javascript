@@ -8,7 +8,7 @@ async function launchChromium(): Promise<void> {
   // TODO: make configurable
   const numBrowsers = 10;
   // TODO: this only works in the docker compose setup, needs to use service discovery to work in ECS
-  const url = 'http://apache';
+  const url = 'http://webserver.topics.momento';
   const browserContexts = await Promise.all(
     range(numBrowsers).map(() => browser.newContext())
   );
@@ -20,7 +20,8 @@ async function launchChromium(): Promise<void> {
       console.log(`Browser ${index} loading page`);
       const page = await context.newPage();
       await page.goto(url);
-      console.log(`Browser ${index} done loading page`);
+      console.log(`Browser ${index} done loading page:`);
+      console.log(await page.content());
     })
   );
 
