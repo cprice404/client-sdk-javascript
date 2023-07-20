@@ -1,6 +1,7 @@
 import {
   CacheGet,
   CacheSet,
+  CancelledError,
   InternalServerError,
   LimitExceededError,
   MomentoLogger,
@@ -23,6 +24,7 @@ export enum AsyncSetGetResult {
   SUCCESS = 'SUCCESS',
   UNAVAILABLE = 'UNAVAILABLE',
   DEADLINE_EXCEEDED = 'DEADLINE_EXCEEDED',
+  CANCELLED = 'CANCELLED',
   RESOURCE_EXHAUSTED = 'RESOURCE_EXHAUSTED',
   RST_STREAM = 'RST_STREAM',
 }
@@ -38,6 +40,7 @@ export interface BasicLoadGenContext {
   globalSuccessCount: number;
   globalUnavailableCount: number;
   globalDeadlineExceededCount: number;
+  globalCancelledCount: number;
   globalResourceExhaustedCount: number;
   globalRstStreamCount: number;
 }
@@ -63,6 +66,9 @@ export function updateContextCountsForRequest(context: BasicLoadGenContext, resu
       break;
     case AsyncSetGetResult.RESOURCE_EXHAUSTED:
       context.globalResourceExhaustedCount++;
+      break;
+    case AsyncSetGetResult.CANCELLED:
+      context.globalCancelledCount++;
       break;
     case AsyncSetGetResult.RST_STREAM:
       context.globalRstStreamCount++;
@@ -113,6 +119,12 @@ export async function executeRequest<T>(
       } else {
         throw e;
       }
+    } else if (e instanceof CancelledError) {
+      if (e.message.includes('Timeout expired')) {
+        return [AsyncSetGetResult.CANCELLED, undefined];
+      } else {
+        throw e;
+      }
     } else {
       throw e;
     }
@@ -128,6 +140,7 @@ export function initiateLoadGenContext(): BasicLoadGenContext {
     globalSuccessCount: 0,
     globalUnavailableCount: 0,
     globalDeadlineExceededCount: 0,
+    globalCancelledCount: 0,
     globalResourceExhaustedCount: 0,
     globalRstStreamCount: 0,
   };

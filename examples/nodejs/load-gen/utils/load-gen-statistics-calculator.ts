@@ -50,6 +50,10 @@ deadline exceeded: ${loadGenContext.globalDeadlineExceededCount} (${percentReque
     loadGenContext,
     loadGenContext.globalDeadlineExceededCount
   )}%)
+        cancelled: ${loadGenContext.globalCancelledCount} (${percentRequests(
+    loadGenContext,
+    loadGenContext.globalCancelledCount
+  )}%)
 resource exhausted: ${loadGenContext.globalResourceExhaustedCount} (${percentRequests(
     loadGenContext,
     loadGenContext.globalResourceExhaustedCount
