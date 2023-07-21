@@ -46,9 +46,9 @@ total requests: ${loadGenContext.globalRequestCount} (${tps(
     loadGenContext,
     loadGenContext.globalUnavailableCount
   )}%)
-deadline exceeded: ${loadGenContext.globalDeadlineExceededCount} (${percentRequests(
+          timeout: ${loadGenContext.globalTimeoutCount} (${percentRequests(
     loadGenContext,
-    loadGenContext.globalDeadlineExceededCount
+    loadGenContext.globalTimeoutCount
   )}%)
         cancelled: ${loadGenContext.globalCancelledCount} (${percentRequests(
     loadGenContext,

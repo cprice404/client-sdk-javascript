@@ -23,7 +23,7 @@ export interface BasicLoadGenOptions {
 export enum AsyncSetGetResult {
   SUCCESS = 'SUCCESS',
   UNAVAILABLE = 'UNAVAILABLE',
-  DEADLINE_EXCEEDED = 'DEADLINE_EXCEEDED',
+  TIMEOUT = 'TIMEOUT',
   CANCELLED = 'CANCELLED',
   RESOURCE_EXHAUSTED = 'RESOURCE_EXHAUSTED',
   RST_STREAM = 'RST_STREAM',
@@ -39,7 +39,7 @@ export interface BasicLoadGenContext {
   globalRequestCount: number;
   globalSuccessCount: number;
   globalUnavailableCount: number;
-  globalDeadlineExceededCount: number;
+  globalTimeoutCount: number;
   globalCancelledCount: number;
   globalResourceExhaustedCount: number;
   globalRstStreamCount: number;
@@ -61,8 +61,8 @@ export function updateContextCountsForRequest(context: BasicLoadGenContext, resu
     case AsyncSetGetResult.UNAVAILABLE:
       context.globalUnavailableCount++;
       break;
-    case AsyncSetGetResult.DEADLINE_EXCEEDED:
-      context.globalDeadlineExceededCount++;
+    case AsyncSetGetResult.TIMEOUT:
+      context.globalTimeoutCount++;
       break;
     case AsyncSetGetResult.RESOURCE_EXHAUSTED:
       context.globalResourceExhaustedCount++;
@@ -115,7 +115,7 @@ export async function executeRequest<T>(
       }
     } else if (e instanceof TimeoutError) {
       if (e.message.includes('DEADLINE_EXCEEDED')) {
-        return [AsyncSetGetResult.DEADLINE_EXCEEDED, undefined];
+        return [AsyncSetGetResult.TIMEOUT, undefined];
       } else {
         throw e;
       }
@@ -139,7 +139,7 @@ export function initiateLoadGenContext(): BasicLoadGenContext {
     globalRequestCount: 0,
     globalSuccessCount: 0,
     globalUnavailableCount: 0,
-    globalDeadlineExceededCount: 0,
+    globalTimeoutCount: 0,
     globalCancelledCount: 0,
     globalResourceExhaustedCount: 0,
     globalRstStreamCount: 0,
