@@ -86,6 +86,7 @@ class BasicLoadGen {
     let i = 1;
     for (;;) {
       await this.issueAsyncSetGet(client, loadGenContext, workerId, i);
+      // this.issueAsyncSetGet(client, loadGenContext, workerId, i);
 
       if (finished) {
         return;
@@ -104,32 +105,65 @@ class BasicLoadGen {
     const cacheKey = `worker${workerId}operation${operationId}`;
 
     const setStartTime = process.hrtime();
-    const result = await executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () =>
+    // const result = await executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () =>
+    //   client.set(this.cacheName, cacheKey, this.cacheValue)
+    // );
+    executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () =>
       client.set(this.cacheName, cacheKey, this.cacheValue)
-    );
-    if (result !== undefined) {
-      const setDuration = getElapsedMillis(setStartTime);
-      loadGenContext.setLatencies.recordValue(setDuration);
-      if (setDuration < this.delayMillisBetweenRequests) {
-        const delayMs = this.delayMillisBetweenRequests - setDuration;
-        this.logger.trace(`delaying: ${delayMs}`);
-        await delay(delayMs);
-      }
+    )
+      .then(r => {
+        const setDuration = getElapsedMillis(setStartTime);
+        loadGenContext.setLatencies.recordValue(setDuration);
+      })
+      .catch(e => {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        this.logger.error(`An error occurred while executing set request: ${e}`);
+      });
+    // if (result !== undefined) {
+    //   const setDuration = getElapsedMillis(setStartTime);
+    //   loadGenContext.setLatencies.recordValue(setDuration);
+    //   if (setDuration < this.delayMillisBetweenRequests) {
+    //     const delayMs = this.delayMillisBetweenRequests - setDuration;
+    //     this.logger.trace(`delaying: ${delayMs}`);
+    //     await delay(delayMs);
+    //   }
+    // }
+    const setDuration = getElapsedMillis(setStartTime);
+    // loadGenContext.setLatencies.recordValue(setDuration);
+    if (setDuration < this.delayMillisBetweenRequests) {
+      const delayMs = this.delayMillisBetweenRequests - setDuration;
+      this.logger.trace(`delaying: ${delayMs}`);
+      await delay(delayMs);
     }
 
     const getStartTime = process.hrtime();
-    const getResult = await executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () =>
-      client.get(this.cacheName, cacheKey)
-    );
-
-    if (getResult !== undefined) {
-      const getDuration = getElapsedMillis(getStartTime);
-      loadGenContext.getLatencies.recordValue(getDuration);
-      if (getDuration < this.delayMillisBetweenRequests) {
-        const delayMs = this.delayMillisBetweenRequests - getDuration;
-        this.logger.trace(`delaying: ${delayMs}`);
-        await delay(delayMs);
-      }
+    // const getResult = await executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () =>
+    //   client.get(this.cacheName, cacheKey)
+    // );
+    executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () => client.get(this.cacheName, cacheKey))
+      .then(r => {
+        const getDuration = getElapsedMillis(getStartTime);
+        loadGenContext.getLatencies.recordValue(getDuration);
+      })
+      .catch(e => {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        this.logger.error(`An error occurred while executing get request: ${e}`);
+      });
+    // if (getResult !== undefined) {
+    //   const getDuration = getElapsedMillis(getStartTime);
+    //   loadGenContext.getLatencies.recordValue(getDuration);
+    //   if (getDuration < this.delayMillisBetweenRequests) {
+    //     const delayMs = this.delayMillisBetweenRequests - getDuration;
+    //     this.logger.trace(`delaying: ${delayMs}`);
+    //     await delay(delayMs);
+    //   }
+    // }
+    const getDuration = getElapsedMillis(getStartTime);
+    // loadGenContext.getLatencies.recordValue(getDuration);
+    if (getDuration < this.delayMillisBetweenRequests) {
+      const delayMs = this.delayMillisBetweenRequests - getDuration;
+      this.logger.trace(`delaying: ${delayMs}`);
+      await delay(delayMs);
     }
   }
 }
