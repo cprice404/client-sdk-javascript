@@ -33,6 +33,10 @@ class BasicLoadGen {
     this.cacheValue = 'x'.repeat(options.cacheItemPayloadBytes);
     this.delayMillisBetweenRequests =
       (1000.0 * this.options.numberOfConcurrentRequests) / this.options.maxRequestsPerSecond;
+
+    this.logger.info(`Number of concurrent requests: ${this.options.numberOfConcurrentRequests}`);
+    this.logger.info(`Target TPS: ${this.options.maxRequestsPerSecond}`);
+    this.logger.info(`Minimum delay between requests to achieve target TPS: ${this.delayMillisBetweenRequests}`);
   }
 
   async run(): Promise<void> {

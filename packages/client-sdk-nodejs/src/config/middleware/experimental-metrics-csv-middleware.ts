@@ -14,7 +14,7 @@ class ExperimentalMetricsCsvMiddlewareRequestHandler extends ExperimentalMetrics
     logger: MomentoLogger,
     csvPath: string
   ) {
-    super(parent, logger);git 
+    super(parent, logger);
     this.csvPath = csvPath;
   }
 
