@@ -206,12 +206,12 @@ function generateRandomString(length: number) {
 
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
   // const garbageStringGenerator = () => Math.random().toString().repeat(100_000);
-  const garbageStringGenerator = () => generateRandomString(100_000);
+  const garbageStringGenerator = () => generateRandomString(1_000_000);
   const garbageArray = [];
   setInterval(() => {
     console.log(`Garbage array now has size: ${garbageArray.length}`);
     const garbage = garbageStringGenerator();
-    console.log(`Adding more garbage: ${garbage}`);
+    // console.log(`Adding more garbage: ${garbage}`);
     garbageArray.push(garbage);
   }, 10);
 
