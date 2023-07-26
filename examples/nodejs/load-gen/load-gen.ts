@@ -194,8 +194,19 @@ see how different configurations impact performance.
 If you have questions or need help experimenting further, please reach out to us!
 `;
 
+function generateRandomString(length: number) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
-  const garbageStringGenerator = () => Math.random().toString().repeat(100_000);
+  // const garbageStringGenerator = () => Math.random().toString().repeat(100_000);
+  const garbageStringGenerator = () => generateRandomString(100_000);
   const garbageArray = [];
   setInterval(() => {
     console.log(`Garbage array now has size: ${garbageArray.length}`);
