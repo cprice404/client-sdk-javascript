@@ -195,6 +195,12 @@ If you have questions or need help experimenting further, please reach out to us
 `;
 
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
+  const garbageStringGenerator = () => Math.random().toString().repeat(100);
+  const garbageArray = [];
+  setInterval(() => {
+    garbageArray.push(garbageStringGenerator());
+  }, 200);
+
   const loadGenerator = new BasicLoadGen(loadGeneratorOptions);
   await loadGenerator.run();
 }
