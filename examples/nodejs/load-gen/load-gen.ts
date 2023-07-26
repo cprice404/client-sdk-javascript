@@ -195,12 +195,12 @@ If you have questions or need help experimenting further, please reach out to us
 `;
 
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
-  const garbageStringGenerator = () => Math.random().toString().repeat(100);
+  const garbageStringGenerator = () => Math.random().toString().repeat(1000);
   const garbageArray = [];
   setInterval(() => {
     console.log(`Garbage array now has size: ${garbageArray.length}`);
     garbageArray.push(garbageStringGenerator());
-  }, 50);
+  }, 10);
 
   const loadGenerator = new BasicLoadGen(loadGeneratorOptions);
   await loadGenerator.run();
