@@ -198,8 +198,9 @@ async function main(loadGeneratorOptions: BasicLoadGenOptions) {
   const garbageStringGenerator = () => Math.random().toString().repeat(100);
   const garbageArray = [];
   setInterval(() => {
+    console.log(`Garbage array now has size: ${garbageArray.length}`);
     garbageArray.push(garbageStringGenerator());
-  }, 200);
+  }, 50);
 
   const loadGenerator = new BasicLoadGen(loadGeneratorOptions);
   await loadGenerator.run();
