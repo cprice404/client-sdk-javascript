@@ -195,7 +195,7 @@ If you have questions or need help experimenting further, please reach out to us
 `;
 
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
-  const garbageStringGenerator = () => Math.random().toString().repeat(1000);
+  const garbageStringGenerator = () => Math.random().toString().repeat(10_000);
   const garbageArray = [];
   setInterval(() => {
     console.log(`Garbage array now has size: ${garbageArray.length}`);
