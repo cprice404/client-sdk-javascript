@@ -16,7 +16,7 @@ export function getCacheClient(
   requestTimeoutMs: number,
   cacheItemTtlSeconds: number
 ) {
-  const cacheClient = new CacheClient({
+  return new CacheClient({
     configuration: Configurations.Laptop.v1(loggerFactory).withClientTimeoutMillis(requestTimeoutMs).withMiddlewares([
       // new ExperimentalMetricsLoggingMiddleware(loggerFactory)
     ]),
@@ -25,14 +25,10 @@ export function getCacheClient(
     }),
     defaultTtlSeconds: cacheItemTtlSeconds,
   });
-  return new MomentoClientWrapperWithCoalescing(cacheClient, {
-    numberOfGetRequestsCoalesced: 0,
-    numberOfSetRequestsCoalesced: 0,
-  });
 }
 
 export async function createCache(
-  momentCacheClient: MomentoClientWrapperWithCoalescing,
+  momentCacheClient: {createCache: (cacheName: string) => Promise<CreateCache.Response>},
   cacheName: string,
   logger: MomentoLogger
 ) {

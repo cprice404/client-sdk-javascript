@@ -41,7 +41,13 @@ class BasicLoadGen {
   }
 
   async run(): Promise<void> {
-    const momento = getCacheClient(this.loggerFactory, this.options.requestTimeoutMs, this.cacheItemTtlSeconds);
+    const momento = new MomentoClientWrapperWithCoalescing(
+      getCacheClient(this.loggerFactory, this.options.requestTimeoutMs, this.cacheItemTtlSeconds),
+      {
+        numberOfGetRequestsCoalesced: 0,
+        numberOfSetRequestsCoalesced: 0,
+      }
+    );
 
     await createCache(momento, this.cacheName, this.logger);
 
