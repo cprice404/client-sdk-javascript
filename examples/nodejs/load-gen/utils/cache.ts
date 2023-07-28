@@ -17,9 +17,9 @@ export function getCacheClient(
   cacheItemTtlSeconds: number
 ) {
   const cacheClient = new CacheClient({
-    configuration: Configurations.Laptop.v1(loggerFactory)
-      .withClientTimeoutMillis(requestTimeoutMs)
-      .withMiddlewares([new ExperimentalMetricsLoggingMiddleware(loggerFactory)]),
+    configuration: Configurations.Laptop.v1(loggerFactory).withClientTimeoutMillis(requestTimeoutMs).withMiddlewares([
+      // new ExperimentalMetricsLoggingMiddleware(loggerFactory)
+    ]),
     credentialProvider: new EnvMomentoTokenProvider({
       environmentVariableName: 'MOMENTO_AUTH_TOKEN',
     }),
