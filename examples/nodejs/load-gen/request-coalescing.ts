@@ -53,56 +53,56 @@ class RequestCoalescerLoadGen {
     this.logger.info(`Running ${this.options.numberOfConcurrentRequests} concurrent requests`);
     this.logger.info(`Running for ${this.options.totalSecondsToRun} seconds`);
 
-    // console.log('------------ PROCESSING REQUESTS WITHOUT REQUEST COALESCING ------------');
-    //
-    // let loadGenContext = initiateLoadGenContext();
-    // // Show stats periodically.
-    // let logStatsIntervalId = setInterval(() => {
-    //   logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
-    // }, this.options.showStatsIntervalSeconds * 1000);
-    //
-    // const asyncGetSetResults = range(this.options.numberOfConcurrentRequests).map(() =>
-    //   this.launchAndRunWorkers(momento, loadGenContext)
-    // );
-    //
-    // await Promise.all(asyncGetSetResults);
-    //
-    // // We're done, stop showing stats.
-    // clearInterval(logStatsIntervalId);
-    //
-    // // Show the stats one last time at the end.
-    // logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
-    //
-    // this.logger.info('DONE!');
-    // // wait a few millis to allow the logger to finish flushing
-    // await delay(500);
+    console.log('------------ PROCESSING REQUESTS WITHOUT REQUEST COALESCING ------------');
 
-    console.log('------------ PROCESSING REQUESTS WITH REQUEST COALESCING ------------');
-
-    const loadGenContext = initiateLoadGenContext();
-
+    let loadGenContext = initiateLoadGenContext();
     // Show stats periodically.
-    const logStatsIntervalId = setInterval(() => {
+    let logStatsIntervalId = setInterval(() => {
       logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
-      logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
     }, this.options.showStatsIntervalSeconds * 1000);
 
-    const requestCoalescerContext = initiateRequestCoalescerContext();
-
-    const momentoWithCoalescing = new MomentoClientWrapperWithCoalescing(momento, requestCoalescerContext);
-
-    const asyncGetSetResultsWithRequestCoalescer = range(this.options.numberOfConcurrentRequests).map(() =>
-      this.launchAndRunWorkers(momentoWithCoalescing, loadGenContext)
+    const asyncGetSetResults = range(this.options.numberOfConcurrentRequests).map(() =>
+      this.launchAndRunWorkers(momento, loadGenContext)
     );
 
-    await Promise.all(asyncGetSetResultsWithRequestCoalescer);
+    await Promise.all(asyncGetSetResults);
 
     // We're done, stop showing stats.
     clearInterval(logStatsIntervalId);
 
     // Show the stats one last time at the end.
     logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
-    logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
+
+    this.logger.info('DONE!');
+    // wait a few millis to allow the logger to finish flushing
+    await delay(500);
+
+    // console.log('------------ PROCESSING REQUESTS WITH REQUEST COALESCING ------------');
+    //
+    // const loadGenContext = initiateLoadGenContext();
+    //
+    // // Show stats periodically.
+    // const logStatsIntervalId = setInterval(() => {
+    //   logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
+    //   logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
+    // }, this.options.showStatsIntervalSeconds * 1000);
+    //
+    // const requestCoalescerContext = initiateRequestCoalescerContext();
+    //
+    // const momentoWithCoalescing = new MomentoClientWrapperWithCoalescing(momento, requestCoalescerContext);
+    //
+    // const asyncGetSetResultsWithRequestCoalescer = range(this.options.numberOfConcurrentRequests).map(() =>
+    //   this.launchAndRunWorkers(momentoWithCoalescing, loadGenContext)
+    // );
+    //
+    // await Promise.all(asyncGetSetResultsWithRequestCoalescer);
+    //
+    // // We're done, stop showing stats.
+    // clearInterval(logStatsIntervalId);
+    //
+    // // Show the stats one last time at the end.
+    // logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
+    // logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
 
     this.logger.info('DONE!');
     // wait a few millis to allow the logger to finish flushing
