@@ -1,4 +1,4 @@
-import {CacheClient, CacheGet, CacheSet} from '@gomomento/sdk';
+import {CacheClient, CacheGet, CacheSet, CreateCache} from '@gomomento/sdk';
 import {RequestCoalescerContext} from './load-gen';
 
 export interface GetAndSetOnlyClient {
@@ -17,6 +17,10 @@ export class MomentoClientWrapperWithCoalescing {
     this.context = context;
     this.getRequestMap = new Map<string, Promise<CacheGet.Response>>();
     this.setRequestMap = new Map<string, Promise<CacheSet.Response>>();
+  }
+
+  createCache(cacheName: string): Promise<CreateCache.Response> {
+    return this.momentoClient.createCache(cacheName);
   }
 
   get(cacheName: string, key: string): Promise<CacheGet.Response> {

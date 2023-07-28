@@ -1,5 +1,5 @@
 import {
-  CacheClient,
+  // CacheClient,
   DefaultMomentoLoggerFactory,
   DefaultMomentoLoggerLevel,
   MomentoLogger,
@@ -15,6 +15,7 @@ import {
 } from './utils/load-gen';
 import {getElapsedMillis, logStats} from './utils/load-gen-statistics-calculator';
 import {createCache, getCacheClient} from './utils/cache';
+import {MomentoClientWrapperWithCoalescing} from './utils/momento-client-with-coalescing';
 
 class BasicLoadGen {
   private readonly loggerFactory: MomentoLoggerFactory;
@@ -75,7 +76,7 @@ class BasicLoadGen {
   }
 
   private async launchAndRunWorkers(
-    client: CacheClient,
+    client: MomentoClientWrapperWithCoalescing,
     loadGenContext: BasicLoadGenContext,
     workerId: number
   ): Promise<void> {
@@ -97,7 +98,7 @@ class BasicLoadGen {
   }
 
   private async issueAsyncSetGet(
-    client: CacheClient,
+    client: MomentoClientWrapperWithCoalescing,
     loadGenContext: BasicLoadGenContext,
     workerId: number,
     operationId: number
@@ -219,7 +220,7 @@ class ThisIsTheOffendingClass {
 
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
   // const garbageStringGenerator = () => Math.random().toString().repeat(100_000);
-  const theOffendingClass = new ThisIsTheOffendingClass();
+  // const theOffendingClass = new ThisIsTheOffendingClass();
 
   const loadGenerator = new BasicLoadGen(loadGeneratorOptions);
   await loadGenerator.run();
