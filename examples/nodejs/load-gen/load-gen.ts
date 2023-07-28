@@ -204,16 +204,22 @@ function generateRandomString(length: number) {
   return result;
 }
 
+class ThisIsTheOffendingClass {
+  private readonly garbageStringGenerator = () => generateRandomString(5_000);
+  private readonly garbageArray: Array<string> = [];
+  constructor() {
+    setInterval(() => {
+      console.log(`Garbage array now has size: ${this.garbageArray.length}`);
+      const garbage = this.garbageStringGenerator();
+      // console.log(`Adding more garbage: ${garbage}`);
+      this.garbageArray.push(garbage);
+    }, 100);
+  }
+}
+
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
   // const garbageStringGenerator = () => Math.random().toString().repeat(100_000);
-  const garbageStringGenerator = () => generateRandomString(5_000);
-  const garbageArray = [];
-  setInterval(() => {
-    console.log(`Garbage array now has size: ${garbageArray.length}`);
-    const garbage = garbageStringGenerator();
-    // console.log(`Adding more garbage: ${garbage}`);
-    garbageArray.push(garbage);
-  }, 100);
+  const theOffendingClass = new ThisIsTheOffendingClass();
 
   const loadGenerator = new BasicLoadGen(loadGeneratorOptions);
   await loadGenerator.run();

@@ -9,7 +9,6 @@ import {
   MomentoLoggerFactory,
 } from '@gomomento/sdk';
 import {ExperimentalMetricsLoggingMiddleware} from '@gomomento/sdk/dist/src/config/middleware/experimental-metrics-logging-middleware';
-import {log} from 'util';
 
 export function getCacheClient(
   loggerFactory: MomentoLoggerFactory,
