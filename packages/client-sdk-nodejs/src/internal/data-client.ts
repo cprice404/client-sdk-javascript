@@ -3,7 +3,7 @@ import {cache} from '@gomomento/generated-types';
 import {TextEncoder} from 'util';
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
-import {createRetryInterceptorIfEnabled} from './grpc/retry-interceptor';
+// import {createRetryInterceptorIfEnabled} from './grpc/retry-interceptor';
 import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor, Metadata} from '@grpc/grpc-js';
 import {
@@ -2728,10 +2728,10 @@ export class DataClient implements IDataClient {
       middlewaresInterceptor(loggerFactory, middlewares),
       new HeaderInterceptorProvider(headers).createHeadersInterceptor(),
       ClientTimeoutInterceptor(this.requestTimeoutMs),
-      ...createRetryInterceptorIfEnabled(
-        this.configuration.getLoggerFactory(),
-        this.configuration.getRetryStrategy()
-      ),
+      // ...createRetryInterceptorIfEnabled(
+      //   this.configuration.getLoggerFactory(),
+      //   this.configuration.getRetryStrategy()
+      // ),
     ];
   }
 
