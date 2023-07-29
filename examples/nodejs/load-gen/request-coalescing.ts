@@ -61,8 +61,8 @@ class RequestCoalescerLoadGen {
       logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
     }, this.options.showStatsIntervalSeconds * 1000);
 
-    const asyncGetSetResults = range(this.options.numberOfConcurrentRequests).map(() =>
-      this.launchAndRunWorkers(momento, loadGenContext)
+    const asyncGetSetResults = range(this.options.numberOfConcurrentRequests).map(workerId =>
+      this.launchAndRunWorkers(momento, loadGenContext, workerId + 1)
     );
 
     await Promise.all(asyncGetSetResults);
@@ -109,21 +109,32 @@ class RequestCoalescerLoadGen {
     await delay(500);
   }
 
-  private async launchAndRunWorkers(client: GetAndSetOnlyClient, loadGenContext: BasicLoadGenContext): Promise<void> {
+  private async launchAndRunWorkers(
+    client: GetAndSetOnlyClient,
+    loadGenContext: BasicLoadGenContext,
+    workerId: number
+  ): Promise<void> {
     let finished = false;
     const finish = () => (finished = true);
     setTimeout(finish, this.options.totalSecondsToRun * 1000);
 
+    const i = 1;
     for (;;) {
-      await this.issueAsyncSetGet(client, loadGenContext);
+      await this.issueAsyncSetGet(client, loadGenContext, workerId, i);
       if (finished) {
         return;
       }
     }
   }
 
-  private async issueAsyncSetGet(client: GetAndSetOnlyClient, loadGenContext: BasicLoadGenContext): Promise<void> {
-    const cacheKey = this.getRandomCacheKey();
+  private async issueAsyncSetGet(
+    client: GetAndSetOnlyClient,
+    loadGenContext: BasicLoadGenContext,
+    workerId: number,
+    operationId: number
+  ): Promise<void> {
+    // const cacheKey = this.getRandomCacheKey();
+    const cacheKey = `worker${workerId}operation${operationId}`;
 
     const setStartTime = process.hrtime();
     const result = await executeRequestAndUpdateContextCounts(this.logger, loadGenContext, () =>
