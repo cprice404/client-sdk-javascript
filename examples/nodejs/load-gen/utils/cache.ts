@@ -8,6 +8,7 @@ import {
   MomentoLogger,
   MomentoLoggerFactory,
 } from '@gomomento/sdk';
+import {ExperimentalMetricsLoggingMiddleware} from '@gomomento/sdk/dist/src/config/middleware/experimental-metrics-logging-middleware';
 
 export function getCacheClient(
   loggerFactory: MomentoLoggerFactory,
@@ -15,7 +16,9 @@ export function getCacheClient(
   cacheItemTtlSeconds: number
 ) {
   return new CacheClient({
-    configuration: Configurations.Laptop.v1(loggerFactory).withClientTimeoutMillis(requestTimeoutMs),
+    configuration: Configurations.Laptop.v1(loggerFactory)
+      .withClientTimeoutMillis(requestTimeoutMs)
+      .withMiddlewares([new ExperimentalMetricsLoggingMiddleware(loggerFactory)]),
     credentialProvider: new EnvMomentoTokenProvider({
       environmentVariableName: 'MOMENTO_AUTH_TOKEN',
     }),
