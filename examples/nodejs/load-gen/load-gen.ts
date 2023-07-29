@@ -180,7 +180,7 @@ const loadGeneratorOptions: BasicLoadGenOptions = {
    * Configures the Momento client to timeout if a request exceeds this limit.
    * Momento client default is 5 seconds.
    */
-  requestTimeoutMs: 15 * 1000,
+  requestTimeoutMs: 2,
   /**
    * Controls the size of the payload that will be used for the cache items in
    * the load test.  Smaller payloads will generally provide lower latencies than
@@ -206,7 +206,7 @@ const loadGeneratorOptions: BasicLoadGenOptions = {
    * Controls how long the load test will run, in milliseconds. We will execute operations
    * for this long and the exit.
    */
-  totalSecondsToRun: 60,
+  totalSecondsToRun: 60 * 60 * 24,
 };
 
 main(loadGeneratorOptions)
