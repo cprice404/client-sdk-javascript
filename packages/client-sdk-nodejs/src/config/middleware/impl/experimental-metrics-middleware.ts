@@ -187,6 +187,9 @@ export abstract class ExperimentalMetricsMiddleware implements Middleware {
   }
 
   incrementActiveRequestCount(): number {
+    console.log(
+      `incrementing active request count from ${this.numActiveRequests}`
+    );
     return ++this.numActiveRequests;
   }
 
@@ -195,6 +198,9 @@ export abstract class ExperimentalMetricsMiddleware implements Middleware {
   }
 
   decrementActiveRequestCount(): void {
+    console.log(
+      `decrementing active request count from ${this.numActiveRequests}`
+    );
     --this.numActiveRequests;
   }
 
