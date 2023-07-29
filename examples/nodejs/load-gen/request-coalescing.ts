@@ -55,9 +55,9 @@ class RequestCoalescerLoadGen {
 
     console.log('------------ PROCESSING REQUESTS WITHOUT REQUEST COALESCING ------------');
 
-    let loadGenContext = initiateLoadGenContext();
+    const loadGenContext = initiateLoadGenContext();
     // Show stats periodically.
-    let logStatsIntervalId = setInterval(() => {
+    const logStatsIntervalId = setInterval(() => {
       logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
     }, this.options.showStatsIntervalSeconds * 1000);
 
@@ -77,32 +77,32 @@ class RequestCoalescerLoadGen {
     // wait a few millis to allow the logger to finish flushing
     await delay(500);
 
-    console.log('------------ PROCESSING REQUESTS WITH REQUEST COALESCING ------------');
-
-    loadGenContext = initiateLoadGenContext();
-
-    // Show stats periodically.
-    logStatsIntervalId = setInterval(() => {
-      logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
-      logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
-    }, this.options.showStatsIntervalSeconds * 1000);
-
-    const requestCoalescerContext = initiateRequestCoalescerContext();
-
-    const momentoWithCoalescing = new MomentoClientWrapperWithCoalescing(momento, requestCoalescerContext);
-
-    const asyncGetSetResultsWithRequestCoalescer = range(this.options.numberOfConcurrentRequests).map(() =>
-      this.launchAndRunWorkers(momentoWithCoalescing, loadGenContext)
-    );
-
-    await Promise.all(asyncGetSetResultsWithRequestCoalescer);
-
-    // We're done, stop showing stats.
-    clearInterval(logStatsIntervalId);
-
-    // Show the stats one last time at the end.
-    logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
-    logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
+    // console.log('------------ PROCESSING REQUESTS WITH REQUEST COALESCING ------------');
+    //
+    // loadGenContext = initiateLoadGenContext();
+    //
+    // // Show stats periodically.
+    // logStatsIntervalId = setInterval(() => {
+    //   logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
+    //   logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
+    // }, this.options.showStatsIntervalSeconds * 1000);
+    //
+    // const requestCoalescerContext = initiateRequestCoalescerContext();
+    //
+    // const momentoWithCoalescing = new MomentoClientWrapperWithCoalescing(momento, requestCoalescerContext);
+    //
+    // const asyncGetSetResultsWithRequestCoalescer = range(this.options.numberOfConcurrentRequests).map(() =>
+    //   this.launchAndRunWorkers(momentoWithCoalescing, loadGenContext)
+    // );
+    //
+    // await Promise.all(asyncGetSetResultsWithRequestCoalescer);
+    //
+    // // We're done, stop showing stats.
+    // clearInterval(logStatsIntervalId);
+    //
+    // // Show the stats one last time at the end.
+    // logStats(loadGenContext, this.logger, this.options.maxRequestsPerSecond);
+    // logCoalescingStats(requestCoalescerContext, loadGenContext, this.logger);
 
     this.logger.info('DONE!');
     // wait a few millis to allow the logger to finish flushing
@@ -179,7 +179,7 @@ const loadGeneratorOptions: BasicLoadGenOptions = {
    * Configures the Momento client to timeout if a request exceeds this limit.
    * Momento client default is 5 seconds.
    */
-  requestTimeoutMs: 15 * 1000,
+  requestTimeoutMs: 2,
   /**
    * Controls the size of the payload that will be used for the cache items in
    * the load test.  Smaller payloads will generally provide lower latencies than
@@ -205,7 +205,7 @@ const loadGeneratorOptions: BasicLoadGenOptions = {
    * Controls how long the load test will run, in milliseconds. We will execute operations
    * for this long and the exit.
    */
-  totalSecondsToRun: 60,
+  totalSecondsToRun: 60 * 60 * 24,
 };
 
 async function main(loadGeneratorOptions: BasicLoadGenOptions) {
