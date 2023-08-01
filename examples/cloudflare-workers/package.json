@@ -11,5 +11,7 @@
     "typescript": "^5.0.4",
     "wrangler": "^3.0.0"
   },
-  "dependencies": { }
+  "dependencies": {
+    "@gomomento/sdk-web": "^1.29.0"
+  }
 }

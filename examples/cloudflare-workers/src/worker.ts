@@ -7,6 +7,7 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+import {CacheClient, Configurations, CredentialProvider} from "@gomomento/sdk-web";
 
 class MomentoFetcher {
 	private readonly apiToken: string;
@@ -23,7 +24,7 @@ class MomentoFetcher {
 		} else {
 			throw new Error(`failed to retrieve item from cache: ${cacheName}`)
 		}
-		
+
 		return await resp.text();
 	}
 
@@ -64,6 +65,16 @@ export interface Env {
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		const webSdkClient = new CacheClient(
+			{
+				configuration: Configurations.Browser.v1(),
+				credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_AUTH_TOKEN'}),
+				defaultTtlSeconds: 60
+			}
+		);
+		console.log(`Instantiated web sdk client`);
+
+
 		const client = new MomentoFetcher(env.MOMENTO_AUTH_TOKEN, env.MOMENTO_REST_ENDPOINT);
 		const cache = env.MOMENTO_CACHE_NAME;
 		const key = "key";
