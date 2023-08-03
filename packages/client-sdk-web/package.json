@@ -18,7 +18,7 @@
     "unit-test": "jest unit",
     "integration-test-auth": "jest auth-client.test.ts",
     "integration-test": "jest integration --testPathIgnorePatterns auth-client.test.ts",
-    "build-and-run-tests": "cd ../common-integration-tests && npm run build && cd - && jest --testPathIgnorePatterns auth-client.test.ts",
+    "build-and-run-tests": "cd ../common-integration-tests && npm run build && cd - && jest --testPathIgnorePatterns auth-client.test.ts --maxWorkers 1",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
     "watch": "tsc -w",
@@ -50,8 +50,8 @@
     "xhr2": "^0.2.1"
   },
   "dependencies": {
+    "@gomomento/generated-types-webtext": "file:../../../client-protos/javascript-web",
     "@gomomento/sdk-core": "file:../core",
-    "@gomomento/generated-types-webtext": "0.68.0",
     "google-protobuf": "3.21.2",
     "grpc-web": "1.4.2",
     "jwt-decode": "3.1.2"

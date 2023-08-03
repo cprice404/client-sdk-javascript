@@ -12,6 +12,8 @@
     "wrangler": "^3.0.0"
   },
   "dependencies": {
-    "@gomomento/sdk-web": "^1.29.0"
+    "@gomomento/sdk-core": "file:../../packages/core",
+    "@gomomento/sdk-web": "file:../../packages/client-sdk-web",
+    "xhr4sw": "^0.0.5"
   }
 }
