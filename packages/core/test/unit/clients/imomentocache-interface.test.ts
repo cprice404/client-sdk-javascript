@@ -8,6 +8,8 @@ describe('IMomentoCache', () => {
     );
     const cacheInterface =
       cacheInterfaceSourceFile.getInterface('IMomentoCache');
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const cacheInterfaceMembers = cacheInterface!
       .getMethods()
       .map(m => m.getName())
@@ -19,6 +21,7 @@ describe('IMomentoCache', () => {
     );
     const clientInterface =
       clientInterfaceSourceFile.getInterface('ICacheClient');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const clientInterfaceMembers = clientInterface!
       .getMethods()
       .map(m => m.getName())

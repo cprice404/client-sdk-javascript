@@ -29,7 +29,11 @@ const TEXT_DECODER = new TextDecoder();
  * }
  * ```
  */
-export abstract class Response extends ResponseBase {}
+export abstract class Response extends ResponseBase {
+  public value(): Set<string> | undefined {
+    throw new ReferenceError('Not yet implemented');
+  }
+}
 
 class _Hit extends Response {
   private readonly elements: Uint8Array[];
@@ -37,6 +41,15 @@ class _Hit extends Response {
   constructor(elements: Uint8Array[]) {
     super();
     this.elements = elements;
+  }
+
+  /**
+   * Returns the data as a Set whose values are utf-8 strings, decoded from the underlying byte arrays.  This
+   * is a convenience alias for {valueSetString}.
+   * @returns {Set<string>}
+   */
+  public value(): Set<string> {
+    return this.valueSetString();
   }
 
   /**

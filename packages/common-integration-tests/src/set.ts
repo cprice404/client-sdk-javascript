@@ -623,8 +623,29 @@ export function runSetTests(
       );
     });
 
-    it('should support accessing value for CacheSetFetch.Hit without instanceof check', () => {
-      expect(true).toEqual(false);
+    it('should support accessing value for CacheSetFetch.Hit without instanceof check', async () => {
+      const setName = v4();
+
+      await Momento.setAddElements(IntegrationTestCacheName, setName, [
+        'foo',
+        'bar',
+      ]);
+
+      const fetchResponse = await Momento.setFetch(
+        IntegrationTestCacheName,
+        setName
+      );
+      expectWithMessage(() => {
+        expect(fetchResponse).toBeInstanceOf(CacheSetFetch.Hit);
+      }, `expected a HIT but got ${fetchResponse.toString()}`);
+
+      const expectedResult = new Set(['foo', 'bar']);
+
+      expect(fetchResponse.value()).toEqual(expectedResult);
+
+      const hit = fetchResponse as CacheSetFetch.Hit;
+      expect(hit.value()).toEqual(expectedResult);
+      expect(hit.valueSet()).toEqual(expectedResult);
     });
   });
 }
