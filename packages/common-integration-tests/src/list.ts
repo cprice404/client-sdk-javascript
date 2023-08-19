@@ -365,6 +365,10 @@ export function runListTests(
           'bar',
         ]);
       });
+
+      it('should support accessing value for CacheListFetch.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#listLength', () => {
@@ -464,6 +468,10 @@ export function runListTests(
         }, `expected a HIT but got ${response.toString()}`);
         expect((response as CacheListPopBack.Hit).valueString()).toEqual('bar');
       });
+
+      it('should support accessing value for CacheListPopBack.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#listPopFront', () => {
@@ -517,6 +525,10 @@ export function runListTests(
           expect(response).toBeInstanceOf(CacheListPopFront.Hit);
         }, `expected a HIT but got ${response.toString()}`);
         expect((response as CacheListPopBack.Hit).valueString()).toEqual('foo');
+      });
+
+      it('should support accessing value for CacheListPopFront.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
       });
     });
 

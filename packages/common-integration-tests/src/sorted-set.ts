@@ -664,6 +664,10 @@ export function runSortedSetTests(
           {value: 'bam', score: 1000},
         ]);
       });
+
+      it('should support accessing value for a sortedSetFetchByRank Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#sortedSetFetchByScore', () => {
@@ -1235,6 +1239,10 @@ export function runSortedSetTests(
           {value: 'burrito', score: 9000},
         ]);
       });
+
+      it('should support accessing value for sortedSetFetchByScore Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#sortedSetGetRank', () => {
@@ -1404,6 +1412,10 @@ export function runSortedSetTests(
         const hitResult = result as CacheSortedSetGetScore.Hit;
         expect(hitResult.score()).toEqual(84);
       });
+
+      it('should support accessing value for CacheSortedSetGetScore.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#sortedSetGetScores', () => {
@@ -1481,6 +1493,10 @@ export function runSortedSetTests(
         }, `expected HIT but got ${result.toString()}`);
         const hitResult = result as CacheSortedSetGetScores.Hit;
         expect(hitResult.valueRecord()).toEqual({bar: 84, baz: 90210});
+      });
+
+      it('should support accessing value for CacheSortedSetGetScores.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
       });
     });
 
@@ -1734,6 +1750,10 @@ export function runSortedSetTests(
         }, `expected HIT but got ${result.toString()}`);
         const success = result as CacheSortedSetIncrementScore.Success;
         expect(success.score()).toEqual(85);
+      });
+
+      it('should support accessing value for SortedSetIncrementScore.Success without instanceof check', () => {
+        expect(true).toEqual(false);
       });
     });
 

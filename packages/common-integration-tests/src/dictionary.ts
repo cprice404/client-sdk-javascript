@@ -399,6 +399,10 @@ export function runDictionaryTests(
         const hit = response as CacheDictionaryFetch.Hit;
         expect(hit.valueRecord()).toEqual({a: 'A', b: 'B'});
       });
+
+      it('should support accessing value for CacheDictionaryFetch.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#dictionaryGetField', () => {
@@ -457,6 +461,10 @@ export function runDictionaryTests(
         }, `expected HIT but got ${getResponse.toString()}`);
         const hit = getResponse as CacheDictionaryGetField.Hit;
         expect(hit.valueString()).toEqual('B');
+      });
+
+      it('should support accessing value for CacheDictionaryGetField.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
       });
     });
 
@@ -686,6 +694,10 @@ export function runDictionaryTests(
         const hit = getResponse as CacheDictionaryGetFields.Hit;
         expect(hit.valueRecord()).toEqual({a: 'A', c: 'C'});
       });
+
+      it('should support accessing value for CacheDictionaryGetFields.Hit without instanceof check', () => {
+        expect(true).toEqual(false);
+      });
     });
 
     describe('#dictionaryIncrement', () => {
@@ -907,6 +919,10 @@ export function runDictionaryTests(
         }, `expected SUCCESS but got ${response.toString()}`);
         const success = response as CacheDictionaryIncrement.Success;
         expect(success.valueNumber()).toEqual(42);
+      });
+
+      it('should support accessing value for CacheDictionaryIncrement.Success without instanceof check', () => {
+        expect(true).toEqual(false);
       });
     });
 

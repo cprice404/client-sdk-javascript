@@ -547,7 +547,7 @@ export function runSetTests(
     });
   });
 
-  describe('#fetch', () => {
+  describe('#setFetch', () => {
     it('should succeed for string arrays happy path', async () => {
       const setName = v4();
       const addResponse = await Momento.setAddElements(
@@ -621,6 +621,10 @@ export function runSetTests(
       expect((fetchResponse as CacheSetFetch.Hit).valueSet()).toEqual(
         new Set(['foo', 'bar'])
       );
+    });
+
+    it('should support accessing value for CacheSetFetch.Hit without instanceof check', () => {
+      expect(true).toEqual(false);
     });
   });
 }

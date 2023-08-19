@@ -233,6 +233,10 @@ export function runGetSetDeleteTests(
       const getMiss = await Momento.get(IntegrationTestCacheName, cacheKey);
       expect(getMiss).toBeInstanceOf(CacheGet.Miss);
     });
+
+    it('should support accessing value for CacheGet.Hit without instanceof check', () => {
+      expect(true).toEqual(false);
+    });
   });
 
   describe('#increment', () => {
@@ -381,6 +385,10 @@ export function runGetSetDeleteTests(
       }, `expected SUCCESS but got ${response.toString()}`);
       const successResponse = response as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(52);
+    });
+
+    it('should support accessing value for CacheIncrement.Success without instanceof check', () => {
+      expect(true).toEqual(false);
     });
   });
 
