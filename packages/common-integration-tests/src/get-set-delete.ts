@@ -234,8 +234,36 @@ export function runGetSetDeleteTests(
       expect(getMiss).toBeInstanceOf(CacheGet.Miss);
     });
 
-    it('should support accessing value for CacheGet.Hit without instanceof check', () => {
-      expect(true).toEqual(false);
+    it('should support accessing value for CacheGet.Hit without instanceof check', async () => {
+      const cacheKey = v4();
+      const cacheValue = v4();
+
+      const setResponse = await Momento.set(
+        IntegrationTestCacheName,
+        cacheKey,
+        cacheValue
+      );
+      expectWithMessage(() => {
+        expect(setResponse).toBeInstanceOf(CacheSet.Success);
+      }, `expected SUCCESS but got ${setResponse.toString()}`);
+      const getResponse = await Momento.get(IntegrationTestCacheName, cacheKey);
+      expectWithMessage(() => {
+        expect(getResponse).toBeInstanceOf(CacheGet.Hit);
+      }, `expected HIT but got ${getResponse.toString()}`);
+
+      expect(getResponse.value()).toEqual(cacheValue);
+
+      if (getResponse instanceof CacheGet.Hit) {
+        expect(getResponse.value()).toEqual(cacheValue);
+        expect(getResponse.valueString()).toEqual(cacheValue);
+      }
+
+      const missResponse = await Momento.get(IntegrationTestCacheName, v4());
+      expectWithMessage(() => {
+        expect(getResponse).toBeInstanceOf(CacheGet.Miss);
+      }, `expected MISS but got ${getResponse.toString()}`);
+
+      expect(missResponse.value()).toEqual(undefined);
     });
   });
 
@@ -246,81 +274,89 @@ export function runGetSetDeleteTests(
 
     it('increments from 0 to expected amount with string field', async () => {
       const field = v4();
-      let response = await Momento.increment(
+      let incrementResponse = await Momento.increment(
         IntegrationTestCacheName,
         field,
         1
       );
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheIncrement.Success);
-      }, `expected SUCCESS but got ${response.toString()}`);
-      let successResponse = response as CacheIncrement.Success;
+        expect(incrementResponse).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+      let successResponse = incrementResponse as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(1);
 
-      response = await Momento.increment(IntegrationTestCacheName, field, 41);
+      incrementResponse = await Momento.increment(
+        IntegrationTestCacheName,
+        field,
+        41
+      );
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheIncrement.Success);
-      }, `expected SUCCESS but got ${response.toString()}`);
-      successResponse = response as CacheIncrement.Success;
+        expect(incrementResponse).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+      successResponse = incrementResponse as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(42);
       expect(successResponse.toString()).toEqual('Success: value: 42');
 
-      response = await Momento.increment(
+      incrementResponse = await Momento.increment(
         IntegrationTestCacheName,
         field,
         -1042
       );
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheIncrement.Success);
-      }, `expected SUCCESS but got ${response.toString()}`);
-      successResponse = response as CacheIncrement.Success;
+        expect(incrementResponse).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+      successResponse = incrementResponse as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(-1000);
 
-      response = await Momento.get(IntegrationTestCacheName, field);
+      const getResponse = await Momento.get(IntegrationTestCacheName, field);
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheGet.Hit);
-      }, `expected HIT but got ${response.toString()}`);
-      const hitResponse = response as CacheGet.Hit;
+        expect(incrementResponse).toBeInstanceOf(CacheGet.Hit);
+      }, `expected HIT but got ${incrementResponse.toString()}`);
+      const hitResponse = getResponse as CacheGet.Hit;
       expect(hitResponse.valueString()).toEqual('-1000');
     });
 
     it('increments from 0 to expected amount with Uint8Array field', async () => {
       const field = new TextEncoder().encode(v4());
-      let response = await Momento.increment(
+      let incrementResponse = await Momento.increment(
         IntegrationTestCacheName,
         field,
         1
       );
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheIncrement.Success);
-      }, `expected SUCCESS but got ${response.toString()}`);
-      let successResponse = response as CacheIncrement.Success;
+        expect(incrementResponse).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+      let successResponse = incrementResponse as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(1);
 
-      response = await Momento.increment(IntegrationTestCacheName, field, 41);
+      incrementResponse = await Momento.increment(
+        IntegrationTestCacheName,
+        field,
+        41
+      );
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheIncrement.Success);
-      }, `expected SUCCESS but got ${response.toString()}`);
-      successResponse = response as CacheIncrement.Success;
+        expect(incrementResponse).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+      successResponse = incrementResponse as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(42);
       expect(successResponse.toString()).toEqual('Success: value: 42');
 
-      response = await Momento.increment(
+      incrementResponse = await Momento.increment(
         IntegrationTestCacheName,
         field,
         -1042
       );
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheIncrement.Success);
-      }, `expected SUCCESS but got ${response.toString()}`);
-      successResponse = response as CacheIncrement.Success;
+        expect(incrementResponse).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+      successResponse = incrementResponse as CacheIncrement.Success;
       expect(successResponse.valueNumber()).toEqual(-1000);
 
-      response = await Momento.get(IntegrationTestCacheName, field);
+      const getResponse = await Momento.get(IntegrationTestCacheName, field);
       expectWithMessage(() => {
-        expect(response).toBeInstanceOf(CacheGet.Hit);
-      }, `expected HIT but got ${response.toString()}`);
-      const hitResponse = response as CacheGet.Hit;
+        expect(incrementResponse).toBeInstanceOf(CacheGet.Hit);
+      }, `expected HIT but got ${incrementResponse.toString()}`);
+      const hitResponse = getResponse as CacheGet.Hit;
       expect(hitResponse.valueString()).toEqual('-1000');
     });
 
@@ -387,8 +423,24 @@ export function runGetSetDeleteTests(
       expect(successResponse.valueNumber()).toEqual(52);
     });
 
-    it('should support accessing value for CacheIncrement.Success without instanceof check', () => {
-      expect(true).toEqual(false);
+    it('should support accessing value for CacheIncrement.Success without instanceof check', async () => {
+      const field = v4();
+
+      await Momento.set(IntegrationTestCacheName, field, '10');
+      const response = await Momento.increment(
+        IntegrationTestCacheName,
+        field,
+        42
+      );
+      expectWithMessage(() => {
+        expect(response).toBeInstanceOf(CacheIncrement.Success);
+      }, `expected SUCCESS but got ${response.toString()}`);
+
+      expect(response.value()).toEqual(52);
+
+      const successResponse = response as CacheIncrement.Success;
+      expect(successResponse.value()).toEqual(52);
+      expect(successResponse.valueNumber()).toEqual(52);
     });
   });
 
