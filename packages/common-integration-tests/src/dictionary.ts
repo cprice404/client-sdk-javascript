@@ -725,104 +725,118 @@ export function runDictionaryTests(
       it('increments from 0 to expected amount with string field', async () => {
         const dictionaryName = v4();
         const field = v4();
-        let response = await Momento.dictionaryIncrement(
+        let incrementResponse = await Momento.dictionaryIncrement(
           IntegrationTestCacheName,
           dictionaryName,
           field,
           1
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryIncrement.Success);
-        }, `expected SUCCESS but got ${response.toString()}`);
-        let successResponse = response as CacheDictionaryIncrement.Success;
+          expect(incrementResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+        let successResponse =
+          incrementResponse as CacheDictionaryIncrement.Success;
         expect(successResponse.valueNumber()).toEqual(1);
 
-        response = await Momento.dictionaryIncrement(
+        incrementResponse = await Momento.dictionaryIncrement(
           IntegrationTestCacheName,
           dictionaryName,
           field,
           41
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryIncrement.Success);
-        }, `expected SUCCESS but got ${response.toString()}`);
-        successResponse = response as CacheDictionaryIncrement.Success;
+          expect(incrementResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+        successResponse = incrementResponse as CacheDictionaryIncrement.Success;
         expect(successResponse.valueNumber()).toEqual(42);
         expect(successResponse.toString()).toEqual('Success: value: 42');
 
-        response = await Momento.dictionaryIncrement(
+        incrementResponse = await Momento.dictionaryIncrement(
           IntegrationTestCacheName,
           dictionaryName,
           field,
           -1042
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryIncrement.Success);
-        }, `expected SUCCESS but got ${response.toString()}`);
-        successResponse = response as CacheDictionaryIncrement.Success;
+          expect(incrementResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+        successResponse = incrementResponse as CacheDictionaryIncrement.Success;
         expect(successResponse.valueNumber()).toEqual(-1000);
 
-        response = await Momento.dictionaryGetField(
+        const getFieldResponse = await Momento.dictionaryGetField(
           IntegrationTestCacheName,
           dictionaryName,
           field
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryGetField.Hit);
-        }, `expected HIT but got ${response.toString()}`);
-        const hitResponse = response as CacheDictionaryGetField.Hit;
+          expect(getFieldResponse).toBeInstanceOf(CacheDictionaryGetField.Hit);
+        }, `expected HIT but got ${incrementResponse.toString()}`);
+        const hitResponse = getFieldResponse as CacheDictionaryGetField.Hit;
         expect(hitResponse.valueString()).toEqual('-1000');
       });
 
       it('increments from 0 to expected amount with Uint8Array field', async () => {
         const dictionaryName = v4();
         const field = new TextEncoder().encode(v4());
-        let response = await Momento.dictionaryIncrement(
+        let incrementResponse = await Momento.dictionaryIncrement(
           IntegrationTestCacheName,
           dictionaryName,
           field,
           1
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryIncrement.Success);
-        }, `expected SUCCESS but got ${response.toString()}`);
-        let successResponse = response as CacheDictionaryIncrement.Success;
+          expect(incrementResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+        let successResponse =
+          incrementResponse as CacheDictionaryIncrement.Success;
         expect(successResponse.valueNumber()).toEqual(1);
 
-        response = await Momento.dictionaryIncrement(
+        incrementResponse = await Momento.dictionaryIncrement(
           IntegrationTestCacheName,
           dictionaryName,
           field,
           41
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryIncrement.Success);
-        }, `expected SUCCESS but got ${response.toString()}`);
-        successResponse = response as CacheDictionaryIncrement.Success;
+          expect(incrementResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+        successResponse = incrementResponse as CacheDictionaryIncrement.Success;
         expect(successResponse.valueNumber()).toEqual(42);
         expect(successResponse.toString()).toEqual('Success: value: 42');
 
-        response = await Momento.dictionaryIncrement(
+        incrementResponse = await Momento.dictionaryIncrement(
           IntegrationTestCacheName,
           dictionaryName,
           field,
           -1042
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryIncrement.Success);
-        }, `expected SUCCESS but got ${response.toString()}`);
-        successResponse = response as CacheDictionaryIncrement.Success;
+          expect(incrementResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${incrementResponse.toString()}`);
+        successResponse = incrementResponse as CacheDictionaryIncrement.Success;
         expect(successResponse.valueNumber()).toEqual(-1000);
 
-        response = await Momento.dictionaryGetField(
+        const getFieldResponse = await Momento.dictionaryGetField(
           IntegrationTestCacheName,
           dictionaryName,
           field
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryGetField.Hit);
-        }, `expected HIT but got ${response.toString()}`);
-        const hitResponse = response as CacheDictionaryGetField.Hit;
+          expect(incrementResponse).toBeInstanceOf(CacheDictionaryGetField.Hit);
+        }, `expected HIT but got ${incrementResponse.toString()}`);
+        const hitResponse = getFieldResponse as CacheDictionaryGetField.Hit;
         expect(hitResponse.valueString()).toEqual('-1000');
       });
 
@@ -921,8 +935,33 @@ export function runDictionaryTests(
         expect(success.valueNumber()).toEqual(42);
       });
 
-      it('should support accessing value for CacheDictionaryIncrement.Success without instanceof check', () => {
-        expect(true).toEqual(false);
+      it('should support accessing value for CacheDictionaryIncrement.Success without instanceof check', async () => {
+        const dictionaryName = v4();
+
+        await Momento.dictionarySetFields(
+          IntegrationTestCacheName,
+          dictionaryName,
+          {
+            a: 'A',
+            b: '41',
+          }
+        );
+
+        const successResponse = await Momento.dictionaryIncrement(
+          IntegrationTestCacheName,
+          dictionaryName,
+          'b'
+        );
+        expectWithMessage(() => {
+          expect(successResponse).toBeInstanceOf(
+            CacheDictionaryIncrement.Success
+          );
+        }, `expected SUCCESS but got ${successResponse.toString()}`);
+
+        expect(successResponse.value()).toEqual(42);
+
+        const success = successResponse as CacheDictionaryIncrement.Success;
+        expect(success.value()).toEqual(42);
       });
     });
 
