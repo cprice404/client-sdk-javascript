@@ -366,8 +366,29 @@ export function runListTests(
         ]);
       });
 
-      it('should support accessing value for CacheListFetch.Hit without instanceof check', () => {
-        expect(true).toEqual(false);
+      it('should support accessing value for CacheListFetch.Hit without instanceof check', async () => {
+        const listName = v4();
+
+        await Momento.listConcatenateFront(IntegrationTestCacheName, listName, [
+          'foo',
+          'bar',
+        ]);
+
+        const respFetch = await Momento.listFetch(
+          IntegrationTestCacheName,
+          listName
+        );
+        expectWithMessage(() => {
+          expect(respFetch).toBeInstanceOf(CacheListFetch.Hit);
+        }, `expected a HIT but got ${respFetch.toString()}`);
+
+        const expectedResult = ['foo', 'bar'];
+
+        expect(respFetch.value()).toEqual(expectedResult);
+
+        const hitResponse = respFetch as CacheListFetch.Hit;
+        expect(hitResponse.value()).toEqual(expectedResult);
+        expect(hitResponse.valueList()).toEqual(expectedResult);
       });
     });
 
@@ -469,8 +490,27 @@ export function runListTests(
         expect((response as CacheListPopBack.Hit).valueString()).toEqual('bar');
       });
 
-      it('should support accessing value for CacheListPopBack.Hit without instanceof check', () => {
-        expect(true).toEqual(false);
+      it('should support accessing value for CacheListPopBack.Hit without instanceof check', async () => {
+        const listName = v4();
+
+        await Momento.listConcatenateFront(IntegrationTestCacheName, listName, [
+          'foo',
+          'bar',
+        ]);
+
+        const response = await Momento.listPopBack(
+          IntegrationTestCacheName,
+          listName
+        );
+        expectWithMessage(() => {
+          expect(response).toBeInstanceOf(CacheListPopBack.Hit);
+        }, `expected a HIT but got ${response.toString()}`);
+
+        expect(response.value()).toEqual('bar');
+
+        const hitResponse = response as CacheListPopBack.Hit;
+        expect(hitResponse.value()).toEqual('bar');
+        expect(hitResponse.valueString()).toEqual('bar');
       });
     });
 
@@ -527,8 +567,27 @@ export function runListTests(
         expect((response as CacheListPopBack.Hit).valueString()).toEqual('foo');
       });
 
-      it('should support accessing value for CacheListPopFront.Hit without instanceof check', () => {
-        expect(true).toEqual(false);
+      it('should support accessing value for CacheListPopFront.Hit without instanceof check', async () => {
+        const listName = v4();
+
+        await Momento.listConcatenateFront(IntegrationTestCacheName, listName, [
+          'foo',
+          'bar',
+        ]);
+
+        const response = await Momento.listPopFront(
+          IntegrationTestCacheName,
+          listName
+        );
+        expectWithMessage(() => {
+          expect(response).toBeInstanceOf(CacheListPopFront.Hit);
+        }, `expected a HIT but got ${response.toString()}`);
+
+        expect(response.value()).toEqual('foo');
+
+        const hitResponse = response as CacheListPopBack.Hit;
+        expect(hitResponse.value()).toEqual('foo');
+        expect(hitResponse.valueString()).toEqual('foo');
       });
     });
 

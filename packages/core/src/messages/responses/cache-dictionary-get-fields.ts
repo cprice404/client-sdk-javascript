@@ -34,7 +34,11 @@ type CacheDictionaryGetFieldResponseType =
  * }
  * ```
  */
-export abstract class Response extends ResponseBase {}
+export abstract class Response extends ResponseBase {
+  public value(): Record<string, string> {
+    throw new ReferenceError('Not yet implemented');
+  }
+}
 
 class _Hit extends Response {
   private readonly items: _DictionaryGetResponsePart[];
@@ -141,6 +145,16 @@ class _Hit extends Response {
    * @returns {Record<string, string>}
    */
   public valueRecord(): Record<string, string> {
+    return this.valueRecordStringString();
+  }
+
+  /**
+   * Returns the data as a Record whose keys and values are utf-8 strings, decoded from the underlying byte arrays.
+   * This can be used in most places where an Object is desired.  This is a convenience alias for
+   * {valueRecordStringString}.
+   * @returns {Record<string, string>}
+   */
+  public value(): Record<string, string> {
     return this.valueRecordStringString();
   }
 

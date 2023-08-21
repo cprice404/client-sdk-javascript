@@ -26,7 +26,11 @@ import {SdkError} from '../../errors';
  * }
  * ```
  */
-export abstract class Response extends ResponseBase {}
+export abstract class Response extends ResponseBase {
+  public score(): number {
+    throw new ReferenceError('Not yet implemented');
+  }
+}
 
 class _Hit extends Response {
   private readonly _value: Uint8Array;

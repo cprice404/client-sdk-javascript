@@ -29,7 +29,11 @@ const TEXT_DECODER = new TextDecoder();
  * }
  * ```
  */
-export abstract class Response extends ResponseBase {}
+export abstract class Response extends ResponseBase {
+  public value(): string {
+    throw new ReferenceError('Not yet implemented');
+  }
+}
 
 class _Hit extends Response {
   private readonly body: Uint8Array;
@@ -42,6 +46,14 @@ class _Hit extends Response {
    * @returns string
    */
   public valueString(): string {
+    return TEXT_DECODER.decode(this.body);
+  }
+
+  /**
+   * Returns the data as a utf-8 string, decoded from the underlying byte array.
+   * @returns string
+   */
+  public value(): string {
     return TEXT_DECODER.decode(this.body);
   }
 
