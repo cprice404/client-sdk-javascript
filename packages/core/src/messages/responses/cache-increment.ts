@@ -22,7 +22,10 @@ import {ResponseBase, ResponseError, ResponseSuccess} from './response-base';
  */
 export abstract class Response extends ResponseBase {
   public value(): number | undefined {
-    throw new ReferenceError('Not yet implemented');
+    if (this instanceof Success) {
+      return (this as Success).value();
+    }
+    return undefined;
   }
 }
 

@@ -246,24 +246,23 @@ export function runGetSetDeleteTests(
       expectWithMessage(() => {
         expect(setResponse).toBeInstanceOf(CacheSet.Success);
       }, `expected SUCCESS but got ${setResponse.toString()}`);
-      const getResponse = await Momento.get(IntegrationTestCacheName, cacheKey);
+      let getResponse = await Momento.get(IntegrationTestCacheName, cacheKey);
       expectWithMessage(() => {
         expect(getResponse).toBeInstanceOf(CacheGet.Hit);
       }, `expected HIT but got ${getResponse.toString()}`);
 
       expect(getResponse.value()).toEqual(cacheValue);
 
-      if (getResponse instanceof CacheGet.Hit) {
-        expect(getResponse.value()).toEqual(cacheValue);
-        expect(getResponse.valueString()).toEqual(cacheValue);
-      }
+      const hitResponse = getResponse as CacheGet.Hit;
+      expect(hitResponse.value()).toEqual(cacheValue);
+      expect(hitResponse.valueString()).toEqual(cacheValue);
 
-      const missResponse = await Momento.get(IntegrationTestCacheName, v4());
+      getResponse = await Momento.get(IntegrationTestCacheName, v4());
       expectWithMessage(() => {
         expect(getResponse).toBeInstanceOf(CacheGet.Miss);
       }, `expected MISS but got ${getResponse.toString()}`);
 
-      expect(missResponse.value()).toEqual(undefined);
+      expect(getResponse.value()).toEqual(undefined);
     });
   });
 
@@ -310,8 +309,8 @@ export function runGetSetDeleteTests(
 
       const getResponse = await Momento.get(IntegrationTestCacheName, field);
       expectWithMessage(() => {
-        expect(incrementResponse).toBeInstanceOf(CacheGet.Hit);
-      }, `expected HIT but got ${incrementResponse.toString()}`);
+        expect(getResponse).toBeInstanceOf(CacheGet.Hit);
+      }, `expected HIT but got ${getResponse.toString()}`);
       const hitResponse = getResponse as CacheGet.Hit;
       expect(hitResponse.valueString()).toEqual('-1000');
     });
@@ -354,8 +353,8 @@ export function runGetSetDeleteTests(
 
       const getResponse = await Momento.get(IntegrationTestCacheName, field);
       expectWithMessage(() => {
-        expect(incrementResponse).toBeInstanceOf(CacheGet.Hit);
-      }, `expected HIT but got ${incrementResponse.toString()}`);
+        expect(getResponse).toBeInstanceOf(CacheGet.Hit);
+      }, `expected HIT but got ${getResponse.toString()}`);
       const hitResponse = getResponse as CacheGet.Hit;
       expect(hitResponse.valueString()).toEqual('-1000');
     });

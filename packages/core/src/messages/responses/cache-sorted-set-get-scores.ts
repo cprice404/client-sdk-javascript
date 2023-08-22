@@ -37,8 +37,11 @@ type CacheSortedSetGetScoreResponseType =
  * ```
  */
 export abstract class Response extends ResponseBase {
-  public value(): Record<string, number> {
-    throw new ReferenceError('Not yet implemented');
+  public value(): Record<string, number> | undefined {
+    if (this instanceof Hit) {
+      return (this as Hit).value();
+    }
+    return undefined;
   }
 }
 

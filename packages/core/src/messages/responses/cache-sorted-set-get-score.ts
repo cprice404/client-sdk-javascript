@@ -27,8 +27,11 @@ import {SdkError} from '../../errors';
  * ```
  */
 export abstract class Response extends ResponseBase {
-  public score(): number {
-    throw new ReferenceError('Not yet implemented');
+  public score(): number | undefined {
+    if (this instanceof Hit) {
+      return (this as Hit).score();
+    }
+    return undefined;
   }
 }
 

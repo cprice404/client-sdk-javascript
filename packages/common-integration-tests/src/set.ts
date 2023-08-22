@@ -631,7 +631,7 @@ export function runSetTests(
         'bar',
       ]);
 
-      const fetchResponse = await Momento.setFetch(
+      let fetchResponse = await Momento.setFetch(
         IntegrationTestCacheName,
         setName
       );
@@ -639,13 +639,20 @@ export function runSetTests(
         expect(fetchResponse).toBeInstanceOf(CacheSetFetch.Hit);
       }, `expected a HIT but got ${fetchResponse.toString()}`);
 
-      const expectedResult = new Set(['foo', 'bar']);
+      const expectedResult = ['foo', 'bar'];
 
       expect(fetchResponse.value()).toEqual(expectedResult);
 
       const hit = fetchResponse as CacheSetFetch.Hit;
       expect(hit.value()).toEqual(expectedResult);
-      expect(hit.valueSet()).toEqual(expectedResult);
+      expect(hit.valueArray()).toEqual(expectedResult);
+
+      fetchResponse = await Momento.setFetch(IntegrationTestCacheName, v4());
+      expectWithMessage(() => {
+        expect(fetchResponse).toBeInstanceOf(CacheSetFetch.Miss);
+      }, `expected a MISS but got ${fetchResponse.toString()}`);
+
+      expect(fetchResponse.value()).toEqual(undefined);
     });
   });
 }

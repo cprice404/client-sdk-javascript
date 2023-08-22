@@ -30,8 +30,11 @@ const TEXT_DECODER = new TextDecoder();
  * ```
  */
 export abstract class Response extends ResponseBase {
-  public value(): {value: string; score: number}[] {
-    throw new ReferenceError('Not yet implemented');
+  public value(): {value: string; score: number}[] | undefined {
+    if (this instanceof Hit) {
+      return (this as Hit).value();
+    }
+    return undefined;
   }
 }
 

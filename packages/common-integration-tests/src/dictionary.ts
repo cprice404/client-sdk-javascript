@@ -409,21 +409,31 @@ export function runDictionaryTests(
           {a: 'A', b: 'B'}
         );
 
-        const response = await Momento.dictionaryFetch(
+        let fetchResponse = await Momento.dictionaryFetch(
           IntegrationTestCacheName,
           dictionaryName
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheDictionaryFetch.Hit);
-        }, `expected HIT but got ${response.toString()}`);
+          expect(fetchResponse).toBeInstanceOf(CacheDictionaryFetch.Hit);
+        }, `expected HIT but got ${fetchResponse.toString()}`);
 
         const expectedValue = {a: 'A', b: 'B'};
 
-        expect(response.value()).toEqual(expectedValue);
+        expect(fetchResponse.value()).toEqual(expectedValue);
 
-        const hit = response as CacheDictionaryFetch.Hit;
+        const hit = fetchResponse as CacheDictionaryFetch.Hit;
         expect(hit.value()).toEqual(expectedValue);
         expect(hit.valueRecord()).toEqual(expectedValue);
+
+        fetchResponse = await Momento.dictionaryFetch(
+          IntegrationTestCacheName,
+          v4()
+        );
+
+        expectWithMessage(() => {
+          expect(fetchResponse).toBeInstanceOf(CacheDictionaryFetch.Miss);
+        }, `expected MISS but got ${fetchResponse.toString()}`);
+        expect(fetchResponse.value()).toEqual(undefined);
       });
     });
 
@@ -497,7 +507,7 @@ export function runDictionaryTests(
           }
         );
 
-        const getResponse = await Momento.dictionaryGetField(
+        let getResponse = await Momento.dictionaryGetField(
           IntegrationTestCacheName,
           dictionaryName,
           'b'
@@ -511,6 +521,16 @@ export function runDictionaryTests(
         const hit = getResponse as CacheDictionaryGetField.Hit;
         expect(hit.valueString()).toEqual('B');
         expect(hit.value()).toEqual('B');
+
+        getResponse = await Momento.dictionaryGetField(
+          IntegrationTestCacheName,
+          v4(),
+          'foo'
+        );
+        expectWithMessage(() => {
+          expect(getResponse).toBeInstanceOf(CacheDictionaryGetField.Miss);
+        }, `expected MISS but got ${getResponse.toString()}`);
+        expect(getResponse.value()).toEqual(undefined);
       });
     });
 
@@ -754,7 +774,7 @@ export function runDictionaryTests(
           }
         );
 
-        const getResponse = await Momento.dictionaryGetFields(
+        let getResponse = await Momento.dictionaryGetFields(
           IntegrationTestCacheName,
           dictionaryName,
           ['a', 'c']
@@ -770,6 +790,17 @@ export function runDictionaryTests(
         const hit = getResponse as CacheDictionaryGetFields.Hit;
         expect(hit.value()).toEqual(expectedResult);
         expect(hit.valueRecord()).toEqual(expectedResult);
+
+        getResponse = await Momento.dictionaryGetFields(
+          IntegrationTestCacheName,
+          v4(),
+          ['foo', 'bar']
+        );
+
+        expectWithMessage(() => {
+          expect(getResponse).toBeInstanceOf(CacheDictionaryGetFields.Miss);
+        }, `expected MISS but got ${getResponse.toString()}`);
+        expect(getResponse.value()).toEqual(undefined);
       });
     });
 
@@ -907,8 +938,8 @@ export function runDictionaryTests(
           field
         );
         expectWithMessage(() => {
-          expect(incrementResponse).toBeInstanceOf(CacheDictionaryGetField.Hit);
-        }, `expected HIT but got ${incrementResponse.toString()}`);
+          expect(getFieldResponse).toBeInstanceOf(CacheDictionaryGetField.Hit);
+        }, `expected HIT but got ${getFieldResponse.toString()}`);
         const hitResponse = getFieldResponse as CacheDictionaryGetField.Hit;
         expect(hitResponse.valueString()).toEqual('-1000');
       });
@@ -1301,10 +1332,10 @@ export function runDictionaryTests(
           fields
         );
         expectWithMessage(() => {
-          expect(getFieldsResponse).toBeInstanceOf(
+          expect(removeFieldsResponse).toBeInstanceOf(
             CacheDictionaryRemoveFields.Success
           );
-        }, `expected SUCCESS but got ${getFieldsResponse.toString()}`);
+        }, `expected SUCCESS but got ${removeFieldsResponse.toString()}`);
         getFieldsResponse = await Momento.dictionaryGetFields(
           IntegrationTestCacheName,
           dictionaryName,

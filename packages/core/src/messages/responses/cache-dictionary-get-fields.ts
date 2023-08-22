@@ -35,8 +35,11 @@ type CacheDictionaryGetFieldResponseType =
  * ```
  */
 export abstract class Response extends ResponseBase {
-  public value(): Record<string, string> {
-    throw new ReferenceError('Not yet implemented');
+  public value(): Record<string, string> | undefined {
+    if (this instanceof Hit) {
+      return (this as Hit).value();
+    }
+    return undefined;
   }
 }
 

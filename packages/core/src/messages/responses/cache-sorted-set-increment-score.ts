@@ -21,8 +21,11 @@ import {ResponseBase, ResponseError, ResponseSuccess} from './response-base';
  * ```
  */
 export abstract class Response extends ResponseBase {
-  public score(): number {
-    throw new ReferenceError('Not yet implemented');
+  public score(): number | undefined {
+    if (this instanceof Success) {
+      return (this as Success).score();
+    }
+    return undefined;
   }
 }
 
