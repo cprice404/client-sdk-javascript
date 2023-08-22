@@ -374,21 +374,27 @@ export function runListTests(
           'bar',
         ]);
 
-        const respFetch = await Momento.listFetch(
+        let fetchResponse = await Momento.listFetch(
           IntegrationTestCacheName,
           listName
         );
         expectWithMessage(() => {
-          expect(respFetch).toBeInstanceOf(CacheListFetch.Hit);
-        }, `expected a HIT but got ${respFetch.toString()}`);
+          expect(fetchResponse).toBeInstanceOf(CacheListFetch.Hit);
+        }, `expected a HIT but got ${fetchResponse.toString()}`);
 
         const expectedResult = ['foo', 'bar'];
 
-        expect(respFetch.value()).toEqual(expectedResult);
+        expect(fetchResponse.value()).toEqual(expectedResult);
 
-        const hitResponse = respFetch as CacheListFetch.Hit;
+        const hitResponse = fetchResponse as CacheListFetch.Hit;
         expect(hitResponse.value()).toEqual(expectedResult);
         expect(hitResponse.valueList()).toEqual(expectedResult);
+
+        fetchResponse = await Momento.listFetch(IntegrationTestCacheName, v4());
+        expectWithMessage(() => {
+          expect(fetchResponse).toBeInstanceOf(CacheListFetch.Miss);
+        }, `expected a MISS but got ${fetchResponse.toString()}`);
+        expect(fetchResponse.value()).toEqual(undefined);
       });
     });
 
@@ -498,19 +504,25 @@ export function runListTests(
           'bar',
         ]);
 
-        const response = await Momento.listPopBack(
+        let popResponse = await Momento.listPopBack(
           IntegrationTestCacheName,
           listName
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheListPopBack.Hit);
-        }, `expected a HIT but got ${response.toString()}`);
+          expect(popResponse).toBeInstanceOf(CacheListPopBack.Hit);
+        }, `expected a HIT but got ${popResponse.toString()}`);
 
-        expect(response.value()).toEqual('bar');
+        expect(popResponse.value()).toEqual('bar');
 
-        const hitResponse = response as CacheListPopBack.Hit;
+        const hitResponse = popResponse as CacheListPopBack.Hit;
         expect(hitResponse.value()).toEqual('bar');
         expect(hitResponse.valueString()).toEqual('bar');
+
+        popResponse = await Momento.listPopBack(IntegrationTestCacheName, v4());
+        expectWithMessage(() => {
+          expect(popResponse).toBeInstanceOf(CacheListPopBack.Miss);
+        }, `expected a MISS but got ${popResponse.toString()}`);
+        expect(popResponse.value()).toEqual(undefined);
       });
     });
 
@@ -575,19 +587,28 @@ export function runListTests(
           'bar',
         ]);
 
-        const response = await Momento.listPopFront(
+        let popResponse = await Momento.listPopFront(
           IntegrationTestCacheName,
           listName
         );
         expectWithMessage(() => {
-          expect(response).toBeInstanceOf(CacheListPopFront.Hit);
-        }, `expected a HIT but got ${response.toString()}`);
+          expect(popResponse).toBeInstanceOf(CacheListPopFront.Hit);
+        }, `expected a HIT but got ${popResponse.toString()}`);
 
-        expect(response.value()).toEqual('foo');
+        expect(popResponse.value()).toEqual('foo');
 
-        const hitResponse = response as CacheListPopBack.Hit;
+        const hitResponse = popResponse as CacheListPopBack.Hit;
         expect(hitResponse.value()).toEqual('foo');
         expect(hitResponse.valueString()).toEqual('foo');
+
+        popResponse = await Momento.listPopFront(
+          IntegrationTestCacheName,
+          v4()
+        );
+        expectWithMessage(() => {
+          expect(popResponse).toBeInstanceOf(CacheListPopFront.Miss);
+        }, `expected a MISS but got ${popResponse.toString()}`);
+        expect(popResponse.value()).toEqual(undefined);
       });
     });
 
