@@ -64,6 +64,10 @@ import * as GenerateAuthToken from './messages/responses/generate-auth-token';
 import * as RefreshAuthToken from './messages/responses/refresh-auth-token';
 import * as GenerateDisposableToken from './messages/responses/generate-disposable-token';
 
+// VectorClient Response Types
+export * as vector from './messages/responses/vector';
+export * from './messages/responses/vector';
+
 import {CacheInfo} from './messages/cache-info';
 import {
   SubscribeCallOptions,
@@ -78,7 +82,7 @@ import {
   CredentialProvider,
   StringMomentoTokenProvider,
   EnvMomentoTokenProvider,
-} from './auth/credential-provider';
+} from './auth';
 
 import {
   MomentoErrorCode,
