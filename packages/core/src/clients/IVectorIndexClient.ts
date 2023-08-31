@@ -1,4 +1,4 @@
-import {IVectorControlClient} from '../internal/clients';
+import {IVectorIndexControlClient} from '../internal/clients';
 import {
   VectorAddItemBatch,
   VectorDeleteItemBatch,
@@ -11,7 +11,7 @@ export interface SearchOptions {
   metadataFields?: Array<string>;
 }
 
-export interface IVectorClient extends IVectorControlClient {
+export interface IVectorIndexClient extends IVectorIndexControlClient {
   addItemBatch(
     indexName: string,
     items: Array<VectorIndexItem>

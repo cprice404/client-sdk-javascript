@@ -5,8 +5,8 @@ import {
   IVectorIndexControlClient,
 } from '@gomomento/sdk-core/dist/src/internal/clients';
 import {VectorIndexClientProps} from './vector-index-client-props';
-import {VectorDataClient} from './internal/vector-data-client';
 import {IVectorIndexDataClient} from '@gomomento/sdk-core/dist/src/internal/clients/vector/IVectorIndexDataClient';
+import {VectorDataClient} from './internal/vector-data-client';
 
 /**
  * PREVIEW Vector Index Client

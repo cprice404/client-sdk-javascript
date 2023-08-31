@@ -6,15 +6,15 @@ import {
   expectWithMessage,
   WithIndex,
 } from './common-int-test-utils';
-import {IVectorClient} from '@gomomento/sdk-core/dist/src/clients/IVectorClient';
 import {
   CreateVectorIndex,
   DeleteVectorIndex,
+  IVectorIndexClient,
   ListVectorIndexes,
   MomentoErrorCode,
 } from '@gomomento/sdk-core';
 
-export function runVectorControlPlaneTest(Momento: IVectorClient) {
+export function runVectorControlPlaneTest(Momento: IVectorIndexClient) {
   describe('create/delete vector index', () => {
     ItBehavesLikeItValidatesIndexName((props: ValidateVectorProps) => {
       return Momento.createIndex(props.indexName, props.numDimensions);

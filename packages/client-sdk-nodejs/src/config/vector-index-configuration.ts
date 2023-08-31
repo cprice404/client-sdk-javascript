@@ -4,7 +4,7 @@ import {TransportStrategy} from './transport';
 import {Middleware} from './middleware/middleware';
 import {RetryStrategy} from './retry/retry-strategy';
 
-export interface VectorConfigurationProps {
+export interface VectorIndexConfigurationProps {
   /**
    * Configures logging verbosity and format
    */
@@ -23,13 +23,13 @@ export interface VectorConfigurationProps {
   middlewares: Middleware[];
 }
 
-export class VectorConfiguration implements Configuration {
+export class VectorIndexConfiguration implements Configuration {
   private readonly loggerFactory: MomentoLoggerFactory;
   private readonly retryStrategy: RetryStrategy;
   private readonly transportStrategy: TransportStrategy;
   private readonly middlewares: Middleware[];
 
-  constructor(props: VectorConfigurationProps) {
+  constructor(props: VectorIndexConfigurationProps) {
     this.loggerFactory = props.loggerFactory;
     this.transportStrategy = props.transportStrategy;
   }
@@ -43,7 +43,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   withClientTimeoutMillis(clientTimeoutMillis: number): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       transportStrategy:
         this.transportStrategy.withClientTimeoutMillis(clientTimeoutMillis),
@@ -53,7 +53,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   withTransportStrategy(transportStrategy: TransportStrategy): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       transportStrategy: transportStrategy,
       retryStrategy: this.retryStrategy,
@@ -62,7 +62,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   addMiddleware(middleware: Middleware): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       retryStrategy: this.retryStrategy,
       transportStrategy: this.transportStrategy,
@@ -79,7 +79,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   withMiddlewares(middlewares: Middleware[]): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       retryStrategy: this.retryStrategy,
       transportStrategy: this.transportStrategy,
@@ -88,7 +88,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   withRetryStrategy(retryStrategy: RetryStrategy): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       retryStrategy: retryStrategy,
       transportStrategy: this.transportStrategy,

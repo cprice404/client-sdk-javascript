@@ -14,7 +14,7 @@ export interface VectorConfigurationProps {
   transportStrategy: TransportStrategy;
 }
 
-export class VectorConfiguration implements Configuration {
+export class VectorIndexConfiguration implements Configuration {
   private readonly loggerFactory: MomentoLoggerFactory;
   private readonly transportStrategy: TransportStrategy;
 
@@ -32,7 +32,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   withClientTimeoutMillis(clientTimeoutMillis: number): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       transportStrategy:
         this.transportStrategy.withClientTimeoutMillis(clientTimeoutMillis),
@@ -40,7 +40,7 @@ export class VectorConfiguration implements Configuration {
   }
 
   withTransportStrategy(transportStrategy: TransportStrategy): Configuration {
-    return new VectorConfiguration({
+    return new VectorIndexConfiguration({
       loggerFactory: this.loggerFactory,
       transportStrategy: transportStrategy,
     });

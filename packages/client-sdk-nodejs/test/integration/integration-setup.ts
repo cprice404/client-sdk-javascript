@@ -11,7 +11,7 @@ import {
   CollectionTtl,
   TopicClient,
   PreviewVectorIndexClient,
-  VectorConfigurations,
+  VectorIndexConfigurations,
 } from '../../src';
 import {ICacheClient} from '@gomomento/sdk-core/dist/src/clients/ICacheClient';
 import {ITopicClient} from '@gomomento/sdk-core/dist/src/clients/ITopicClient';
@@ -96,7 +96,7 @@ function momentoTopicClientForTestingWithSessionToken(): TopicClient {
 function momentoVectorClientForTesting(): PreviewVectorIndexClient {
   return new PreviewVectorIndexClient({
     credentialProvider: IntegrationTestCacheClientProps.credentialProvider,
-    configuration: VectorConfigurations.Laptop.latest(),
+    configuration: VectorIndexConfigurations.Laptop.latest(),
   });
 }
 
@@ -140,10 +140,10 @@ export function SetupTopicIntegrationTest(): {
 }
 
 export function SetupVectorIntegrationTest(): {
-  Momento: PreviewVectorIndexClient;
+  vectorClient: PreviewVectorIndexClient;
 } {
-  const Momento = momentoVectorClientForTesting();
-  return {Momento};
+  const vectorClient = momentoVectorClientForTesting();
+  return {vectorClient};
 }
 
 export function SetupAuthClientIntegrationTest(): {

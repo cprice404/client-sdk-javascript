@@ -3,10 +3,10 @@ import {TopicClient} from './topic-client';
 import {PreviewVectorIndexClient} from './preview-vector-index-client';
 import * as Configurations from './config/configurations';
 import * as TopicConfigurations from './config/topic-configurations';
-import * as VectorConfigurations from './config/vector-configurations';
+import * as VectorIndexConfigurations from './config/vector-index-configurations';
 
 import {TopicClientProps} from './topic-client-props';
-import {VectorConfiguration} from './config/vector-configuration';
+import {VectorIndexConfiguration} from './config/vector-index-configuration';
 
 // Cache Client Response Types
 import * as CacheGet from '@gomomento/sdk-core/dist/src/messages/responses/cache-get';
@@ -185,8 +185,8 @@ export {
   Configuration,
   CacheConfiguration,
   PreviewVectorIndexClient,
-  VectorConfigurations,
-  VectorConfiguration,
+  VectorIndexConfigurations,
+  VectorIndexConfiguration,
   CacheClient,
   SimpleCacheClient,
   CacheInfo,

@@ -4,6 +4,7 @@ import {
   CreateVectorIndex,
   DeleteCache,
   DeleteVectorIndex,
+  IVectorIndexClient,
   MomentoErrorCode,
 } from '@gomomento/sdk-core';
 import {ICacheClient} from '@gomomento/sdk-core/dist/src/clients/ICacheClient';
@@ -12,7 +13,6 @@ import {
   ResponseBase,
 } from '@gomomento/sdk-core/dist/src/messages/responses/response-base';
 import {v4} from 'uuid';
-import {IVectorClient} from '@gomomento/sdk-core/dist/src/clients/IVectorClient';
 
 export function isLocalhostDevelopmentMode(): boolean {
   const useLocalhost = process.env.MOMENTO_SDK_TESTS_USE_LOCALHOST;
@@ -75,7 +75,7 @@ export async function WithCache(
 }
 
 export const deleteIndexIfExists = async (
-  client: IVectorClient,
+  client: IVectorIndexClient,
   indexName: string
 ) => {
   if (isLocalhostDevelopmentMode()) {
@@ -93,7 +93,7 @@ export const deleteIndexIfExists = async (
 };
 
 export const createIndexIfNotExists = async (
-  client: IVectorClient,
+  client: IVectorIndexClient,
   indexName: string
 ) => {
   if (isLocalhostDevelopmentMode()) {
@@ -109,7 +109,7 @@ export const createIndexIfNotExists = async (
 };
 
 export async function WithIndex(
-  client: IVectorClient,
+  client: IVectorIndexClient,
   indexName: string,
   block: () => Promise<void>
 ) {

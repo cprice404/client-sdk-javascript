@@ -6,15 +6,26 @@ import {
   VectorSearch,
   VectorDeleteItemBatch,
 } from '../../..';
-import {IVectorClient, SearchOptions} from '../../../clients/IVectorClient';
-import {IVectorControlClient} from './IVectorControlClient';
+import {
+  IVectorIndexClient,
+  SearchOptions,
+} from '../../../clients/IVectorIndexClient';
+import {IVectorIndexControlClient} from './IVectorIndexControlClient';
 import {VectorIndexItem} from '../../../messages/vector-index';
+import {IVectorIndexDataClient} from './IVectorIndexDataClient';
 
-export abstract class AbstractVectorClient implements IVectorClient {
-  protected readonly controlClient: IVectorControlClient;
+export abstract class AbstractVectorIndexClient
+  implements IVectorIndexClient, IVectorIndexDataClient
+{
+  protected readonly controlClient: IVectorIndexControlClient;
+  protected readonly dataClient: IVectorIndexDataClient;
 
-  protected constructor(controlClient: IVectorControlClient) {
+  protected constructor(
+    controlClient: IVectorIndexControlClient,
+    dataClient: IVectorIndexDataClient
+  ) {
     this.controlClient = controlClient;
+    this.dataClient = dataClient;
   }
 
   /**
@@ -73,11 +84,11 @@ export abstract class AbstractVectorClient implements IVectorClient {
    * {@link VectorAddItemBatch.Success} on success.
    * {@link VectorAddItemBatch.Error} on error.
    */
-  addItemBatch(
+  public async addItemBatch(
     indexName: string,
     items: Array<VectorIndexItem>
   ): Promise<VectorAddItemBatch.Response> {
-    throw new Error('Not implemented!');
+    return await this.dataClient.addItemBatch(indexName, items);
   }
 
   /**
@@ -95,12 +106,12 @@ export abstract class AbstractVectorClient implements IVectorClient {
    *   If not provided, no metadata is returned. Defaults to None.
    * @returns {Promise<VectorSearch.Response>}
    */
-  search(
+  public async search(
     indexName: string,
     queryVector: Array<number>,
     options?: SearchOptions
   ): Promise<VectorSearch.Response> {
-    throw new Error('Not implemented!');
+    return await this.dataClient.search(indexName, queryVector, options);
   }
 
   /**
@@ -111,10 +122,10 @@ export abstract class AbstractVectorClient implements IVectorClient {
    * @param {Array<string>} ids - The IDs of the items to be deleted from the index.
    * @returns {Promise<VectorDeleteItemBatch.Response>}
    */
-  deleteItemBatch(
+  public async deleteItemBatch(
     indexName: string,
     ids: Array<string>
   ): Promise<VectorDeleteItemBatch.Response> {
-    throw new Error('Not implemented!');
+    return await this.dataClient.deleteItemBatch(indexName, ids);
   }
 }

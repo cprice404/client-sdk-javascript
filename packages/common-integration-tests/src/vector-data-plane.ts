@@ -2,8 +2,8 @@ import {
   VectorAddItemBatch,
   VectorSearch,
   VectorDeleteItemBatch,
+  IVectorIndexClient,
 } from '@gomomento/sdk-core';
-import {IVectorClient} from '@gomomento/sdk-core/dist/src/clients/IVectorClient';
 import {
   expectWithMessage,
   ItBehavesLikeItValidatesIndexName,
@@ -14,7 +14,7 @@ import {
 } from './common-int-test-utils';
 import {sleep} from '@gomomento/sdk-core/dist/src/internal/utils';
 
-export function runVectorDataPlaneTest(vectorClient: IVectorClient) {
+export function runVectorDataPlaneTest(vectorClient: IVectorIndexClient) {
   describe('addItem validation', () => {
     ItBehavesLikeItValidatesIndexName((props: ValidateVectorProps) => {
       return vectorClient.addItemBatch(props.indexName, []);
