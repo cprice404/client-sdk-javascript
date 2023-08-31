@@ -17,6 +17,7 @@ import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';
 import {vectorindex} from '@gomomento/generated-types/dist/vectorindex';
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
+import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 
 export class VectorDataClient implements IVectorIndexDataClient {
   private readonly configuration: VectorIndexConfiguration;
@@ -77,7 +78,39 @@ export class VectorDataClient implements IVectorIndexDataClient {
     indexName: string,
     items: Array<VectorIndexItem>
   ): Promise<VectorAddItemBatch.Response> {
-    const request = new vectorindex._Add();
+    const request = new vectorindex._AddItemBatchRequest({
+      index_name: indexName,
+      items: items.map(
+        item =>
+          new vectorindex._Item({
+            id: item.id,
+            vector: new vectorindex._Vector({elements: item.vector}),
+            metadata:
+              item.metadata === undefined
+                ? []
+                : Object.entries(item.metadata).map(
+                    ([key, value]) =>
+                      new vectorindex._Metadata({
+                        field: key,
+                        string_value: value,
+                      })
+                  ),
+          })
+      ),
+    });
+    return await new Promise(resolve => {
+      this.client.AddItemBatch(
+        request,
+        {interceptors: this.interceptors},
+        (err, resp) => {
+          if (resp) {
+            resolve(new VectorAddItemBatch.Success());
+          } else {
+            resolve(new VectorAddItemBatch.Error(cacheServiceErrorMapper(err)));
+          }
+        }
+      );
+    });
   }
 
   deleteItemBatch(

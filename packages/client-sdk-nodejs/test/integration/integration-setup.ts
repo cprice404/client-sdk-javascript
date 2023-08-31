@@ -67,7 +67,7 @@ function sessionCredsProvider(): CredentialProvider {
   return _sessionCredsProvider;
 }
 
-function integrationTestCacheClientProps(): CacheClientProps {
+export function integrationTestCacheClientProps(): CacheClientProps {
   return {
     configuration: Configurations.Laptop.latest(),
     credentialProvider: credsProvider(),
