@@ -38,6 +38,8 @@ interface TokenAndEndpoints {
  * @returns TokenAndEndpoints
  */
 export const decodeAuthToken = (token?: string): TokenAndEndpoints => {
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  console.log(`DECODE AUTH TOKEN: ${token}`);
   if (!token) {
     throw new InvalidArgumentError('malformed auth token');
   }
@@ -49,6 +51,7 @@ export const decodeAuthToken = (token?: string): TokenAndEndpoints => {
     // they are base64 encoded, which will tell us that they are our v1 api tokens. If its not, we will fall back to decoding
     // it as one of our legacy jwts.
     if (isBase64(token)) {
+      console.log('IT IS BASE64');
       const base64DecodedToken = JSON.parse(
         decodeFromBase64(token)
       ) as Base64DecodedV1Token;
@@ -62,19 +65,25 @@ export const decodeAuthToken = (token?: string): TokenAndEndpoints => {
         authToken: base64DecodedToken.api_key,
       };
     } else {
+      console.log('IT IS NOT BASE64');
       // This decode function uses generics to advertise that we will usually expect to find the LegacyClaims.  However,
       // if the token is a valid JWT but not actually one of our legacy tokens, the endpoint claims will be undefined,
       // which is why the return type for this function specifies that the controlEndpoint/cacheEndpoint may be undefined.
-      const decodedLegacyToken = decodeAuthTokenClaims<LegacyClaims>(token);
-      return {
-        controlEndpoint: decodedLegacyToken.cp,
-        cacheEndpoint: decodedLegacyToken.c,
-        vectorEndpoint: decodedLegacyToken.c,
-        authToken: token,
-      };
+      // const decodedLegacyToken = decodeAuthTokenClaims<LegacyClaims>(token);
+      decodeAuthTokenClaims<LegacyClaims>(token);
+      throw new Error('WTF');
+      // return {
+      //   controlEndpoint: decodedLegacyToken.cp,
+      //   cacheEndpoint: decodedLegacyToken.c,
+      //   vectorEndpoint: decodedLegacyToken.c,
+      //   authToken: token,
+      // };
     }
   } catch (e) {
-    throw new InvalidArgumentError('failed to parse token');
+    console.log('FUCK YOU');
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    // throw new InvalidArgumentError(`failed to parse token: ${e}`);
+    throw e;
   }
 };
 

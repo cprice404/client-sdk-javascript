@@ -116,6 +116,7 @@ export class StringMomentoTokenProvider extends CredentialProviderBase {
   constructor(props: StringMomentoTokenProviderProps) {
     super();
     const decodedToken = decodeAuthToken(props.authToken);
+    console.log(`DECODED TOKEN: ${JSON.stringify(decodedToken)}`);
     this.authToken = decodedToken.authToken;
     this.controlEndpointOverridden = props.controlEndpoint !== undefined;
     const controlEndpoint =
@@ -198,11 +199,11 @@ export class EnvMomentoTokenProvider extends StringMomentoTokenProvider {
         `Missing required environment variable ${props.environmentVariableName}`
       );
     }
-    const decodedToken = decodeAuthToken(authToken);
     super({
-      authToken: decodedToken.authToken,
-      controlEndpoint: props.controlEndpoint ?? decodedToken.controlEndpoint,
-      cacheEndpoint: props.cacheEndpoint ?? decodedToken.cacheEndpoint,
+      authToken: authToken,
+      controlEndpoint: props.controlEndpoint,
+      cacheEndpoint: props.cacheEndpoint,
+      vectorEndpoint: props.vectorEndpoint,
     });
     this.environmentVariableName = props.environmentVariableName;
   }

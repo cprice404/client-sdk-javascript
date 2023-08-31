@@ -42,9 +42,15 @@ export async function WithCache(
   }
 }
 
-const credsProvider = CredentialProvider.fromEnvironmentVariable({
-  environmentVariableName: 'TEST_AUTH_TOKEN',
-});
+let _credsProvider: CredentialProvider | undefined = undefined;
+function credsProvider(): CredentialProvider {
+  if (_credsProvider === undefined) {
+    _credsProvider = CredentialProvider.fromEnvironmentVariable({
+      environmentVariableName: 'TEST_AUTH_TOKEN',
+    });
+  }
+  return _credsProvider;
+}
 
 let _sessionCredsProvider: CredentialProvider | undefined = undefined;
 
@@ -54,21 +60,23 @@ function sessionCredsProvider(): CredentialProvider {
       environmentVariableName: 'TEST_SESSION_TOKEN',
       // session tokens don't include cache/control endpoints, so we must provide them.  In this case we just hackily
       // steal them from the auth-token-based creds provider.
-      cacheEndpoint: credsProvider.getCacheEndpoint(),
-      controlEndpoint: credsProvider.getControlEndpoint(),
+      cacheEndpoint: credsProvider().getCacheEndpoint(),
+      controlEndpoint: credsProvider().getControlEndpoint(),
     });
   }
   return _sessionCredsProvider;
 }
 
-export const IntegrationTestCacheClientProps: CacheClientProps = {
-  configuration: Configurations.Laptop.latest(),
-  credentialProvider: credsProvider,
-  defaultTtlSeconds: 1111,
-};
+function integrationTestCacheClientProps(): CacheClientProps {
+  return {
+    configuration: Configurations.Laptop.latest(),
+    credentialProvider: credsProvider(),
+    defaultTtlSeconds: 1111,
+  };
+}
 
 function momentoClientForTesting(): CacheClient {
-  return new CacheClient(IntegrationTestCacheClientProps);
+  return new CacheClient(integrationTestCacheClientProps());
 }
 
 function momentoClientForTestingWithSessionToken(): CacheClient {
@@ -81,21 +89,22 @@ function momentoClientForTestingWithSessionToken(): CacheClient {
 
 function momentoTopicClientForTesting(): TopicClient {
   return new TopicClient({
-    configuration: IntegrationTestCacheClientProps.configuration,
-    credentialProvider: IntegrationTestCacheClientProps.credentialProvider,
+    configuration: integrationTestCacheClientProps().configuration,
+    credentialProvider: integrationTestCacheClientProps().credentialProvider,
   });
 }
 
 function momentoTopicClientForTestingWithSessionToken(): TopicClient {
   return new TopicClient({
-    configuration: IntegrationTestCacheClientProps.configuration,
+    configuration: integrationTestCacheClientProps().configuration,
     credentialProvider: sessionCredsProvider(),
   });
 }
 
 function momentoVectorClientForTesting(): PreviewVectorIndexClient {
+  console.log('VECTOR CLIENT FOR TESTING');
   return new PreviewVectorIndexClient({
-    credentialProvider: IntegrationTestCacheClientProps.credentialProvider,
+    credentialProvider: credsProvider(),
     configuration: VectorIndexConfigurations.Laptop.latest(),
   });
 }

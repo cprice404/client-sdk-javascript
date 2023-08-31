@@ -23,7 +23,9 @@ export class PreviewVectorIndexClient
   implements IVectorIndexClient
 {
   constructor(props: VectorIndexClientProps) {
+    console.log('CONSTRUCTING VECTOR CONTROL CLIENT');
     const controlClient: IVectorIndexControlClient = createControlClient(props);
+    console.log('CONSTRUCTING VECTOR DATA CLIENT');
     const dataClient = createDataClient(props);
     super(controlClient, dataClient);
   }
