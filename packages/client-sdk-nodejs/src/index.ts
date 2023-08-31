@@ -1,6 +1,6 @@
 import {CacheClient, SimpleCacheClient} from './cache-client';
 import {TopicClient} from './topic-client';
-import {PreviewVectorClient} from './preview-vector-client';
+import {PreviewVectorIndexClient} from './preview-vector-index-client';
 import * as Configurations from './config/configurations';
 import * as TopicConfigurations from './config/topic-configurations';
 import * as VectorConfigurations from './config/vector-configurations';
@@ -184,7 +184,7 @@ export {
   Configurations,
   Configuration,
   CacheConfiguration,
-  PreviewVectorClient,
+  PreviewVectorIndexClient,
   VectorConfigurations,
   VectorConfiguration,
   CacheClient,

@@ -10,7 +10,7 @@ import {
   CredentialProvider,
   CollectionTtl,
   TopicClient,
-  PreviewVectorClient,
+  PreviewVectorIndexClient,
   VectorConfigurations,
 } from '../../src';
 import {ICacheClient} from '@gomomento/sdk-core/dist/src/clients/ICacheClient';
@@ -93,8 +93,8 @@ function momentoTopicClientForTestingWithSessionToken(): TopicClient {
   });
 }
 
-function momentoVectorClientForTesting(): PreviewVectorClient {
-  return new PreviewVectorClient({
+function momentoVectorClientForTesting(): PreviewVectorIndexClient {
+  return new PreviewVectorIndexClient({
     credentialProvider: IntegrationTestCacheClientProps.credentialProvider,
     configuration: VectorConfigurations.Laptop.latest(),
   });
@@ -140,7 +140,7 @@ export function SetupTopicIntegrationTest(): {
 }
 
 export function SetupVectorIntegrationTest(): {
-  Momento: PreviewVectorClient;
+  Momento: PreviewVectorIndexClient;
 } {
   const Momento = momentoVectorClientForTesting();
   return {Momento};

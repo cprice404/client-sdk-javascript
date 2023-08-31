@@ -6,7 +6,7 @@ import {
 } from '@gomomento/sdk-core/dist/src/internal/clients';
 import {VectorClientProps} from './vector-client-props';
 
-export class PreviewVectorClient
+export class PreviewVectorIndexClient
   extends AbstractVectorClient
   implements IVectorClient
 {

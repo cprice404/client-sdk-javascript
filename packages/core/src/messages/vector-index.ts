@@ -1,3 +1,5 @@
 export interface VectorIndexItem {
-  NOPE: string;
+  id: string;
+  vector: Array<number>;
+  metadata?: Record<string, string>;
 }

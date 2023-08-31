@@ -23,7 +23,7 @@ export function testCacheName(): string {
 }
 
 export function testIndexName(): string {
-  return v4();
+  return `js-integration-test-${v4()}`;
 }
 
 export const deleteCacheIfExists = async (
@@ -162,6 +162,7 @@ export interface ValidateTopicProps {
 export interface ValidateVectorProps {
   indexName: string;
   numDimensions: number;
+  topK: number;
 }
 
 export function ItBehavesLikeItValidatesCacheName(
@@ -197,12 +198,34 @@ export function ItBehavesLikeItValidatesIndexName(
   getResponse: (props: ValidateVectorProps) => Promise<ResponseBase>
 ) {
   it('validates its index name', async () => {
-    const response = await getResponse({indexName: '   ', numDimensions: 1});
+    const response = await getResponse({
+      indexName: '   ',
+      numDimensions: 1,
+      topK: 10,
+    });
     expect((response as IResponseError).errorCode()).toEqual(
       MomentoErrorCode.INVALID_ARGUMENT_ERROR
     );
     expect((response as IResponseError).message()).toEqual(
       'Invalid argument passed to Momento client: index name must not be empty'
+    );
+  });
+}
+
+export function ItBehavesLikeItValidatesTopK(
+  getResponse: (props: ValidateVectorProps) => Promise<ResponseBase>
+) {
+  it('validates its topK', async () => {
+    const response = await getResponse({
+      indexName: v4(),
+      numDimensions: 2,
+      topK: 0,
+    });
+    expect((response as IResponseError).errorCode()).toEqual(
+      MomentoErrorCode.INVALID_ARGUMENT_ERROR
+    );
+    expect((response as IResponseError).message()).toEqual(
+      'Invalid argument passed to Momento client: topK must be greater than zero'
     );
   });
 }
@@ -214,6 +237,7 @@ export function ItBehavesLikeItValidatesNumDimensions(
     const response = await getResponse({
       indexName: v4(),
       numDimensions: 0,
+      topK: 10,
     });
     expect((response as IResponseError).errorCode()).toEqual(
       MomentoErrorCode.INVALID_ARGUMENT_ERROR

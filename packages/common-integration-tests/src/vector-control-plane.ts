@@ -14,7 +14,7 @@ import {
   MomentoErrorCode,
 } from '@gomomento/sdk-core';
 
-export function runVectorIndexTest(Momento: IVectorClient) {
+export function runVectorControlPlaneTest(Momento: IVectorClient) {
   describe('create/delete vector index', () => {
     ItBehavesLikeItValidatesIndexName((props: ValidateVectorProps) => {
       return Momento.createIndex(props.indexName, props.numDimensions);

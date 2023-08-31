@@ -2,9 +2,13 @@ import {
   CreateVectorIndex,
   DeleteVectorIndex,
   ListVectorIndexes,
+  VectorAddItemBatch,
+  VectorSearch,
+  VectorDeleteItemBatch,
 } from '../../..';
-import {IVectorClient} from '../../../clients/IVectorClient';
+import {IVectorClient, SearchOptions} from '../../../clients/IVectorClient';
 import {IVectorControlClient} from './IVectorControlClient';
+import {VectorIndexItem} from '../../../messages/vector-index';
 
 export abstract class AbstractVectorClient implements IVectorClient {
   protected readonly controlClient: IVectorControlClient;
@@ -53,5 +57,64 @@ export abstract class AbstractVectorClient implements IVectorClient {
     indexName: string
   ): Promise<DeleteVectorIndex.Response> {
     return await this.controlClient.deleteIndex(indexName);
+  }
+
+  /**
+   * Adds a batch of items into a vector index.
+   *
+   * Adds an item into the index regardless if the ID already exists.
+   * On duplicate ID, a separate entry is created with the same ID.
+   * To deduplicate, first call `deleteItemBatch` to remove all items
+   * with the same ID, then call `addItemBatch` to add the new items.
+   *
+   * @param {string} indexName - Name of the index to add the items into.
+   * @param {Array<VectorIndexItem>} items - The items to be added into the index.
+   * @returns {Promise<VectorAddItemBatch.Response>} -
+   * {@link VectorAddItemBatch.Success} on success.
+   * {@link VectorAddItemBatch.Error} on error.
+   */
+  addItemBatch(
+    indexName: string,
+    items: Array<VectorIndexItem>
+  ): Promise<VectorAddItemBatch.Response> {
+    throw new Error('Not implemented!');
+  }
+
+  /**
+   * Searches for the most similar vectors to the query vector in the index.
+   * Ranks the vectors in the index by maximum inner product to the query vector.
+   * If the index and query vectors are unit normalized, this is equivalent to
+   * ranking by cosine similarity. Hence to perform a cosine similarity search,
+   * the index vectors should be unit normalized prior to indexing, and the query
+   * vector should be unit normalized prior to searching.
+   *
+   * @param {string} indexName - Name of the index to search in.
+   * @param {Array<number>} queryVector - The vector to search for.
+   * @param {number} topK - The number of results to return. Defaults to 10.
+   * @param {Array<string>} metadataFields - A list of metadata fields to return with each result.
+   *   If not provided, no metadata is returned. Defaults to None.
+   * @returns {Promise<VectorSearch.Response>}
+   */
+  search(
+    indexName: string,
+    queryVector: Array<number>,
+    options?: SearchOptions
+  ): Promise<VectorSearch.Response> {
+    throw new Error('Not implemented!');
+  }
+
+  /**
+   * Deletes a batch of items from a vector index.
+   * Deletes any and all items with the given IDs from the index.
+   *
+   * @param {string} indexName - Name of the index to delete the items from.
+   * @param {Array<string>} ids - The IDs of the items to be deleted from the index.
+   * @returns {Promise<VectorDeleteItemBatch.Response>}
+   */
+  deleteItemBatch(
+    indexName: string,
+    ids: Array<string>
+  ): Promise<VectorDeleteItemBatch.Response> {
+    throw new Error('Not implemented!');
   }
 }
