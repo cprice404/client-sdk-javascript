@@ -1,4 +1,7 @@
-import {VectorIndexConfiguration} from './vector-index-configuration';
+import {
+  VectorIndexClientConfiguration,
+  VectorIndexConfiguration,
+} from './vector-index-configuration';
 import {MomentoLoggerFactory} from '@gomomento/sdk-core';
 
 import {
@@ -17,7 +20,7 @@ const defaultLoggerFactory: MomentoLoggerFactory =
  * @export
  * @class Laptop
  */
-export class Laptop extends VectorIndexConfiguration {
+export class Laptop extends VectorIndexClientConfiguration {
   /**
    * Provides the latest recommended configuration for a laptop development environment.  NOTE: this configuration may
    * change in future releases to take advantage of improvements we identify for default configurations.
@@ -58,7 +61,7 @@ export class Laptop extends VectorIndexConfiguration {
  * @export
  * @class Browser
  */
-export class Browser extends VectorIndexConfiguration {
+export class Browser extends VectorIndexClientConfiguration {
   /**
    * Provides the latest recommended configuration for an in-browser environment.  NOTE: this configuration may
    * change in future releases to take advantage of improvements we identify for default configurations.

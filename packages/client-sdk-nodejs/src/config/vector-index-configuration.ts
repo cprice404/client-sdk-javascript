@@ -1,8 +1,32 @@
-import {Configuration} from './configuration';
 import {MomentoLoggerFactory} from '@gomomento/sdk-core';
 import {TransportStrategy} from './transport';
-import {Middleware} from './middleware/middleware';
-import {RetryStrategy} from './retry/retry-strategy';
+
+/**
+ * Configuration options for Momento VectorIndexClient
+ *
+ * @export
+ * @interface VectorIndexConfiguration
+ */
+export interface VectorIndexConfiguration {
+  /**
+   * @returns {MomentoLoggerFactory} the current configuration options for logging verbosity and format
+   */
+  getLoggerFactory(): MomentoLoggerFactory;
+
+  /**
+   * @returns {TransportStrategy} the current configuration options for wire interactions with the Momento service
+   */
+  getTransportStrategy(): TransportStrategy;
+
+  /**
+   * Copy constructor for overriding TransportStrategy
+   * @param {TransportStrategy} transportStrategy
+   * @returns {Configuration} a new Configuration object with the specified TransportStrategy
+   */
+  withTransportStrategy(
+    transportStrategy: TransportStrategy
+  ): VectorIndexConfiguration;
+}
 
 export interface VectorIndexConfigurationProps {
   /**
@@ -10,24 +34,16 @@ export interface VectorIndexConfigurationProps {
    */
   loggerFactory: MomentoLoggerFactory;
   /**
-   * Configures how and when failed requests will be retried
-   */
-  retryStrategy: RetryStrategy;
-  /**
    * Configures low-level options for network interactions with the Momento service
    */
   transportStrategy: TransportStrategy;
-  /**
-   * Configures middleware functions that will wrap each request
-   */
-  middlewares: Middleware[];
 }
 
-export class VectorIndexConfiguration implements Configuration {
+export class VectorIndexClientConfiguration
+  implements VectorIndexConfiguration
+{
   private readonly loggerFactory: MomentoLoggerFactory;
-  private readonly retryStrategy: RetryStrategy;
   private readonly transportStrategy: TransportStrategy;
-  private readonly middlewares: Middleware[];
 
   constructor(props: VectorIndexConfigurationProps) {
     this.loggerFactory = props.loggerFactory;
@@ -42,57 +58,22 @@ export class VectorIndexConfiguration implements Configuration {
     return this.transportStrategy;
   }
 
-  withClientTimeoutMillis(clientTimeoutMillis: number): Configuration {
-    return new VectorIndexConfiguration({
+  withClientTimeoutMillis(
+    clientTimeoutMillis: number
+  ): VectorIndexConfiguration {
+    return new VectorIndexClientConfiguration({
       loggerFactory: this.loggerFactory,
       transportStrategy:
         this.transportStrategy.withClientTimeoutMillis(clientTimeoutMillis),
-      retryStrategy: this.retryStrategy,
-      middlewares: this.middlewares,
     });
   }
 
-  withTransportStrategy(transportStrategy: TransportStrategy): Configuration {
-    return new VectorIndexConfiguration({
+  withTransportStrategy(
+    transportStrategy: TransportStrategy
+  ): VectorIndexConfiguration {
+    return new VectorIndexClientConfiguration({
       loggerFactory: this.loggerFactory,
       transportStrategy: transportStrategy,
-      retryStrategy: this.retryStrategy,
-      middlewares: this.middlewares,
-    });
-  }
-
-  addMiddleware(middleware: Middleware): Configuration {
-    return new VectorIndexConfiguration({
-      loggerFactory: this.loggerFactory,
-      retryStrategy: this.retryStrategy,
-      transportStrategy: this.transportStrategy,
-      middlewares: [middleware, ...this.middlewares],
-    });
-  }
-
-  getMiddlewares(): Middleware[] {
-    return this.middlewares;
-  }
-
-  getRetryStrategy(): RetryStrategy {
-    return this.retryStrategy;
-  }
-
-  withMiddlewares(middlewares: Middleware[]): Configuration {
-    return new VectorIndexConfiguration({
-      loggerFactory: this.loggerFactory,
-      retryStrategy: this.retryStrategy,
-      transportStrategy: this.transportStrategy,
-      middlewares: middlewares,
-    });
-  }
-
-  withRetryStrategy(retryStrategy: RetryStrategy): Configuration {
-    return new VectorIndexConfiguration({
-      loggerFactory: this.loggerFactory,
-      retryStrategy: retryStrategy,
-      transportStrategy: this.transportStrategy,
-      middlewares: this.middlewares,
     });
   }
 }

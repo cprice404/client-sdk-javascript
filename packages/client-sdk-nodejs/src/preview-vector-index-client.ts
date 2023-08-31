@@ -7,6 +7,8 @@ import {
 import {VectorIndexClientProps} from './vector-index-client-props';
 import {VectorDataClient} from './internal/vector-data-client';
 import {IVectorIndexDataClient} from '@gomomento/sdk-core/dist/src/internal/clients/vector/IVectorIndexDataClient';
+import {CacheConfiguration} from './config/configuration';
+import {defaultRetryStrategy} from './config/configurations';
 
 /**
  * PREVIEW Vector Index Client
@@ -31,7 +33,14 @@ function createControlClient(
   props: VectorIndexClientProps
 ): IVectorIndexControlClient {
   return new ControlClient({
-    configuration: props.configuration,
+    configuration: new CacheConfiguration({
+      loggerFactory: props.configuration.getLoggerFactory(),
+      transportStrategy: props.configuration.getTransportStrategy(),
+      retryStrategy: defaultRetryStrategy(
+        props.configuration.getLoggerFactory()
+      ),
+      middlewares: [],
+    }),
     credentialProvider: props.credentialProvider,
   });
 }

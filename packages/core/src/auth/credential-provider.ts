@@ -12,6 +12,10 @@ interface CredentialProviderProps {
    * optionally overrides the default cacheEndpoint
    */
   cacheEndpoint?: string;
+  /**
+   * optionally overrides the default vectorEndpoint
+   */
+  vectorEndpoint?: string;
 }
 
 /**
@@ -35,6 +39,11 @@ export abstract class CredentialProvider {
    * @returns {string} The host which the Momento client will connect to for Momento data plane operations
    */
   abstract getCacheEndpoint(): string;
+
+  /**
+   * @returns {string} The host which the Momento client will connect to for Momento vector index operations
+   */
+  abstract getVectorEndpoint(): string;
 
   /**
    * @returns {boolean} true if the cache endpoint was manually overridden at construction time; false otherwise
@@ -66,6 +75,8 @@ abstract class CredentialProviderBase implements CredentialProvider {
 
   abstract getControlEndpoint(): string;
 
+  abstract getVectorEndpoint(): string;
+
   abstract isCacheEndpointOverridden(): boolean;
   abstract isControlEndpointOverridden(): boolean;
 
@@ -94,8 +105,10 @@ export class StringMomentoTokenProvider extends CredentialProviderBase {
   private readonly authToken: string;
   private readonly controlEndpoint: string;
   private readonly cacheEndpoint: string;
+  private readonly vectorEndpoint: string;
   private readonly controlEndpointOverridden: boolean;
   private readonly cacheEndpointOverridden: boolean;
+  private readonly vectorEndpointOverridden: boolean;
 
   /**
    * @param {StringMomentoTokenProviderProps} props configuration options for the token provider
@@ -119,9 +132,17 @@ export class StringMomentoTokenProvider extends CredentialProviderBase {
         'Malformed token; unable to determine cache endpoint.  Depending on the type of token you are using, you may need to specify the cacheEndpoint explicitly.'
       );
     }
+    this.vectorEndpointOverridden = props.vectorEndpoint !== undefined;
+    const vectorEndpoint = props.vectorEndpoint ?? decodedToken.vectorEndpoint;
+    if (vectorEndpoint === undefined) {
+      throw new Error(
+        'Malformed token; unable to determine vector endpoint.  Depending on the type of token you are using, you may need to specify the vectorEndpoint explicitly.'
+      );
+    }
 
     this.controlEndpoint = controlEndpoint;
     this.cacheEndpoint = cacheEndpoint;
+    this.vectorEndpoint = vectorEndpoint;
   }
 
   getAuthToken(): string {
@@ -136,12 +157,20 @@ export class StringMomentoTokenProvider extends CredentialProviderBase {
     return this.controlEndpoint;
   }
 
+  getVectorEndpoint(): string {
+    return this.vectorEndpoint;
+  }
+
   isControlEndpointOverridden(): boolean {
     return this.controlEndpointOverridden;
   }
 
   isCacheEndpointOverridden(): boolean {
     return this.cacheEndpointOverridden;
+  }
+
+  isVectorEndpointOverridden(): boolean {
+    return this.vectorEndpointOverridden;
   }
 }
 
