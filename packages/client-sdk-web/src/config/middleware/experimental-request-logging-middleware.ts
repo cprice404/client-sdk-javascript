@@ -20,23 +20,22 @@ class ExperimentalLoggingMiddlewareRequestHandler
 
   onRequest(request: MiddlewareRequest): Promise<MiddlewareRequest> {
     this.logger.info(
-      'Logging middleware onRequest: request %s | metadata: %s | request type: %s | request size: %s',
-      this.requestId,
-      JSON.stringify(request.getMetadata()),
-      request.getRequestType(),
-      request.getBodySize()
+      `Logging middleware onRequest: request ${
+        this.requestId
+      } | metadata: ${JSON.stringify(
+        request.getMetadata()
+      )} | request type: ${request.getRequestType()} | request size: ${request.getBodySize()}`
     );
     return Promise.resolve(request);
   }
 
   onResponse(response: MiddlewareResponse): Promise<MiddlewareResponse> {
     this.logger.info(
-      'Logging middleware onResponse: response %s | status: %s | metadata: %s | response type: %s | response size: %s',
-      this.requestId,
-      response.getStatusCode(),
-      JSON.stringify(response.getMetadata()),
-      response.getResponseType(),
-      response.getBodySize()
+      `Logging middleware onResponse: response ${
+        this.requestId
+      } | status: ${response.getStatusCode()} | metadata: ${JSON.stringify(
+        response.getMetadata()
+      )} | response type: ${response.getResponseType()} | response size: ${response.getBodySize()}`
     );
     return Promise.resolve(response);
   }
@@ -68,9 +67,9 @@ class ExperimentalLoggingMiddlewareRequestHandler
     metadata: MiddlewareMetadata
   ): Promise<MiddlewareMetadata> {
     this.logger.info(
-      'Logging middleware: request %s onResponseMetadata: %s',
-      this.requestId,
-      metadata.toJsonString()
+      `Logging middleware: request ${
+        this.requestId
+      } onResponseMetadata: ${metadata.toJsonString()}`
     );
     return Promise.resolve(metadata);
   }
@@ -90,9 +89,9 @@ class ExperimentalLoggingMiddlewareRequestHandler
   //
   onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus> {
     this.logger.info(
-      'Logging middleware: request %s onResponseStatus: status code: %s',
-      this.requestId,
-      status.code()
+      `Logging middleware: request ${
+        this.requestId
+      } onResponseStatus: status code: ${status.code()}`
     );
     return Promise.resolve(status);
   }

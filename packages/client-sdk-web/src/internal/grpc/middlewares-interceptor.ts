@@ -121,29 +121,25 @@ class MiddlewareInterceptedStream implements ClientReadableStream<Message> {
     callback: (arg: any) => void
   ): ClientReadableStream<Message> {
     this.logger.warn(`INTERCEPTOR GOT EVENT: ${eventType}`);
-    if (eventType === 'status') {
-      this.logger.warn('CREATING NEW CALLBACK FOR STATUS');
-      const newCallback = (status: Status) => {
-        this.logger.warn('IN NEW CALLBACK FOR STATUS');
-        applyMiddlewareHandlers(
-          'onResponseStatus',
-          this.reversedMiddlewareRequestHandlers,
-          (h: MiddlewareRequestHandler) => (s: MiddlewareStatus) => {
-            this.logger.warn(
-              'MIDDLEWARE REDUCE FN CALLING ONRESPONSESTATUS FOR A HANDLER'
-            );
-            return h.onResponseStatus(s);
-          },
-          new MiddlewareStatus(status),
-          (s: MiddlewareStatus) => callback(s._grpcStatus)
-        );
-      };
-      this.stream.on(eventType, newCallback);
+    switch (eventType) {
+      case 'error':
+        this.onError(eventType, callback);
+        break;
+      case 'status':
+        this.onStatus(eventType, callback);
+        break;
+      case 'metadata':
+        this.onMetadata(eventType, callback);
+        break;
+      case 'data':
+        this.onData(eventType, callback);
+        break;
+      case 'end':
+        this.onEnd(eventType, callback);
+        break;
     }
     return this;
   }
-
-  // private onMetadata(status: Metadata): void {}
 
   removeListener(eventType: 'error', callback: (err: RpcError) => void): void;
   removeListener(eventType: 'status', callback: (status: Status) => void): void;
@@ -166,6 +162,48 @@ class MiddlewareInterceptedStream implements ClientReadableStream<Message> {
 
   cancel(): void {
     this.stream.cancel();
+  }
+
+  private onError(eventType: 'error', callback: (err: RpcError) => void): void {
+    this.stream.on('error', callback);
+  }
+
+  private onStatus(
+    eventType: 'status',
+    callback: (status: Status) => void
+  ): void {
+    this.logger.warn('CREATING NEW CALLBACK FOR STATUS');
+    const newCallback = (status: Status) => {
+      this.logger.warn('IN NEW CALLBACK FOR STATUS');
+      applyMiddlewareHandlers(
+        'onResponseStatus',
+        this.reversedMiddlewareRequestHandlers,
+        (h: MiddlewareRequestHandler) => (s: MiddlewareStatus) =>
+          h.onResponseStatus(s),
+        new MiddlewareStatus(status),
+        (s: MiddlewareStatus) => callback(s._grpcStatus)
+      );
+    };
+    this.stream.on(eventType, newCallback);
+  }
+
+  private onMetadata(
+    eventType: 'metadata',
+    callback: (metadata: Metadata) => void
+  ): void {
+    this.logger.warn('CREATING NEW CALLBACK FOR Metadata');
+    const newCallback = (status: Status) => {
+      this.logger.warn('IN NEW CALLBACK FOR Metadata');
+      applyMiddlewareHandlers(
+        'onResponseMetadata',
+        this.reversedMiddlewareRequestHandlers,
+        (h: MiddlewareRequestHandler) => (s: MiddlewareStatus) =>
+          h.onResponseStatus(s),
+        new MiddlewareStatus(status),
+        (s: MiddlewareStatus) => callback(s._grpcStatus)
+      );
+    };
+    this.stream.on(eventType, newCallback);
   }
 
   //   // create a copy of the handlers and reverse it, because for the response life cycle actions we should call
