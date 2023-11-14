@@ -1,40 +1,40 @@
 import {Message} from 'google-protobuf';
-import {Request, UnaryResponse} from 'grpc-web';
+import {Metadata, Request, Status, UnaryResponse} from 'grpc-web';
 
-// export class MiddlewareMetadata {
-//   readonly _grpcMetadata: Metadata;
-//   constructor(metadata: Metadata) {
-//     this._grpcMetadata = metadata;
-//   }
-//
-//   toJsonString(): string {
-//     return JSON.stringify(this._grpcMetadata);
-//   }
-// }
-// export class MiddlewareStatus {
-//   readonly _grpcStatus: Status;
-//   constructor(status: Status) {
-//     this._grpcStatus = status;
-//   }
-//
-//   code() {
-//     return this._grpcStatus.code;
-//   }
-// }
-//
-// export class MiddlewareMessage {
-//   readonly _grpcMessage: Message;
-//   constructor(message: Message) {
-//     this._grpcMessage = message;
-//   }
-//
-//   messageLength(): number {
-//     if (this._grpcMessage !== null && this._grpcMessage !== undefined) {
-//       return this._grpcMessage.serializeBinary().length;
-//     }
-//     return 0;
-//   }
-// }
+export class MiddlewareMetadata {
+  readonly _grpcMetadata: Metadata;
+  constructor(metadata: Metadata) {
+    this._grpcMetadata = metadata;
+  }
+
+  toJsonString(): string {
+    return JSON.stringify(this._grpcMetadata);
+  }
+}
+export class MiddlewareStatus {
+  readonly _grpcStatus: Status;
+  constructor(status: Status) {
+    this._grpcStatus = status;
+  }
+
+  code() {
+    return this._grpcStatus.code;
+  }
+}
+
+export class MiddlewareMessage {
+  readonly _grpcMessage: Message;
+  constructor(message: Message) {
+    this._grpcMessage = message;
+  }
+
+  messageLength(): number {
+    if (this._grpcMessage !== null && this._grpcMessage !== undefined) {
+      return this._grpcMessage.serializeBinary().length;
+    }
+    return 0;
+  }
+}
 
 export class MiddlewareRequest {
   readonly _grpcRequest: Request<Message, Message>;
@@ -83,11 +83,11 @@ export interface MiddlewareRequestHandler {
   // onRequestMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata>;
   // onRequestBody(request: MiddlewareMessage): Promise<MiddlewareMessage>;
   //
-  // onResponseMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata>;
+  onResponseMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata>;
   // onResponseBody(
   //   response: MiddlewareMessage | null
   // ): Promise<MiddlewareMessage | null>;
-  // onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus>;
+  onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus>;
   onRequest(request: MiddlewareRequest): Promise<MiddlewareRequest>;
   onResponse(response: MiddlewareResponse): Promise<MiddlewareResponse>;
 }

@@ -1,8 +1,10 @@
 import {
   Middleware,
+  MiddlewareMetadata,
   MiddlewareRequest,
   MiddlewareRequestHandler,
   MiddlewareResponse,
+  MiddlewareStatus,
 } from './middleware';
 import {MomentoLogger} from '../../';
 
@@ -38,12 +40,13 @@ class ExperimentalLoggingMiddlewareRequestHandler
     );
     return Promise.resolve(response);
   }
+
   //
   //
   //
-  //
+
   // onRequestMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata> {
-  //   this.logger.debug(
+  //   this.logger.info(
   //     'Logging middleware: request %s onRequestMetadata: %s',
   //     this.requestId,
   //     metadata.toJsonString()
@@ -51,7 +54,7 @@ class ExperimentalLoggingMiddlewareRequestHandler
   //   return Promise.resolve(metadata);
   // }
   // onRequestBody(request: MiddlewareMessage): Promise<MiddlewareMessage> {
-  //   this.logger.debug(
+  //   this.logger.info(
   //     'Logging middleware: request %s onRequestBody: request type: %s, request size: %s',
   //     this.requestId,
   //     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -61,21 +64,21 @@ class ExperimentalLoggingMiddlewareRequestHandler
   //   return Promise.resolve(request);
   // }
   //
-  // onResponseMetadata(
-  //   metadata: MiddlewareMetadata
-  // ): Promise<MiddlewareMetadata> {
-  //   this.logger.debug(
-  //     'Logging middleware: request %s onResponseMetadata: %s',
-  //     this.requestId,
-  //     metadata.toJsonString()
-  //   );
-  //   return Promise.resolve(metadata);
-  // }
-  //
+  onResponseMetadata(
+    metadata: MiddlewareMetadata
+  ): Promise<MiddlewareMetadata> {
+    this.logger.info(
+      'Logging middleware: request %s onResponseMetadata: %s',
+      this.requestId,
+      metadata.toJsonString()
+    );
+    return Promise.resolve(metadata);
+  }
+
   // onResponseBody(
   //   response: MiddlewareMessage | null
   // ): Promise<MiddlewareMessage | null> {
-  //   this.logger.debug(
+  //   this.logger.info(
   //     'Logging middleware: request %s onResponseBody: response type: %s, response size: %s',
   //     this.requestId,
   //     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -85,14 +88,14 @@ class ExperimentalLoggingMiddlewareRequestHandler
   //   return Promise.resolve(response);
   // }
   //
-  // onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus> {
-  //   this.logger.debug(
-  //     'Logging middleware: request %s onResponseStatus: status code: %s',
-  //     this.requestId,
-  //     status.code()
-  //   );
-  //   return Promise.resolve(status);
-  // }
+  onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus> {
+    this.logger.info(
+      'Logging middleware: request %s onResponseStatus: status code: %s',
+      this.requestId,
+      status.code()
+    );
+    return Promise.resolve(status);
+  }
 }
 
 /**
@@ -115,6 +118,7 @@ export class ExperimentalRequestLoggingMiddleware implements Middleware {
   private nextRequestId: number;
   constructor(logger: MomentoLogger) {
     this.logger = logger;
+    this.logger.warn('CONSTRUCTING EXPERIMENTAL REQUEST LOGGING MIDDLEWARE');
     this.nextRequestId = 0;
   }
 
