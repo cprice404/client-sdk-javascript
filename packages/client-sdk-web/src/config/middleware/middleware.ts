@@ -28,6 +28,10 @@ export class MiddlewareMessage {
     this._grpcMessage = message;
   }
 
+  responseType(): string {
+    return this._grpcMessage.constructor.name;
+  }
+
   messageLength(): number {
     if (this._grpcMessage !== null && this._grpcMessage !== undefined) {
       return this._grpcMessage.serializeBinary().length;
@@ -83,13 +87,12 @@ export interface MiddlewareRequestHandler {
   // onRequestMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata>;
   // onRequestBody(request: MiddlewareMessage): Promise<MiddlewareMessage>;
   //
-  onResponseMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata>;
-  // onResponseBody(
-  //   response: MiddlewareMessage | null
-  // ): Promise<MiddlewareMessage | null>;
-  onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus>;
-  onRequest(request: MiddlewareRequest): Promise<MiddlewareRequest>;
-  onResponse(response: MiddlewareResponse): Promise<MiddlewareResponse>;
+  onRequest(request: MiddlewareRequest): MiddlewareRequest;
+  onResponseMetadata(metadata: MiddlewareMetadata): MiddlewareMetadata;
+  onResponseData(response: MiddlewareMessage): MiddlewareMessage;
+  onResponseStatus(status: MiddlewareStatus): MiddlewareStatus;
+  onResponseEnd(): void;
+  // onResponse(response: MiddlewareResponse): Promise<MiddlewareResponse>;
 }
 
 export interface MiddlewareRequestHandlerContext {

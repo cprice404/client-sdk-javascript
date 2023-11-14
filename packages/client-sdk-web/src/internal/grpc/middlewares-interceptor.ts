@@ -1,10 +1,16 @@
 import {
   Middleware,
+  MiddlewareMessage,
+  MiddlewareMetadata,
+  // MiddlewareMessage,
+  // MiddlewareMetadata,
+  MiddlewareRequest,
   // MiddlewareMessage,
   // MiddlewareMetadata,
   MiddlewareRequestHandler,
   MiddlewareRequestHandlerContext,
   MiddlewareStatus,
+  // MiddlewareStatus,
   // MiddlewareStatus,
 } from '../../config/middleware/middleware';
 import {Message} from 'google-protobuf';
@@ -55,19 +61,34 @@ class MiddlewareStreamInterceptor
     ) => ClientReadableStream<Message>
   ): ClientReadableStream<Message> {
     this.logger.warn('INTERCEPTING REQUEST!');
+
+    const middlewareRequestHandlers = this.middlewares.map(m =>
+      m.onNewRequest(this.middlewareRequestContext)
+    );
+
+    const middlewareRequest = new MiddlewareRequest(request);
+    const transformedRequest = middlewareRequestHandlers.reduce(
+      (acc, h) => h.onRequest(acc),
+      middlewareRequest
+    );
+    //
+    // this.reversedMiddlewareRequestHandlers = [
+    //   ...this.middlewareRequestHandlers,
+    // ].reverse();
+
     return new MiddlewareInterceptedStream(
       this.logger,
-      this.middlewares,
       this.middlewareRequestContext,
-      request,
-      invoker(request)
+      middlewareRequestHandlers,
+      // request,
+      invoker(transformedRequest._grpcRequest)
     );
   }
 }
 
 class MiddlewareInterceptedStream implements ClientReadableStream<Message> {
   readonly logger: MomentoLogger;
-  readonly middlewares: Middleware[];
+  // readonly middlewares: Middleware[];
   readonly middlewareRequestContext: MiddlewareRequestHandlerContext;
   readonly middlewareRequestHandlers: MiddlewareRequestHandler[];
   readonly reversedMiddlewareRequestHandlers: MiddlewareRequestHandler[];
@@ -75,19 +96,16 @@ class MiddlewareInterceptedStream implements ClientReadableStream<Message> {
 
   constructor(
     logger: MomentoLogger,
-    middlewares: Middleware[],
     middlewareRequestContext: MiddlewareRequestHandlerContext,
-    request: Request<Message, Message>,
+    middlewareRequestHandlers: MiddlewareRequestHandler[],
+    // request: Request<Message, Message>,
     stream: ClientReadableStream<Message>
   ) {
     this.logger = logger;
-    this.middlewares = middlewares;
+    // this.middlewares = middlewares;
     this.middlewareRequestContext = middlewareRequestContext;
+    this.middlewareRequestHandlers = middlewareRequestHandlers;
     this.stream = stream;
-
-    this.middlewareRequestHandlers = this.middlewares.map(m =>
-      m.onNewRequest(this.middlewareRequestContext)
-    );
 
     this.reversedMiddlewareRequestHandlers = [
       ...this.middlewareRequestHandlers,
@@ -121,24 +139,22 @@ class MiddlewareInterceptedStream implements ClientReadableStream<Message> {
     callback: (arg: any) => void
   ): ClientReadableStream<Message> {
     this.logger.warn(`INTERCEPTOR GOT EVENT: ${eventType}`);
+    // return this.stream.on(eventType as never, callback);
     switch (eventType) {
       case 'error':
-        this.onError(eventType, callback);
-        break;
+        return this.onResponseError(eventType, callback);
       case 'status':
-        this.onStatus(eventType, callback);
-        break;
+        return this.onResponseStatus(eventType, callback);
       case 'metadata':
-        this.onMetadata(eventType, callback);
+        return this.onResponseMetadata(eventType, callback);
         break;
       case 'data':
-        this.onData(eventType, callback);
-        break;
+        return this.onResponseData(eventType, callback);
       case 'end':
-        this.onEnd(eventType, callback);
-        break;
+        return this.onResponseEnd(eventType, callback as () => void);
+      default:
+        return this.stream.on(eventType, callback);
     }
-    return this;
   }
 
   removeListener(eventType: 'error', callback: (err: RpcError) => void): void;
@@ -164,46 +180,88 @@ class MiddlewareInterceptedStream implements ClientReadableStream<Message> {
     this.stream.cancel();
   }
 
-  private onError(eventType: 'error', callback: (err: RpcError) => void): void {
-    this.stream.on('error', callback);
+  private onResponseError(
+    eventType: 'error',
+    callback: (err: RpcError) => void
+  ): ClientReadableStream<Message> {
+    return this.stream.on('error', callback);
   }
 
-  private onStatus(
+  private onResponseStatus(
     eventType: 'status',
     callback: (status: Status) => void
-  ): void {
+  ): ClientReadableStream<Message> {
     this.logger.warn('CREATING NEW CALLBACK FOR STATUS');
     const newCallback = (status: Status) => {
       this.logger.warn('IN NEW CALLBACK FOR STATUS');
-      applyMiddlewareHandlers(
+      const modifiedStatus = applyMiddlewareHandlers(
         'onResponseStatus',
         this.reversedMiddlewareRequestHandlers,
         (h: MiddlewareRequestHandler) => (s: MiddlewareStatus) =>
           h.onResponseStatus(s),
-        new MiddlewareStatus(status),
-        (s: MiddlewareStatus) => callback(s._grpcStatus)
+        new MiddlewareStatus(status)
       );
+      callback(modifiedStatus._grpcStatus);
     };
-    this.stream.on(eventType, newCallback);
+    return this.stream.on(eventType, newCallback);
   }
 
-  private onMetadata(
+  private onResponseMetadata(
     eventType: 'metadata',
     callback: (metadata: Metadata) => void
-  ): void {
+  ): ClientReadableStream<Message> {
     this.logger.warn('CREATING NEW CALLBACK FOR Metadata');
-    const newCallback = (status: Status) => {
+    const newCallback = (metadata: Metadata) => {
       this.logger.warn('IN NEW CALLBACK FOR Metadata');
-      applyMiddlewareHandlers(
+      const modifiedMetadata = applyMiddlewareHandlers(
         'onResponseMetadata',
         this.reversedMiddlewareRequestHandlers,
-        (h: MiddlewareRequestHandler) => (s: MiddlewareStatus) =>
-          h.onResponseStatus(s),
-        new MiddlewareStatus(status),
-        (s: MiddlewareStatus) => callback(s._grpcStatus)
+        (h: MiddlewareRequestHandler) => (m: MiddlewareMetadata) =>
+          h.onResponseMetadata(m),
+        new MiddlewareMetadata(metadata)
       );
+
+      callback(modifiedMetadata._grpcMetadata);
     };
-    this.stream.on(eventType, newCallback);
+    return this.stream.on(eventType, newCallback);
+  }
+
+  private onResponseData(
+    eventType: 'data',
+    callback: (response: Message) => void
+  ): ClientReadableStream<Message> {
+    this.logger.warn('CREATING NEW CALLBACK FOR ONRESPONSEDATA');
+    const newCallback = (response: Message) => {
+      this.logger.warn('IN NEW CALLBACK FOR ONRESPONSEDATA');
+      const modifiedResponse = applyMiddlewareHandlers(
+        'onResponseData',
+        this.reversedMiddlewareRequestHandlers,
+        (h: MiddlewareRequestHandler) => (request: MiddlewareMessage) =>
+          h.onResponseData(request),
+        new MiddlewareMessage(response)
+        // (msg: MiddlewareMessage) => callback(msg._grpcMessage)
+      );
+      callback(modifiedResponse._grpcMessage);
+    };
+    return this.stream.on(eventType, newCallback);
+  }
+
+  private onResponseEnd(
+    eventType: 'end',
+    callback: () => void
+  ): ClientReadableStream<Message> {
+    this.logger.warn('CREATING NEW CALLBACK FOR ONRESPONSEEND');
+    const newCallback = () => {
+      this.logger.warn('IN NEW CALLBACK FOR ONRESPONSEEND');
+      applyMiddlewareHandlers(
+        'onResponseEnd',
+        this.reversedMiddlewareRequestHandlers,
+        (h: MiddlewareRequestHandler) => () => h.onResponseEnd(),
+        undefined
+      );
+      callback();
+    };
+    return this.stream.on(eventType, newCallback);
   }
 
   //   // create a copy of the handlers and reverse it, because for the response life cycle actions we should call
@@ -295,27 +353,34 @@ function applyMiddlewareHandlers<T>(
   handlers: MiddlewareRequestHandler[],
   middlewareHandlerReduceFn: (
     h: MiddlewareRequestHandler
-  ) => (t: T) => Promise<T>,
-  originalInput: T,
-  nextFn: (t: T) => void
-) {
+    // ) => (t: T) => Promise<T>,
+  ) => (t: T) => T,
+  originalInput: T
+  // nextFn: (t: T) => void
+): T {
   let remainingHandlers = handlers;
-  let middlewarePromise: Promise<T> = Promise.resolve(originalInput);
+  // let middlewarePromise: Promise<T> = Promise.resolve(originalInput);
+  let newT = originalInput;
   while (remainingHandlers.length > 0) {
     const nextHandler = middlewareHandlerReduceFn(remainingHandlers[0]);
-    middlewarePromise = middlewarePromise
-      .then(newT => nextHandler(newT))
-      .catch(e => {
-        throw e;
-      });
+    // middlewarePromise = middlewarePromise
+    //   .then(newT => nextHandler(newT))
+    //   .catch(e => {
+    //     throw e;
+    //   });
+    newT = nextHandler(newT);
     remainingHandlers = remainingHandlers.slice(1);
   }
 
-  middlewarePromise
-    .then(newT => nextFn(newT))
-    .catch(e => {
-      throw e;
-    });
+  return newT;
+
+  // nextFn(newT);
+  //
+  // middlewarePromise
+  //   .then(newT => nextFn(newT))
+  //   .catch(e => {
+  //     throw e;
+  //   });
 }
 
 // // import {

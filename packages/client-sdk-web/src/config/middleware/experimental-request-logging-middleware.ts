@@ -1,9 +1,11 @@
 import {
   Middleware,
+  MiddlewareMessage,
   MiddlewareMetadata,
   MiddlewareRequest,
+  // MiddlewareRequest,
   MiddlewareRequestHandler,
-  MiddlewareResponse,
+  // MiddlewareResponse,
   MiddlewareStatus,
 } from './middleware';
 import {MomentoLogger} from '../../';
@@ -18,7 +20,7 @@ class ExperimentalLoggingMiddlewareRequestHandler
     this.requestId = requestId;
   }
 
-  onRequest(request: MiddlewareRequest): Promise<MiddlewareRequest> {
+  onRequest(request: MiddlewareRequest): MiddlewareRequest {
     this.logger.info(
       `Logging middleware onRequest: request ${
         this.requestId
@@ -26,19 +28,19 @@ class ExperimentalLoggingMiddlewareRequestHandler
         request.getMetadata()
       )} | request type: ${request.getRequestType()} | request size: ${request.getBodySize()}`
     );
-    return Promise.resolve(request);
+    return request;
   }
-
-  onResponse(response: MiddlewareResponse): Promise<MiddlewareResponse> {
-    this.logger.info(
-      `Logging middleware onResponse: response ${
-        this.requestId
-      } | status: ${response.getStatusCode()} | metadata: ${JSON.stringify(
-        response.getMetadata()
-      )} | response type: ${response.getResponseType()} | response size: ${response.getBodySize()}`
-    );
-    return Promise.resolve(response);
-  }
+  //
+  // onResponse(response: MiddlewareResponse): Promise<MiddlewareResponse> {
+  //   this.logger.info(
+  //     `Logging middleware onResponse: response ${
+  //       this.requestId
+  //     } | status: ${response.getStatusCode()} | metadata: ${JSON.stringify(
+  //       response.getMetadata()
+  //     )} | response type: ${response.getResponseType()} | response size: ${response.getBodySize()}`
+  //   );
+  //   return Promise.resolve(response);
+  // }
 
   //
   //
@@ -63,37 +65,37 @@ class ExperimentalLoggingMiddlewareRequestHandler
   //   return Promise.resolve(request);
   // }
   //
-  onResponseMetadata(
-    metadata: MiddlewareMetadata
-  ): Promise<MiddlewareMetadata> {
+  onResponseMetadata(metadata: MiddlewareMetadata): MiddlewareMetadata {
     this.logger.info(
       `Logging middleware: request ${
         this.requestId
       } onResponseMetadata: ${metadata.toJsonString()}`
     );
-    return Promise.resolve(metadata);
+    return metadata;
   }
 
-  // onResponseBody(
-  //   response: MiddlewareMessage | null
-  // ): Promise<MiddlewareMessage | null> {
-  //   this.logger.info(
-  //     'Logging middleware: request %s onResponseBody: response type: %s, response size: %s',
-  //     this.requestId,
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  //     response?.constructor?.name ?? 'null',
-  //     response?.messageLength() ?? 0
-  //   );
-  //   return Promise.resolve(response);
-  // }
-  //
-  onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus> {
+  onResponseData(response: MiddlewareMessage): MiddlewareMessage {
+    this.logger.info(
+      `Logging middleware: request ${
+        this.requestId
+      } onResponseBody: response type: ${response.responseType()}, response size: ${response.messageLength()}`
+    );
+    return response;
+  }
+
+  onResponseStatus(status: MiddlewareStatus): MiddlewareStatus {
     this.logger.info(
       `Logging middleware: request ${
         this.requestId
       } onResponseStatus: status code: ${status.code()}`
     );
-    return Promise.resolve(status);
+    return status;
+  }
+
+  onResponseEnd(): void {
+    this.logger.info(
+      `Logging middleware: request ${this.requestId} onResponseEnd`
+    );
   }
 }
 

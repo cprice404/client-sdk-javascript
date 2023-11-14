@@ -22,6 +22,8 @@ async function main() {
   const momento = new CacheClient({
     configuration: Configurations.Laptop.v1().withMiddlewares([
       new ExperimentalRequestLoggingMiddleware(loggerFactory.getLogger('basicLogger1')),
+      new ExperimentalRequestLoggingMiddleware(loggerFactory.getLogger('basicLogger2')),
+      new ExperimentalRequestLoggingMiddleware(loggerFactory.getLogger('basicLogger3')),
     ]),
     credentialProvider: CredentialProvider.fromEnvironmentVariable({
       environmentVariableName: 'MOMENTO_API_KEY',
