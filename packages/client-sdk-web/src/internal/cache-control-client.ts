@@ -16,7 +16,7 @@ import {
   _ListCachesRequest,
   _FlushCacheRequest,
 } from '@gomomento/generated-types-webtext/dist/controlclient_pb';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {IControlClient} from '@gomomento/sdk-core/dist/src/internal/clients';
 import {normalizeSdkError} from '@gomomento/sdk-core/dist/src/errors';
 import {validateCacheName} from '@gomomento/sdk-core/dist/src/internal/utils';
@@ -39,6 +39,7 @@ export class CacheControlClient<
 {
   private readonly clientWrapper: control.ScsControlClient;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
 
   private readonly clientMetadataProvider: ClientMetadataProvider;
 
@@ -47,6 +48,9 @@ export class CacheControlClient<
    */
   constructor(props: ControlClientProps) {
     this.logger = props.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     this.logger.debug(
       `Creating control client using endpoint: '${getWebControlEndpoint(
         props.credentialProvider
@@ -83,7 +87,11 @@ export class CacheControlClient<
             if (err.code === StatusCode.ALREADY_EXISTS) {
               resolve(new CreateCache.AlreadyExists());
             } else {
-              resolve(new CreateCache.Error(cacheServiceErrorMapper(err)));
+              resolve(
+                new CreateCache.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
+              );
             }
           } else {
             resolve(new CreateCache.Success());
@@ -108,7 +116,9 @@ export class CacheControlClient<
         this.clientMetadataProvider.createClientMetadata(),
         (err, _resp) => {
           if (err) {
-            resolve(new DeleteCache.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new DeleteCache.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           } else {
             resolve(new DeleteCache.Success());
           }
@@ -140,7 +150,9 @@ export class CacheControlClient<
           if (resp) {
             resolve(new CacheFlush.Success());
           } else {
-            resolve(new CacheFlush.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheFlush.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -157,7 +169,9 @@ export class CacheControlClient<
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err) {
-            resolve(new ListCaches.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new ListCaches.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           } else {
             const caches = resp.getCacheList().map(cache => {
               const cacheName = cache.getCacheName();

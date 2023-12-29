@@ -27,7 +27,7 @@ import {IdleGrpcClientWrapper} from './grpc/idle-grpc-client-wrapper';
 import {GrpcClientWrapper} from './grpc/grpc-client-wrapper';
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {
   ChannelCredentials,
   Interceptor,
@@ -41,6 +41,7 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
   private readonly configuration: LeaderboardConfiguration;
   private readonly credentialProvider: CredentialProvider;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly requestTimeoutMs: number;
   private readonly clientWrappers: GrpcClientWrapper<leaderboard.LeaderboardClient>[];
   protected nextDataClientIndex: number;
@@ -48,6 +49,9 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
 
   constructor(props: LeaderboardClientProps) {
     this.configuration = props.configuration;
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     this.credentialProvider = props.credentialProvider;
     this.logger = this.configuration.getLoggerFactory().getLogger(this);
     const grpcConfig = this.configuration
@@ -190,7 +194,11 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
           if (resp) {
             resolve(new LeaderboardUpsert.Success());
           } else {
-            resolve(new LeaderboardUpsert.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardUpsert.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -282,7 +290,11 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
               .elements;
             resolve(new LeaderboardFetch.Success(foundElements));
           } else {
-            resolve(new LeaderboardFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -351,7 +363,11 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
               .elements;
             resolve(new LeaderboardFetch.Success(foundElements));
           } else {
-            resolve(new LeaderboardFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -404,7 +420,11 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
               .elements;
             resolve(new LeaderboardFetch.Success(foundElements));
           } else {
-            resolve(new LeaderboardFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -443,7 +463,11 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
               .count;
             resolve(new LeaderboardLength.Success(length));
           } else {
-            resolve(new LeaderboardLength.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -491,7 +515,9 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
             resolve(new LeaderboardRemoveElements.Success());
           } else {
             resolve(
-              new LeaderboardRemoveElements.Error(cacheServiceErrorMapper(err))
+              new LeaderboardRemoveElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -529,7 +555,11 @@ export class LeaderboardDataClient implements ILeaderboardDataClient {
           if (resp) {
             resolve(new LeaderboardDelete.Success());
           } else {
-            resolve(new LeaderboardDelete.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardDelete.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );

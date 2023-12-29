@@ -4,7 +4,7 @@ import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
 import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';
 import {version} from '../../package.json';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {
   InternalSuperUserPermissions,
   validateDisposableTokenExpiry,
@@ -63,12 +63,16 @@ import {
 export class InternalAuthClient implements IAuthClient {
   private static readonly REQUEST_TIMEOUT_MS: number = 60 * 1000;
 
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly creds: CredentialProvider;
   private readonly interceptors: Interceptor[];
   private readonly tokenClient: token.token.TokenClient;
   private readonly authClient: grpcAuth.AuthClient;
 
   constructor(props: AuthClientProps) {
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.throwOnErrors ?? false
+    );
     this.creds = props.credentialProvider;
     const headers = [new Header('Agent', `nodejs:${version}`)];
     this.interceptors = [
@@ -120,7 +124,11 @@ export class InternalAuthClient implements IAuthClient {
         {interceptors: this.interceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(new GenerateApiKey.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new GenerateApiKey.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(
               new GenerateApiKey.Success(
@@ -160,7 +168,11 @@ export class InternalAuthClient implements IAuthClient {
         {interceptors: this.interceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(new RefreshApiKey.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new RefreshApiKey.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(
               new RefreshApiKey.Success(
@@ -231,7 +243,9 @@ export class InternalAuthClient implements IAuthClient {
         (err, resp) => {
           if (err || !resp) {
             resolve(
-              new GenerateDisposableToken.Error(cacheServiceErrorMapper(err))
+              new GenerateDisposableToken.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           } else {
             resolve(

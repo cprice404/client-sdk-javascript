@@ -4,7 +4,7 @@ import {TextEncoder} from 'util';
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
 import {createRetryInterceptorIfEnabled} from './grpc/retry-interceptor';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor, Metadata} from '@grpc/grpc-js';
 import {
   CacheDelete,
@@ -110,6 +110,7 @@ export class CacheDataClient implements IDataClient {
   private readonly requestTimeoutMs: number;
   private static readonly DEFAULT_REQUEST_TIMEOUT_MS: number = 5 * 1000;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly interceptors: Interceptor[];
 
   /**
@@ -118,8 +119,16 @@ export class CacheDataClient implements IDataClient {
    */
   constructor(props: CacheClientProps, dataClientID: string) {
     this.configuration = props.configuration;
+    console.error(
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      `CACHE DATA CLIENT CONSTRUCTED WITH GET THROW ON ERRORS: ${this.configuration.getThrowOnErrors()}`
+    );
     this.credentialProvider = props.credentialProvider;
     this.logger = this.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
+
     const grpcConfig = this.configuration
       .getTransportStrategy()
       .getGrpcConfig();
@@ -333,7 +342,9 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheSet.Success());
           } else {
-            resolve(new CacheSet.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheSet.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -374,7 +385,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheSetFetch.Hit(resp.found.elements));
           } else {
-            resolve(new CacheSetFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheSetFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -426,7 +441,9 @@ export class CacheDataClient implements IDataClient {
         err => {
           if (err) {
             resolve(
-              new CacheSetAddElements.Error(cacheServiceErrorMapper(err))
+              new CacheSetAddElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           } else {
             resolve(new CacheSetAddElements.Success());
@@ -480,7 +497,9 @@ export class CacheDataClient implements IDataClient {
         err => {
           if (err) {
             resolve(
-              new CacheSetRemoveElements.Error(cacheServiceErrorMapper(err))
+              new CacheSetRemoveElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           } else {
             resolve(new CacheSetRemoveElements.Success());
@@ -563,7 +582,9 @@ export class CacheDataClient implements IDataClient {
             }
           } else {
             resolve(
-              new CacheSetIfNotExists.Error(cacheServiceErrorMapper(err))
+              new CacheSetIfNotExists.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -603,7 +624,9 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheDelete.Success());
           } else {
-            resolve(new CacheDelete.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheDelete.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -665,7 +688,9 @@ export class CacheDataClient implements IDataClient {
                 break;
             }
           } else {
-            resolve(new CacheGet.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheGet.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -738,7 +763,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheListConcatenateBack.Success(resp.list_length));
           } else {
             resolve(
-              new CacheListConcatenateBack.Error(cacheServiceErrorMapper(err))
+              new CacheListConcatenateBack.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -812,7 +839,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheListConcatenateFront.Success(resp.list_length));
           } else {
             resolve(
-              new CacheListConcatenateFront.Error(cacheServiceErrorMapper(err))
+              new CacheListConcatenateFront.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -883,7 +912,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListFetch.Hit(resp.found.values));
           } else {
-            resolve(new CacheListFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -959,7 +992,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListRetain.Success());
           } else {
-            resolve(new CacheListRetain.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListRetain.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1004,7 +1041,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListLength.Hit(resp.found.length));
           } else {
-            resolve(new CacheListLength.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1053,7 +1094,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListPopBack.Hit(resp.found.back));
           } else {
-            resolve(new CacheListPopBack.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPopBack.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1102,7 +1147,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListPopFront.Hit(resp.found.front));
           } else {
-            resolve(new CacheListPopFront.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPopFront.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1170,7 +1219,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListPushBack.Success(resp.list_length));
           } else {
-            resolve(new CacheListPushBack.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPushBack.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1238,7 +1291,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListPushFront.Success(resp.list_length));
           } else {
-            resolve(new CacheListPushFront.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPushFront.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1292,7 +1349,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheListRemoveValue.Success());
           } else {
             resolve(
-              new CacheListRemoveValue.Error(cacheServiceErrorMapper(err))
+              new CacheListRemoveValue.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1343,7 +1402,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheDictionaryFetch.Miss());
           } else {
             resolve(
-              new CacheDictionaryFetch.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1411,7 +1472,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheDictionarySetField.Success());
           } else {
             resolve(
-              new CacheDictionarySetField.Error(cacheServiceErrorMapper(err))
+              new CacheDictionarySetField.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1482,7 +1545,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheDictionarySetFields.Success());
           } else {
             resolve(
-              new CacheDictionarySetFields.Error(cacheServiceErrorMapper(err))
+              new CacheDictionarySetFields.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1564,7 +1629,7 @@ export class CacheDataClient implements IDataClient {
           } else {
             resolve(
               new CacheDictionaryGetField.Error(
-                cacheServiceErrorMapper(err),
+                this.cacheServiceErrorMapper.mapError(err),
                 field
               )
             );
@@ -1630,7 +1695,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheDictionaryGetFields.Miss());
           } else {
             resolve(
-              new CacheDictionaryGetFields.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryGetFields.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1689,7 +1756,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheDictionaryRemoveField.Success());
           } else {
             resolve(
-              new CacheDictionaryRemoveField.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryRemoveField.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1749,7 +1818,7 @@ export class CacheDataClient implements IDataClient {
           } else {
             resolve(
               new CacheDictionaryRemoveFields.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           }
@@ -1804,7 +1873,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheDictionaryLength.Hit(resp.found.length));
           } else {
             resolve(
-              new CacheDictionaryLength.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1867,7 +1938,11 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheIncrement.Success(0));
             }
           } else {
-            resolve(new CacheIncrement.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheIncrement.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1941,7 +2016,9 @@ export class CacheDataClient implements IDataClient {
             }
           } else {
             resolve(
-              new CacheDictionaryIncrement.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryIncrement.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2013,7 +2090,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheSortedSetPutElement.Success());
           } else {
             resolve(
-              new CacheSortedSetPutElement.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetPutElement.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2083,7 +2162,9 @@ export class CacheDataClient implements IDataClient {
             resolve(new CacheSortedSetPutElements.Success());
           } else {
             resolve(
-              new CacheSortedSetPutElements.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetPutElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2195,7 +2276,9 @@ export class CacheDataClient implements IDataClient {
             }
           } else {
             resolve(
-              new CacheSortedSetFetch.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2336,7 +2419,9 @@ export class CacheDataClient implements IDataClient {
             }
           } else {
             resolve(
-              new CacheSortedSetFetch.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2405,7 +2490,9 @@ export class CacheDataClient implements IDataClient {
               }
             } else {
               resolve(
-                new CacheSortedSetGetRank.Error(cacheServiceErrorMapper(err))
+                new CacheSortedSetGetRank.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
               );
             }
           }
@@ -2496,7 +2583,9 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheSortedSetGetScores.Hit(elements, values));
             } else {
               resolve(
-                new CacheSortedSetGetScores.Error(cacheServiceErrorMapper(err))
+                new CacheSortedSetGetScores.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
               );
             }
           }
@@ -2574,7 +2663,7 @@ export class CacheDataClient implements IDataClient {
             } else {
               resolve(
                 new CacheSortedSetIncrementScore.Error(
-                  cacheServiceErrorMapper(err)
+                  this.cacheServiceErrorMapper.mapError(err)
                 )
               );
             }
@@ -2634,7 +2723,7 @@ export class CacheDataClient implements IDataClient {
           if (err) {
             resolve(
               new CacheSortedSetRemoveElement.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           } else {
@@ -2696,7 +2785,7 @@ export class CacheDataClient implements IDataClient {
           if (err) {
             resolve(
               new CacheSortedSetRemoveElements.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           } else {
@@ -2759,7 +2848,9 @@ export class CacheDataClient implements IDataClient {
             }
           } else {
             resolve(
-              new CacheSortedSetLength.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2843,7 +2934,7 @@ export class CacheDataClient implements IDataClient {
           } else {
             resolve(
               new CacheSortedSetLengthByScore.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           }
@@ -2970,7 +3061,11 @@ export class CacheDataClient implements IDataClient {
               )
             );
           } else {
-            resolve(new CacheItemGetType.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheItemGetType.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3009,7 +3104,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheItemGetTtl.Hit(resp.found.remaining_ttl_millis));
           } else {
-            resolve(new CacheItemGetTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheItemGetTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3056,7 +3155,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheKeyExists.Success(resp.exists));
           } else {
-            resolve(new CacheKeyExists.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheKeyExists.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3116,7 +3219,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.set) {
             resolve(new CacheUpdateTtl.Set());
           } else {
-            resolve(new CacheUpdateTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheUpdateTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3163,7 +3270,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheKeysExist.Success(resp.exists));
           } else {
-            resolve(new CacheKeysExist.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheKeysExist.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3223,7 +3334,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.set) {
             resolve(new CacheIncreaseTtl.Set());
           } else {
-            resolve(new CacheIncreaseTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheIncreaseTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3283,7 +3398,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.set) {
             resolve(new CacheDecreaseTtl.Set());
           } else {
-            resolve(new CacheDecreaseTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheDecreaseTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );

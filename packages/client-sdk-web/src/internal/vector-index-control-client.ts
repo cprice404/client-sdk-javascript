@@ -13,7 +13,7 @@ import {
   _DeleteIndexRequest,
   _SimilarityMetric,
 } from '@gomomento/generated-types-webtext/dist/controlclient_pb';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {
   IVectorIndexControlClient,
   VectorSimilarityMetric,
@@ -46,6 +46,7 @@ export class VectorIndexControlClient<
 {
   private readonly clientWrapper: control.ScsControlClient;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
 
   private readonly clientMetadataProvider: ClientMetadataProvider;
 
@@ -54,6 +55,9 @@ export class VectorIndexControlClient<
    */
   constructor(props: ControlClientProps) {
     this.logger = props.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     this.logger.debug(
       `Creating control client using endpoint: '${getWebControlEndpoint(
         props.credentialProvider
@@ -126,7 +130,9 @@ export class VectorIndexControlClient<
               resolve(new CreateVectorIndex.AlreadyExists());
             } else {
               resolve(
-                new CreateVectorIndex.Error(cacheServiceErrorMapper(err))
+                new CreateVectorIndex.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
               );
             }
           } else {
@@ -146,7 +152,11 @@ export class VectorIndexControlClient<
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err) {
-            resolve(new ListVectorIndexes.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new ListVectorIndexes.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             const indexes: VectorIndexInfo[] = resp
               .getIndexesList()
@@ -209,7 +219,11 @@ export class VectorIndexControlClient<
         this.clientMetadataProvider.createClientMetadata(),
         (err, _resp) => {
           if (err) {
-            resolve(new DeleteVectorIndex.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new DeleteVectorIndex.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(new DeleteVectorIndex.Success());
           }

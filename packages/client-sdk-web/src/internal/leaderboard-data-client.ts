@@ -38,7 +38,7 @@ import {
   _UpsertElementsRequest,
 } from '@gomomento/generated-types-webtext/dist/leaderboard_pb';
 import {ClientMetadataProvider} from './client-metadata-provider';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {_RankedElement} from '@gomomento/sdk-core/dist/src/messages/responses/grpc-response-types';
 import {ILeaderboardDataClient} from '@gomomento/sdk-core/dist/src/internal/clients/leaderboard/ILeaderboardDataClient';
 
@@ -48,12 +48,16 @@ export class LeaderboardDataClient<
 > implements ILeaderboardDataClient
 {
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly client: leaderboard.LeaderboardClient;
   private readonly clientMetadataProvider: ClientMetadataProvider;
   private readonly deadlineMillis: number;
 
   constructor(props: LeaderboardClientProps) {
     this.logger = props.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     this.logger.debug(
       `Creating data client using endpoint: '${getWebCacheEndpoint(
         props.credentialProvider
@@ -147,7 +151,11 @@ export class LeaderboardDataClient<
           if (resp) {
             resolve(new LeaderboardUpsert.Success());
           } else {
-            resolve(new LeaderboardUpsert.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardUpsert.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -241,7 +249,11 @@ export class LeaderboardDataClient<
               )
             );
           } else {
-            resolve(new LeaderboardFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -311,7 +323,11 @@ export class LeaderboardDataClient<
               )
             );
           } else {
-            resolve(new LeaderboardFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -366,7 +382,11 @@ export class LeaderboardDataClient<
               )
             );
           } else {
-            resolve(new LeaderboardFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -403,7 +423,11 @@ export class LeaderboardDataClient<
             const length = resp.getCount();
             resolve(new LeaderboardLength.Success(length));
           } else {
-            resolve(new LeaderboardLength.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -450,7 +474,9 @@ export class LeaderboardDataClient<
             resolve(new LeaderboardRemoveElements.Success());
           } else {
             resolve(
-              new LeaderboardRemoveElements.Error(cacheServiceErrorMapper(err))
+              new LeaderboardRemoveElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -487,7 +513,11 @@ export class LeaderboardDataClient<
           if (resp) {
             resolve(new LeaderboardDelete.Success());
           } else {
-            resolve(new LeaderboardDelete.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new LeaderboardDelete.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );

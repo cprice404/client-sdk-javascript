@@ -3,7 +3,7 @@ import grpcPubsub = pubsub.cache_client.pubsub;
 // older versions of node don't have the global util variables https://github.com/nodejs/node/issues/20365
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor, ServiceError} from '@grpc/grpc-js';
 import {Status} from '@grpc/grpc-js/build/src/constants';
 import {version} from '../../package.json';
@@ -33,6 +33,7 @@ export class PubsubClient extends AbstractPubsubClient {
   private static readonly DEFAULT_REQUEST_TIMEOUT_MS: number = 5 * 1000;
   private static readonly DEFAULT_MAX_SESSION_MEMORY_MB: number = 256;
   protected readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly unaryInterceptors: Interceptor[];
   private readonly streamingInterceptors: Interceptor[];
 
@@ -47,6 +48,9 @@ export class PubsubClient extends AbstractPubsubClient {
     this.configuration = props.configuration;
     this.credentialProvider = props.credentialProvider;
     this.logger = this.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      this.configuration.getThrowOnErrors()
+    );
     this.unaryRequestTimeoutMs = PubsubClient.DEFAULT_REQUEST_TIMEOUT_MS;
     this.logger.debug(
       `Creating topic client using endpoint: '${this.credentialProvider.getCacheEndpoint()}'`
@@ -115,7 +119,9 @@ export class PubsubClient extends AbstractPubsubClient {
           if (resp) {
             resolve(new TopicPublish.Success());
           } else {
-            resolve(new TopicPublish.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new TopicPublish.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -244,7 +250,7 @@ export class PubsubClient extends AbstractPubsubClient {
         serviceError.code === Status.INTERNAL &&
         serviceError.details === PubsubClient.RST_STREAM_NO_ERROR_MESSAGE;
       const momentoError = new TopicSubscribe.Error(
-        cacheServiceErrorMapper(serviceError)
+        this.cacheServiceErrorMapper.mapError(serviceError)
       );
       this.handleSubscribeError(options, momentoError, isRstStreamNoError);
     };

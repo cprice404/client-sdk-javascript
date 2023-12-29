@@ -4,7 +4,7 @@ import {
   _GenerateApiTokenRequest,
   _RefreshApiTokenRequest,
 } from '@gomomento/generated-types-webtext/dist/auth_pb';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import Never = _GenerateApiTokenRequest.Never;
 import Expires = _GenerateApiTokenRequest.Expires;
 import {
@@ -78,12 +78,16 @@ export class InternalWebGrpcAuthClient<
 > implements IAuthClient
 {
   private readonly creds: CredentialProvider;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly clientMetadataProvider: ClientMetadataProvider;
   private readonly authClient: auth.AuthClient;
   private readonly tokenClient: token.TokenClient;
 
   constructor(props: AuthClientProps) {
     this.creds = props.credentialProvider;
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.throwOnErrors ?? false
+    );
     this.clientMetadataProvider = new ClientMetadataProvider({});
     this.authClient = new auth.AuthClient(
       // Note: all web SDK requests are routed to a `web.` subdomain to allow us flexibility on the server
@@ -135,7 +139,11 @@ export class InternalWebGrpcAuthClient<
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err || !resp) {
-            resolve(new GenerateApiKey.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new GenerateApiKey.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(
               new GenerateApiKey.Success(
@@ -174,7 +182,11 @@ export class InternalWebGrpcAuthClient<
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err || !resp) {
-            resolve(new RefreshApiKey.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new RefreshApiKey.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(
               new RefreshApiKey.Success(
@@ -245,7 +257,9 @@ export class InternalWebGrpcAuthClient<
         (err, resp) => {
           if (err || !resp) {
             resolve(
-              new GenerateDisposableToken.Error(cacheServiceErrorMapper(err))
+              new GenerateDisposableToken.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           } else {
             resolve(

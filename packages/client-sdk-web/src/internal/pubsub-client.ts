@@ -10,7 +10,7 @@ import {Request, RpcError, StatusCode, UnaryResponse} from 'grpc-web';
 import {TopicClientProps} from '../topic-client-props';
 import {truncateString} from '@gomomento/sdk-core/dist/src/internal/utils';
 import {TopicPublish, TopicSubscribe} from '../index';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {
   AbstractPubsubClient,
   PrepareSubscribeCallbackOptions,
@@ -34,6 +34,7 @@ export class PubsubClient<
   private readonly requestTimeoutMs: number;
   private static readonly DEFAULT_REQUEST_TIMEOUT_MS: number = 5 * 1000;
   protected readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly clientMetadataProvider: ClientMetadataProvider;
 
   private static readonly RST_STREAM_NO_ERROR_MESSAGE =
@@ -46,6 +47,9 @@ export class PubsubClient<
     this.configuration = props.configuration;
     this.credentialProvider = props.credentialProvider;
     this.logger = this.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
 
     this.requestTimeoutMs = PubsubClient.DEFAULT_REQUEST_TIMEOUT_MS;
     this.logger.debug(
@@ -99,7 +103,9 @@ export class PubsubClient<
           if (resp) {
             resolve(new TopicPublish.Success());
           } else {
-            resolve(new TopicPublish.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new TopicPublish.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -233,7 +239,7 @@ export class PubsubClient<
       const shouldReconnectSubscription =
         isBrowserDisconnect || isRstStreamNoError;
       const momentoError = new TopicSubscribe.Error(
-        cacheServiceErrorMapper(serviceError)
+        this.cacheServiceErrorMapper.mapError(serviceError)
       );
       this.handleSubscribeError(
         options,

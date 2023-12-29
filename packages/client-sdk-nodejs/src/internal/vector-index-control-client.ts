@@ -2,7 +2,7 @@ import {control} from '@gomomento/generated-types';
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
 import {Status} from '@grpc/grpc-js/build/src/constants';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';
 import {
   CredentialProvider,
@@ -43,12 +43,16 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
   private readonly interceptors: Interceptor[];
   private static readonly REQUEST_TIMEOUT_MS: number = 60 * 1000;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
 
   /**
    * @param {ControlClientProps} props
    */
   constructor(props: ControlClientProps) {
     this.logger = props.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     const headers = [
       new Header('Authorization', props.credentialProvider.getAuthToken()),
       new Header('Agent', `nodejs:${version}`),
@@ -127,7 +131,9 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
               resolve(new CreateVectorIndex.AlreadyExists());
             } else {
               resolve(
-                new CreateVectorIndex.Error(cacheServiceErrorMapper(err))
+                new CreateVectorIndex.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
               );
             }
           } else {
@@ -152,7 +158,9 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
               // TODO: `Argument of type 'unknown' is not assignable to parameter of type 'Error'.`
               //  I don't see how this is different from the other methods here. So, yeah, what?
               resolve(
-                new ListVectorIndexes.Error(cacheServiceErrorMapper(err))
+                new ListVectorIndexes.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
               );
             } else {
               const indexes = resp.indexes.map(index => {
@@ -209,7 +217,11 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (err, resp) => {
           if (err) {
-            resolve(new DeleteVectorIndex.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new DeleteVectorIndex.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(new DeleteVectorIndex.Success());
           }

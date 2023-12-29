@@ -22,7 +22,7 @@ import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';
 import {vectorindex} from '@gomomento/generated-types/dist/vectorindex';
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {
   validateIndexName,
   validateTopK,
@@ -37,6 +37,7 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
   private readonly configuration: VectorIndexConfiguration;
   private readonly credentialProvider: CredentialProvider;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly requestTimeoutMs: number;
   private readonly client: vectorindex.VectorIndexClient;
   private readonly interceptors: Interceptor[];
@@ -45,6 +46,9 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
     this.configuration = props.configuration;
     this.credentialProvider = props.credentialProvider;
     this.logger = this.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     const grpcConfig = this.configuration
       .getTransportStrategy()
       .getGrpcConfig();
@@ -177,7 +181,9 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
             resolve(new VectorUpsertItemBatch.Success());
           } else {
             resolve(
-              new VectorUpsertItemBatch.Error(cacheServiceErrorMapper(err))
+              new VectorUpsertItemBatch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -214,7 +220,9 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
             resolve(new VectorDeleteItemBatch.Success());
           } else {
             resolve(
-              new VectorDeleteItemBatch.Error(cacheServiceErrorMapper(err))
+              new VectorDeleteItemBatch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -335,7 +343,9 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
               )
             );
           } else {
-            resolve(new VectorSearch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new VectorSearch.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -406,7 +416,7 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
           } else {
             resolve(
               new VectorSearchAndFetchVectors.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           }
@@ -482,7 +492,11 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
               )
             );
           } else {
-            resolve(new VectorGetItemBatch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new VectorGetItemBatch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -556,7 +570,9 @@ export class VectorIndexDataClient implements IVectorIndexDataClient {
             );
           } else {
             resolve(
-              new VectorGetItemMetadataBatch.Error(cacheServiceErrorMapper(err))
+              new VectorGetItemMetadataBatch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }

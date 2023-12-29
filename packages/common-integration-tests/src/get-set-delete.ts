@@ -7,6 +7,7 @@ import {
   CacheSet,
   CacheSetIfNotExists,
   MomentoErrorCode,
+  FailedPreconditionError,
 } from '@gomomento/sdk-core';
 import {TextEncoder} from 'util';
 import {
@@ -19,6 +20,7 @@ import {ICacheClient} from '@gomomento/sdk-core/dist/src/internal/clients/cache'
 
 export function runGetSetDeleteTests(
   cacheClient: ICacheClient,
+  cacheClientWithThrowOnErrors: ICacheClient,
   integrationTestCacheName: string
 ) {
   describe('get/set/delete', () => {
@@ -430,7 +432,7 @@ export function runGetSetDeleteTests(
       expect(successResponse.valueNumber()).toEqual(0);
     });
 
-    it('fails with precondition with a bad amount', async () => {
+    it('returns FailedPreconditionError if increment is called on a string', async () => {
       const field = v4();
 
       await cacheClient.set(integrationTestCacheName, field, 'abcxyz');
@@ -748,6 +750,35 @@ export function runGetSetDeleteTests(
       if (getResponse instanceof CacheGet.Hit) {
         expect(getResponse.valueString()).toEqual(cacheValue);
       }
+    });
+  });
+
+  describe('when configured to throw on errors', () => {
+    it('throws a FailedPreconditionError if increment is called on a string', async () => {
+      const field = v4();
+
+      console.error('\n\n\nRUNNING THE THROW TEST\n\n\n');
+
+      const setResponse = await cacheClientWithThrowOnErrors.set(
+        integrationTestCacheName,
+        field,
+        'abcxyz'
+      );
+
+      console.error(
+        `\n\n\n\nTHE SET RESPONSE IS: ${setResponse.toString()}\n\n\n\n`
+      );
+
+      expect(async () => {
+        const incrementResponse = await cacheClient.increment(
+          integrationTestCacheName,
+          field,
+          1
+        );
+        console.debug(
+          `\n\n\n\nINCREMENT RESPONSE: ${incrementResponse.toString()}\n\n\n\n`
+        );
+      }).toThrow(FailedPreconditionError);
     });
   });
 }

@@ -55,7 +55,7 @@ import {
 } from '..';
 import {Configuration} from '../config/configuration';
 import {Request, UnaryResponse} from 'grpc-web';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {
   _DictionaryFieldValuePair,
   _DictionaryGetResponsePart,
@@ -149,6 +149,7 @@ export class CacheDataClient<
   private readonly clientWrapper: cache.ScsClient;
   private readonly textEncoder: TextEncoder;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly clientMetadataProvider: ClientMetadataProvider;
   private readonly defaultTtlSeconds: number;
   private readonly deadlineMillis: number;
@@ -158,6 +159,9 @@ export class CacheDataClient<
    */
   constructor(props: DataClientProps) {
     this.logger = props.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     this.logger.debug(
       `Creating data client using endpoint: '${getWebCacheEndpoint(
         props.credentialProvider
@@ -245,7 +249,9 @@ export class CacheDataClient<
                 break;
             }
           } else {
-            resolve(new CacheGet.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheGet.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -305,7 +311,9 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheSet.Success());
           } else {
-            resolve(new CacheSet.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheSet.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -383,7 +391,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheSetIfNotExists.Error(cacheServiceErrorMapper(err))
+              new CacheSetIfNotExists.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -422,7 +432,9 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheDelete.Success());
           } else {
-            resolve(new CacheDelete.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheDelete.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -482,7 +494,11 @@ export class CacheDataClient<
               resolve(new CacheIncrement.Success(0));
             }
           } else {
-            resolve(new CacheIncrement.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheIncrement.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -524,7 +540,11 @@ export class CacheDataClient<
           } else if (resp?.getMissing()) {
             resolve(new CacheSetFetch.Miss());
           } else {
-            resolve(new CacheSetFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheSetFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -575,7 +595,9 @@ export class CacheDataClient<
         err => {
           if (err) {
             resolve(
-              new CacheSetAddElements.Error(cacheServiceErrorMapper(err))
+              new CacheSetAddElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           } else {
             resolve(new CacheSetAddElements.Success());
@@ -626,7 +648,9 @@ export class CacheDataClient<
         err => {
           if (err) {
             resolve(
-              new CacheSetRemoveElements.Error(cacheServiceErrorMapper(err))
+              new CacheSetRemoveElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           } else {
             resolve(new CacheSetRemoveElements.Success());
@@ -701,7 +725,9 @@ export class CacheDataClient<
             resolve(new CacheListConcatenateBack.Success(resp.getListLength()));
           } else {
             resolve(
-              new CacheListConcatenateBack.Error(cacheServiceErrorMapper(err))
+              new CacheListConcatenateBack.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -776,7 +802,9 @@ export class CacheDataClient<
             );
           } else {
             resolve(
-              new CacheListConcatenateFront.Error(cacheServiceErrorMapper(err))
+              new CacheListConcatenateFront.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -853,7 +881,11 @@ export class CacheDataClient<
               resolve(new CacheListFetch.Miss());
             }
           } else {
-            resolve(new CacheListFetch.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -929,7 +961,11 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheListRetain.Success());
           } else {
-            resolve(new CacheListRetain.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListRetain.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -982,7 +1018,11 @@ export class CacheDataClient<
               resolve(new CacheListLength.Hit(len));
             }
           } else {
-            resolve(new CacheListLength.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1034,7 +1074,11 @@ export class CacheDataClient<
               resolve(new CacheListPopBack.Hit(this.convertToUint8Array(val)));
             }
           } else {
-            resolve(new CacheListPopBack.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPopBack.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1086,7 +1130,11 @@ export class CacheDataClient<
               resolve(new CacheListPopFront.Hit(this.convertToUint8Array(val)));
             }
           } else {
-            resolve(new CacheListPopFront.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPopFront.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1153,7 +1201,11 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheListPushBack.Success(resp.getListLength()));
           } else {
-            resolve(new CacheListPushBack.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPushBack.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1220,7 +1272,11 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheListPushFront.Success(resp.getListLength()));
           } else {
-            resolve(new CacheListPushFront.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheListPushFront.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -1273,7 +1329,9 @@ export class CacheDataClient<
             resolve(new CacheListRemoveValue.Success());
           } else {
             resolve(
-              new CacheListRemoveValue.Error(cacheServiceErrorMapper(err))
+              new CacheListRemoveValue.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1342,7 +1400,9 @@ export class CacheDataClient<
             resolve(new CacheDictionarySetField.Success());
           } else {
             resolve(
-              new CacheDictionarySetField.Error(cacheServiceErrorMapper(err))
+              new CacheDictionarySetField.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1412,7 +1472,9 @@ export class CacheDataClient<
             resolve(new CacheDictionarySetFields.Success());
           } else {
             resolve(
-              new CacheDictionarySetFields.Error(cacheServiceErrorMapper(err))
+              new CacheDictionarySetFields.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1500,7 +1562,7 @@ export class CacheDataClient<
           } else {
             resolve(
               new CacheDictionaryGetField.Error(
-                cacheServiceErrorMapper(err),
+                this.cacheServiceErrorMapper.mapError(err),
                 this.convertToUint8Array(field)
               )
             );
@@ -1573,7 +1635,9 @@ export class CacheDataClient<
             resolve(new CacheDictionaryGetFields.Miss());
           } else {
             resolve(
-              new CacheDictionaryGetFields.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryGetFields.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1633,7 +1697,9 @@ export class CacheDataClient<
             resolve(new CacheDictionaryFetch.Miss());
           } else {
             resolve(
-              new CacheDictionaryFetch.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1707,7 +1773,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheDictionaryIncrement.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryIncrement.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1763,7 +1831,9 @@ export class CacheDataClient<
             resolve(new CacheDictionaryRemoveField.Success());
           } else {
             resolve(
-              new CacheDictionaryRemoveField.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryRemoveField.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1820,7 +1890,7 @@ export class CacheDataClient<
           } else {
             resolve(
               new CacheDictionaryRemoveFields.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           }
@@ -1878,7 +1948,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheDictionaryLength.Error(cacheServiceErrorMapper(err))
+              new CacheDictionaryLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -1984,7 +2056,9 @@ export class CacheDataClient<
             resolve(new CacheSortedSetFetch.Miss());
           } else {
             resolve(
-              new CacheSortedSetFetch.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2127,7 +2201,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheSortedSetFetch.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetFetch.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2201,7 +2277,9 @@ export class CacheDataClient<
             resolve(new CacheSortedSetPutElement.Success());
           } else {
             resolve(
-              new CacheSortedSetPutElement.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetPutElement.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2270,7 +2348,9 @@ export class CacheDataClient<
             resolve(new CacheSortedSetPutElements.Success());
           } else {
             resolve(
-              new CacheSortedSetPutElements.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetPutElements.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2379,7 +2459,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheSortedSetGetScores.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetGetScores.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2448,7 +2530,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheSortedSetGetRank.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetGetRank.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2527,7 +2611,7 @@ export class CacheDataClient<
           } else {
             resolve(
               new CacheSortedSetIncrementScore.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           }
@@ -2583,7 +2667,7 @@ export class CacheDataClient<
           if (err) {
             resolve(
               new CacheSortedSetRemoveElement.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           } else {
@@ -2641,7 +2725,7 @@ export class CacheDataClient<
           if (err) {
             resolve(
               new CacheSortedSetRemoveElements.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           } else {
@@ -2703,7 +2787,9 @@ export class CacheDataClient<
             }
           } else {
             resolve(
-              new CacheSortedSetLength.Error(cacheServiceErrorMapper(err))
+              new CacheSortedSetLength.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
             );
           }
         }
@@ -2786,7 +2872,7 @@ export class CacheDataClient<
           } else {
             resolve(
               new CacheSortedSetLengthByScore.Error(
-                cacheServiceErrorMapper(err)
+                this.cacheServiceErrorMapper.mapError(err)
               )
             );
           }
@@ -2831,7 +2917,11 @@ export class CacheDataClient<
           } else if (resp?.getMissing()) {
             resolve(new CacheItemGetType.Miss());
           } else {
-            resolve(new CacheItemGetType.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheItemGetType.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -2871,7 +2961,11 @@ export class CacheDataClient<
           } else if (resp?.getMissing()) {
             resolve(new CacheItemGetTtl.Miss());
           } else {
-            resolve(new CacheItemGetTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheItemGetTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -2917,7 +3011,11 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheKeyExists.Success(resp.getExistsList()));
           } else {
-            resolve(new CacheKeyExists.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheKeyExists.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -2966,7 +3064,11 @@ export class CacheDataClient<
           if (resp) {
             resolve(new CacheKeysExist.Success(resp.getExistsList()));
           } else {
-            resolve(new CacheKeysExist.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheKeysExist.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3025,7 +3127,11 @@ export class CacheDataClient<
           } else if (resp?.getSet()) {
             resolve(new CacheUpdateTtl.Set());
           } else {
-            resolve(new CacheUpdateTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheUpdateTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3084,7 +3190,11 @@ export class CacheDataClient<
           } else if (resp?.getSet()) {
             resolve(new CacheIncreaseTtl.Set());
           } else {
-            resolve(new CacheIncreaseTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheIncreaseTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );
@@ -3143,7 +3253,11 @@ export class CacheDataClient<
           } else if (resp?.getSet()) {
             resolve(new CacheDecreaseTtl.Set());
           } else {
-            resolve(new CacheDecreaseTtl.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheDecreaseTtl.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           }
         }
       );

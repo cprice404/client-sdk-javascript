@@ -3,7 +3,7 @@ import grpcControl = control.control_client;
 import {Header, HeaderInterceptorProvider} from './grpc/headers-interceptor';
 import {ClientTimeoutInterceptor} from './grpc/client-timeout-interceptor';
 import {Status} from '@grpc/grpc-js/build/src/constants';
-import {cacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
+import {CacheServiceErrorMapper} from '../errors/cache-service-error-mapper';
 import {ChannelCredentials, Interceptor} from '@grpc/grpc-js';
 import {
   CreateCache,
@@ -42,12 +42,16 @@ export class CacheControlClient {
   private readonly interceptors: Interceptor[];
   private static readonly REQUEST_TIMEOUT_MS: number = 60 * 1000;
   private readonly logger: MomentoLogger;
+  private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
 
   /**
    * @param {ControlClientProps} props
    */
   constructor(props: ControlClientProps) {
     this.logger = props.configuration.getLoggerFactory().getLogger(this);
+    this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
+      props.configuration.getThrowOnErrors()
+    );
     const headers = [
       new Header('Authorization', props.credentialProvider.getAuthToken()),
       new Header('Agent', `nodejs:${version}`),
@@ -93,7 +97,11 @@ export class CacheControlClient {
               if (err.code === Status.ALREADY_EXISTS) {
                 resolve(new CreateCache.AlreadyExists());
               } else {
-                resolve(new CreateCache.Error(cacheServiceErrorMapper(err)));
+                resolve(
+                  new CreateCache.Error(
+                    this.cacheServiceErrorMapper.mapError(err)
+                  )
+                );
               }
             } else {
               resolve(new CreateCache.Success());
@@ -121,7 +129,11 @@ export class CacheControlClient {
           {interceptors: this.interceptors},
           (err, _resp) => {
             if (err) {
-              resolve(new DeleteCache.Error(cacheServiceErrorMapper(err)));
+              resolve(
+                new DeleteCache.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
+              );
             } else {
               resolve(new DeleteCache.Success());
             }
@@ -156,7 +168,9 @@ export class CacheControlClient {
           if (resp) {
             resolve(new CacheFlush.Success());
           } else {
-            resolve(new CacheFlush.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new CacheFlush.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           }
         }
       );
@@ -172,7 +186,9 @@ export class CacheControlClient {
         .getClient()
         .ListCaches(request, {interceptors: this.interceptors}, (err, resp) => {
           if (err || !resp) {
-            resolve(new ListCaches.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new ListCaches.Error(this.cacheServiceErrorMapper.mapError(err))
+            );
           } else {
             const caches = resp.cache.map(cache => {
               const cacheName = cache.cache_name;
@@ -217,7 +233,11 @@ export class CacheControlClient {
           {interceptors: this.interceptors},
           (err, resp) => {
             if (err) {
-              resolve(new CreateSigningKey.Error(cacheServiceErrorMapper(err)));
+              resolve(
+                new CreateSigningKey.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
+              );
             } else {
               const signingKey = new _SigningKey(resp?.key, resp?.expires_at);
               resolve(new CreateSigningKey.Success(endpoint, signingKey));
@@ -238,7 +258,11 @@ export class CacheControlClient {
         .getClient()
         .RevokeSigningKey(request, {interceptors: this.interceptors}, err => {
           if (err) {
-            resolve(new RevokeSigningKey.Error(cacheServiceErrorMapper(err)));
+            resolve(
+              new RevokeSigningKey.Error(
+                this.cacheServiceErrorMapper.mapError(err)
+              )
+            );
           } else {
             resolve(new RevokeSigningKey.Success());
           }
@@ -260,7 +284,11 @@ export class CacheControlClient {
           {interceptors: this.interceptors},
           (err, resp) => {
             if (err || !resp) {
-              resolve(new ListSigningKeys.Error(cacheServiceErrorMapper(err)));
+              resolve(
+                new ListSigningKeys.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
+              );
             } else {
               const signingKeys = resp.signing_key.map(
                 sk => new _SigningKey(sk.key_id, sk.expires_at)
