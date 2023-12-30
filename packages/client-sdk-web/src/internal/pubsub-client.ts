@@ -92,7 +92,7 @@ export class PubsubClient<
     request.setTopic(topicName);
     request.setValue(topicValue);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.client.publish(
         request,
         {
@@ -103,8 +103,11 @@ export class PubsubClient<
           if (resp) {
             resolve(new TopicPublish.Success());
           } else {
-            resolve(
-              new TopicPublish.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new TopicPublish.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -239,7 +242,7 @@ export class PubsubClient<
       const shouldReconnectSubscription =
         isBrowserDisconnect || isRstStreamNoError;
       const momentoError = new TopicSubscribe.Error(
-        this.cacheServiceErrorMapper.mapError(serviceError)
+        this.cacheServiceErrorMapper.convertError(serviceError)
       );
       this.handleSubscribeError(
         options,

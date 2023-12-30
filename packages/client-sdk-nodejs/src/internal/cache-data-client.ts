@@ -331,7 +331,7 @@ export class CacheDataClient implements IDataClient {
       ttl_milliseconds: ttl * 1000,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().Set(
         request,
         metadata,
@@ -342,8 +342,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheSet.Success());
           } else {
-            resolve(
-              new CacheSet.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSet.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -372,7 +375,7 @@ export class CacheDataClient implements IDataClient {
       set_name: setName,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SetFetch(
         request,
         metadata,
@@ -385,10 +388,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheSetFetch.Hit(resp.found.elements));
           } else {
-            resolve(
-              new CacheSetFetch.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSetFetch.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -431,7 +435,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SetUnion(
         request,
         metadata,
@@ -440,10 +444,11 @@ export class CacheDataClient implements IDataClient {
         },
         err => {
           if (err) {
-            resolve(
-              new CacheSetAddElements.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSetAddElements.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new CacheSetAddElements.Success());
@@ -487,7 +492,7 @@ export class CacheDataClient implements IDataClient {
     });
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SetDifference(
         request,
         metadata,
@@ -496,10 +501,11 @@ export class CacheDataClient implements IDataClient {
         },
         err => {
           if (err) {
-            resolve(
-              new CacheSetRemoveElements.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSetRemoveElements.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new CacheSetRemoveElements.Success());
@@ -554,7 +560,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SetIfNotExists(
         request,
         metadata,
@@ -581,10 +587,11 @@ export class CacheDataClient implements IDataClient {
                 break;
             }
           } else {
-            resolve(
-              new CacheSetIfNotExists.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSetIfNotExists.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -613,7 +620,7 @@ export class CacheDataClient implements IDataClient {
       cache_key: key,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().Delete(
         request,
         metadata,
@@ -624,8 +631,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheDelete.Success());
           } else {
-            resolve(
-              new CacheDelete.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDelete.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -657,7 +667,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().Get(
         request,
         metadata,
@@ -688,8 +698,11 @@ export class CacheDataClient implements IDataClient {
                 break;
             }
           } else {
-            resolve(
-              new CacheGet.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheGet.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -751,7 +764,7 @@ export class CacheDataClient implements IDataClient {
       truncate_front_to_size: truncateFrontToSize,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListConcatenateBack(
         request,
         metadata,
@@ -762,10 +775,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListConcatenateBack.Success(resp.list_length));
           } else {
-            resolve(
-              new CacheListConcatenateBack.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListConcatenateBack.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -827,7 +841,7 @@ export class CacheDataClient implements IDataClient {
       truncate_back_to_size: truncateBackToSize,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListConcatenateFront(
         request,
         metadata,
@@ -838,10 +852,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListConcatenateFront.Success(resp.list_length));
           } else {
-            resolve(
-              new CacheListConcatenateFront.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListConcatenateFront.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -899,7 +914,7 @@ export class CacheDataClient implements IDataClient {
     }
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListFetch(
         request,
         metadata,
@@ -912,10 +927,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListFetch.Hit(resp.found.values));
           } else {
-            resolve(
-              new CacheListFetch.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListFetch.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -981,7 +997,7 @@ export class CacheDataClient implements IDataClient {
     }
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListRetain(
         request,
         metadata,
@@ -992,10 +1008,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListRetain.Success());
           } else {
-            resolve(
-              new CacheListRetain.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListRetain.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1028,7 +1045,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListLength(
         request,
         metadata,
@@ -1041,10 +1058,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListLength.Hit(resp.found.length));
           } else {
-            resolve(
-              new CacheListLength.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListLength.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1081,7 +1099,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListPopBack(
         request,
         metadata,
@@ -1094,10 +1112,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListPopBack.Hit(resp.found.back));
           } else {
-            resolve(
-              new CacheListPopBack.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListPopBack.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1134,7 +1153,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListPopFront(
         request,
         metadata,
@@ -1147,10 +1166,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheListPopFront.Hit(resp.found.front));
           } else {
-            resolve(
-              new CacheListPopFront.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListPopFront.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1208,7 +1228,7 @@ export class CacheDataClient implements IDataClient {
       truncate_front_to_size: truncateFrontToSize,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListPushBack(
         request,
         metadata,
@@ -1219,10 +1239,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListPushBack.Success(resp.list_length));
           } else {
-            resolve(
-              new CacheListPushBack.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListPushBack.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1280,7 +1301,7 @@ export class CacheDataClient implements IDataClient {
       truncate_back_to_size: truncateBackToSize,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListPushFront(
         request,
         metadata,
@@ -1291,10 +1312,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListPushFront.Success(resp.list_length));
           } else {
-            resolve(
-              new CacheListPushFront.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListPushFront.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1337,7 +1359,7 @@ export class CacheDataClient implements IDataClient {
       all_elements_with_value: value,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ListRemove(
         request,
         metadata,
@@ -1348,10 +1370,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheListRemoveValue.Success());
           } else {
-            resolve(
-              new CacheListRemoveValue.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheListRemoveValue.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1388,7 +1411,7 @@ export class CacheDataClient implements IDataClient {
       dictionary_name: dictionaryName,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryFetch(
         request,
         metadata,
@@ -1401,10 +1424,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.missing) {
             resolve(new CacheDictionaryFetch.Miss());
           } else {
-            resolve(
-              new CacheDictionaryFetch.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryFetch.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1460,7 +1484,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionarySet(
         request,
         metadata,
@@ -1471,10 +1495,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheDictionarySetField.Success());
           } else {
-            resolve(
-              new CacheDictionarySetField.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionarySetField.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1533,7 +1558,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionarySet(
         request,
         metadata,
@@ -1544,10 +1569,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheDictionarySetFields.Success());
           } else {
-            resolve(
-              new CacheDictionarySetFields.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionarySetFields.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1594,7 +1620,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryGet(
         request,
         metadata,
@@ -1627,11 +1653,11 @@ export class CacheDataClient implements IDataClient {
               );
             }
           } else {
-            resolve(
-              new CacheDictionaryGetField.Error(
-                this.cacheServiceErrorMapper.mapError(err),
-                field
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryGetField.Error(e, field),
+              resolve,
+              reject
             );
           }
         }
@@ -1677,7 +1703,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryGet(
         request,
         metadata,
@@ -1694,10 +1720,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.dictionary === 'missing') {
             resolve(new CacheDictionaryGetFields.Miss());
           } else {
-            resolve(
-              new CacheDictionaryGetFields.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryGetFields.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1744,7 +1771,7 @@ export class CacheDataClient implements IDataClient {
     request.some.fields.push(field);
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryDelete(
         request,
         metadata,
@@ -1755,10 +1782,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheDictionaryRemoveField.Success());
           } else {
-            resolve(
-              new CacheDictionaryRemoveField.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryRemoveField.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1805,7 +1833,7 @@ export class CacheDataClient implements IDataClient {
     fields.forEach(field => request.some.fields.push(field));
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryDelete(
         request,
         metadata,
@@ -1816,10 +1844,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheDictionaryRemoveFields.Success());
           } else {
-            resolve(
-              new CacheDictionaryRemoveFields.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryRemoveFields.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1859,7 +1888,7 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryLength(
         request,
         metadata,
@@ -1872,10 +1901,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheDictionaryLength.Hit(resp.found.length));
           } else {
-            resolve(
-              new CacheDictionaryLength.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryLength.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -1941,19 +1971,25 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheIncrement.Success(0));
             }
           } else {
-            try {
-              console.log(
-                'SENDINCREMENT GOT AN ERROR FROM THE SERVER, TRYING TO RESOLVE'
-              );
-              resolve(
-                new CacheIncrement.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
-              );
-            } catch (err) {
-              console.log('SENDINCREMENT REJECTING!!');
-              reject(err);
-            }
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheIncrement.Error(e),
+              resolve,
+              reject
+            );
+            // try {
+            //   console.log(
+            //     'SENDINCREMENT GOT AN ERROR FROM THE SERVER, TRYING TO RESOLVE'
+            //   );
+            //   resolve(
+            //     new CacheIncrement.Error(
+            //       this.cacheServiceErrorMapper.mapError(err)
+            //     )
+            //   );
+            // } catch (err) {
+            //   console.log('SENDINCREMENT REJECTING!!');
+            //   reject(err);
+            // }
           }
         }
       );
@@ -2011,7 +2047,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().DictionaryIncrement(
         request,
         metadata,
@@ -2026,10 +2062,11 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheDictionaryIncrement.Success(0));
             }
           } else {
-            resolve(
-              new CacheDictionaryIncrement.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDictionaryIncrement.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -2089,7 +2126,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetPut(
         request,
         metadata,
@@ -2100,10 +2137,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheSortedSetPutElement.Success());
           } else {
-            resolve(
-              new CacheSortedSetPutElement.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetPutElement.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -2161,7 +2199,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetPut(
         request,
         metadata,
@@ -2172,10 +2210,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheSortedSetPutElements.Success());
           } else {
-            resolve(
-              new CacheSortedSetPutElements.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetPutElements.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -2251,7 +2290,7 @@ export class CacheDataClient implements IDataClient {
     });
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetFetch(
         request,
         metadata,
@@ -2286,10 +2325,11 @@ export class CacheDataClient implements IDataClient {
               );
             }
           } else {
-            resolve(
-              new CacheSortedSetFetch.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetFetch.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -2394,7 +2434,7 @@ export class CacheDataClient implements IDataClient {
     });
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetFetch(
         request,
         metadata,
@@ -2429,10 +2469,11 @@ export class CacheDataClient implements IDataClient {
               );
             }
           } else {
-            resolve(
-              new CacheSortedSetFetch.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetFetch.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -2480,7 +2521,7 @@ export class CacheDataClient implements IDataClient {
       value: value,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper
         .getClient()
         .SortedSetGetRank(
@@ -2500,10 +2541,11 @@ export class CacheDataClient implements IDataClient {
                 resolve(new CacheSortedSetGetRank.Hit(resp.element_rank.rank));
               }
             } else {
-              resolve(
-                new CacheSortedSetGetRank.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new CacheSortedSetGetRank.Error(e),
+                resolve,
+                reject
               );
             }
           }
@@ -2576,7 +2618,7 @@ export class CacheDataClient implements IDataClient {
       values: values,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper
         .getClient()
         .SortedSetGetScore(
@@ -2593,10 +2635,11 @@ export class CacheDataClient implements IDataClient {
               });
               resolve(new CacheSortedSetGetScores.Hit(elements, values));
             } else {
-              resolve(
-                new CacheSortedSetGetScores.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new CacheSortedSetGetScores.Error(e),
+                resolve,
+                reject
               );
             }
           }
@@ -2657,7 +2700,7 @@ export class CacheDataClient implements IDataClient {
       refresh_ttl: refreshTtl,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper
         .getClient()
         .SortedSetIncrement(
@@ -2672,10 +2715,11 @@ export class CacheDataClient implements IDataClient {
                 resolve(new CacheSortedSetIncrementScore.Success(0));
               }
             } else {
-              resolve(
-                new CacheSortedSetIncrementScore.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new CacheSortedSetIncrementScore.Error(e),
+                resolve,
+                reject
               );
             }
           }
@@ -2723,7 +2767,7 @@ export class CacheDataClient implements IDataClient {
     });
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetRemove(
         request,
         metadata,
@@ -2732,10 +2776,11 @@ export class CacheDataClient implements IDataClient {
         },
         err => {
           if (err) {
-            resolve(
-              new CacheSortedSetRemoveElement.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetRemoveElement.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new CacheSortedSetRemoveElement.Success());
@@ -2785,7 +2830,7 @@ export class CacheDataClient implements IDataClient {
     });
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetRemove(
         request,
         metadata,
@@ -2794,10 +2839,11 @@ export class CacheDataClient implements IDataClient {
         },
         err => {
           if (err) {
-            resolve(
-              new CacheSortedSetRemoveElements.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetRemoveElements.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new CacheSortedSetRemoveElements.Success());
@@ -2841,7 +2887,7 @@ export class CacheDataClient implements IDataClient {
     });
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetLength(
         request,
         metadata,
@@ -2858,10 +2904,11 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheSortedSetLength.Hit(resp.found.length));
             }
           } else {
-            resolve(
-              new CacheSortedSetLength.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetLength.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -2926,7 +2973,7 @@ export class CacheDataClient implements IDataClient {
     }
 
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().SortedSetLengthByScore(
         request,
         metadata,
@@ -2943,10 +2990,11 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheSortedSetLengthByScore.Hit(resp.found.length));
             }
           } else {
-            resolve(
-              new CacheSortedSetLengthByScore.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheSortedSetLengthByScore.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3055,7 +3103,7 @@ export class CacheDataClient implements IDataClient {
       cache_key: key,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ItemGetType(
         request,
         metadata,
@@ -3072,10 +3120,11 @@ export class CacheDataClient implements IDataClient {
               )
             );
           } else {
-            resolve(
-              new CacheItemGetType.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheItemGetType.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3102,7 +3151,7 @@ export class CacheDataClient implements IDataClient {
       cache_key: key,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().ItemGetTtl(
         request,
         metadata,
@@ -3115,10 +3164,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.found) {
             resolve(new CacheItemGetTtl.Hit(resp.found.remaining_ttl_millis));
           } else {
-            resolve(
-              new CacheItemGetTtl.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheItemGetTtl.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3155,7 +3205,7 @@ export class CacheDataClient implements IDataClient {
       cache_keys: [key],
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().KeysExist(
         request,
         metadata,
@@ -3166,10 +3216,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheKeyExists.Success(resp.exists));
           } else {
-            resolve(
-              new CacheKeyExists.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheKeyExists.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3217,7 +3268,7 @@ export class CacheDataClient implements IDataClient {
       overwrite_to_milliseconds: ttlMilliseconds,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().UpdateTtl(
         request,
         metadata,
@@ -3230,10 +3281,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.set) {
             resolve(new CacheUpdateTtl.Set());
           } else {
-            resolve(
-              new CacheUpdateTtl.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheUpdateTtl.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3270,7 +3322,7 @@ export class CacheDataClient implements IDataClient {
       cache_keys: keys,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().KeysExist(
         request,
         metadata,
@@ -3281,10 +3333,11 @@ export class CacheDataClient implements IDataClient {
           if (resp) {
             resolve(new CacheKeysExist.Success(resp.exists));
           } else {
-            resolve(
-              new CacheKeysExist.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheKeysExist.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3332,7 +3385,7 @@ export class CacheDataClient implements IDataClient {
       increase_to_milliseconds: ttlMilliseconds,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().UpdateTtl(
         request,
         metadata,
@@ -3345,10 +3398,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.set) {
             resolve(new CacheIncreaseTtl.Set());
           } else {
-            resolve(
-              new CacheIncreaseTtl.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheIncreaseTtl.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -3396,7 +3450,7 @@ export class CacheDataClient implements IDataClient {
       decrease_to_milliseconds: ttlMilliseconds,
     });
     const metadata = this.createMetadata(cacheName);
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.clientWrapper.getClient().UpdateTtl(
         request,
         metadata,
@@ -3409,10 +3463,11 @@ export class CacheDataClient implements IDataClient {
           } else if (resp?.set) {
             resolve(new CacheDecreaseTtl.Set());
           } else {
-            resolve(
-              new CacheDecreaseTtl.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheDecreaseTtl.Error(e),
+              resolve,
+              reject
             );
           }
         }

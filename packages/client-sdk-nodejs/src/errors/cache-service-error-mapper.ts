@@ -26,10 +26,29 @@ export class CacheServiceErrorMapper {
     console.log(`CONSTRUCTING CACHE SERVICE ERROR MAPPER: ${throwOnError}`);
     this.throwOnError = throwOnError;
   }
-  mapError(err: ServiceError | null): SdkError {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    console.log(`MAPPING ERROR!!! ${err}`);
+  handleError(
+    err: ServiceError | null,
+    errorResponseFactoryFn: (err: SdkError) => unknown,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolveFn: (result: any) => void,
+    rejectFn: (err: SdkError) => void
+  ): void {
+    const error = this.convertError(err);
 
+    if (this.throwOnError) {
+      console.log(
+        `THIS MAPPER IS CONFIGURED TO THROW; REJECTING: ${error.toString()}`
+      );
+      rejectFn(error);
+    } else {
+      console.log(
+        `THIS MAPPER IS NOT CONFIGURED TO THROW; RESOLVING: ${error.toString()}`
+      );
+      resolveFn(errorResponseFactoryFn(error));
+    }
+  }
+
+  convertError(err: ServiceError | null): SdkError {
     const errParams: [
       string,
       number | undefined,
@@ -41,62 +60,38 @@ export class CacheServiceErrorMapper {
       err?.metadata,
       err?.stack,
     ];
-    let error: SdkError;
     switch (err?.code) {
       case Status.PERMISSION_DENIED:
-        error = new PermissionError(...errParams);
-        break;
+        return new PermissionError(...errParams);
       case Status.DATA_LOSS:
       case Status.INTERNAL:
       case Status.ABORTED:
-        error = new InternalServerError(...errParams);
-        break;
+        return new InternalServerError(...errParams);
       case Status.UNKNOWN:
-        error = new UnknownServiceError(...errParams);
-        break;
+        return new UnknownServiceError(...errParams);
       case Status.UNAVAILABLE:
-        error = new ServerUnavailableError(...errParams);
-        break;
+        return new ServerUnavailableError(...errParams);
       case Status.NOT_FOUND:
-        error = new NotFoundError(...errParams);
-        break;
+        return new NotFoundError(...errParams);
       case Status.OUT_OF_RANGE:
       case Status.UNIMPLEMENTED:
-        error = new BadRequestError(...errParams);
-        break;
+        return new BadRequestError(...errParams);
       case Status.FAILED_PRECONDITION:
-        error = new FailedPreconditionError(...errParams);
-        break;
+        return new FailedPreconditionError(...errParams);
       case Status.INVALID_ARGUMENT:
-        error = new InvalidArgumentError(...errParams);
-        break;
+        return new InvalidArgumentError(...errParams);
       case Status.CANCELLED:
-        error = new CancelledError(...errParams);
-        break;
+        return new CancelledError(...errParams);
       case Status.DEADLINE_EXCEEDED:
-        error = new TimeoutError(...errParams);
-        break;
+        return new TimeoutError(...errParams);
       case Status.UNAUTHENTICATED:
-        error = new AuthenticationError(...errParams);
-        break;
+        return new AuthenticationError(...errParams);
       case Status.RESOURCE_EXHAUSTED:
-        error = new LimitExceededError(...errParams);
-        break;
+        return new LimitExceededError(...errParams);
       case Status.ALREADY_EXISTS:
-        error = new AlreadyExistsError(...errParams);
-        break;
+        return new AlreadyExistsError(...errParams);
       default:
-        error = new UnknownError(...errParams);
-        break;
+        return new UnknownError(...errParams);
     }
-    if (this.throwOnError) {
-      console.log(`THROWING ERROR: ${error.toString()}`);
-      throw error;
-    } else {
-      console.log(
-        `THIS MAPPER IS NOT CONFIGURED TO THROW; RETURNING ERROR: ${error.toString()}`
-      );
-    }
-    return error;
   }
 }

@@ -118,16 +118,17 @@ export class InternalAuthClient implements IAuthClient {
       request.never = new Never();
     }
 
-    return await new Promise<GenerateApiKey.Response>(resolve => {
+    return await new Promise<GenerateApiKey.Response>((resolve, reject) => {
       this.authClient.GenerateApiToken(
         request,
         {interceptors: this.interceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new GenerateApiKey.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new GenerateApiKey.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(
@@ -162,16 +163,17 @@ export class InternalAuthClient implements IAuthClient {
       refresh_token: refreshToken,
     });
 
-    return await new Promise<RefreshApiKey.Response>(resolve => {
+    return await new Promise<RefreshApiKey.Response>((resolve, reject) => {
       this.authClient.RefreshApiToken(
         request,
         {interceptors: this.interceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new RefreshApiKey.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new RefreshApiKey.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(
@@ -236,29 +238,32 @@ export class InternalAuthClient implements IAuthClient {
       token_id: tokenId,
     });
 
-    return await new Promise<GenerateDisposableToken.Response>(resolve => {
-      this.tokenClient.GenerateDisposableToken(
-        request,
-        {interceptors: this.interceptors},
-        (err, resp) => {
-          if (err || !resp) {
-            resolve(
-              new GenerateDisposableToken.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
-            );
-          } else {
-            resolve(
-              new GenerateDisposableToken.Success(
-                resp.api_key,
-                resp.endpoint,
-                ExpiresAt.fromEpoch(resp.valid_until)
-              )
-            );
+    return await new Promise<GenerateDisposableToken.Response>(
+      (resolve, reject) => {
+        this.tokenClient.GenerateDisposableToken(
+          request,
+          {interceptors: this.interceptors},
+          (err, resp) => {
+            if (err || !resp) {
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new GenerateDisposableToken.Error(e),
+                resolve,
+                reject
+              );
+            } else {
+              resolve(
+                new GenerateDisposableToken.Success(
+                  resp.api_key,
+                  resp.endpoint,
+                  ExpiresAt.fromEpoch(resp.valid_until)
+                )
+              );
+            }
           }
-        }
-      );
-    });
+        );
+      }
+    );
   }
 }
 

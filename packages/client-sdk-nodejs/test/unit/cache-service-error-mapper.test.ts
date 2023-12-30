@@ -12,6 +12,7 @@ import {
   LimitExceededError,
   NotFoundError,
   PermissionError,
+  SdkError,
   ServerUnavailableError,
   TimeoutError,
   UnknownServiceError,
@@ -29,21 +30,52 @@ const generateServiceError = (status: Status): ServiceError => {
 
 describe('CacheServiceErrorMapper', () => {
   const cacheServiceErrorMapper = new CacheServiceErrorMapper(false);
+  let resolved: SdkError | unknown;
+  let rejected: SdkError | unknown;
+  beforeEach(() => {
+    resolved = undefined;
+    rejected = undefined;
+  });
+
+  const errorResponseFactoryFn = (err: SdkError): never => {
+    return err as never;
+  };
+  const resolveFn = (result: unknown) => {
+    resolved = result;
+  };
+  const rejectFn = (err: SdkError) => {
+    rejected = err;
+  };
 
   it('should return permission denied error when Status.PERMISSION_DENIED', () => {
     const serviceError = generateServiceError(Status.PERMISSION_DENIED);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(PermissionError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(PermissionError);
   });
   it('should return invalid argument error when grpc status is INVALID_ARGUMENT', () => {
     const serviceError = generateServiceError(Status.INVALID_ARGUMENT);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(InvalidArgumentError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(InvalidArgumentError);
   });
   it('should return failed precondition error when grpc status is FAILED_PRECONDITION', () => {
     const serviceError = generateServiceError(Status.FAILED_PRECONDITION);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(FailedPreconditionError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(FailedPreconditionError);
   });
   it('should return bad request error when grpc status is OUT_OF_RANGE or UNIMPLEMENTED', () => {
     const serviceErrors = [
@@ -51,24 +83,44 @@ describe('CacheServiceErrorMapper', () => {
       generateServiceError(Status.UNIMPLEMENTED),
     ];
     serviceErrors.forEach(e => {
-      const res = cacheServiceErrorMapper.mapError(e);
-      expect(res).toBeInstanceOf(BadRequestError);
+      cacheServiceErrorMapper.handleError(
+        e,
+        errorResponseFactoryFn,
+        resolveFn,
+        rejectFn
+      );
+      expect(resolved).toBeInstanceOf(BadRequestError);
     });
   });
   it('should return cache not found error when grpc status is NOT_FOUND', () => {
     const serviceError = generateServiceError(Status.NOT_FOUND);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(NotFoundError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(NotFoundError);
   });
   it('should return unavailable error when grpc status is UNAVAILABLE', () => {
     const serviceError = generateServiceError(Status.UNAVAILABLE);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(ServerUnavailableError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(ServerUnavailableError);
   });
   it('should return unknown service error when grpc status is UNKNOWN', () => {
     const serviceError = generateServiceError(Status.UNKNOWN);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(UnknownServiceError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(UnknownServiceError);
   });
   it('should return internal server error when grpc status is DATA_LOSS, INTERNAL, ABORTED', () => {
     const serviceErrors = [
@@ -77,34 +129,64 @@ describe('CacheServiceErrorMapper', () => {
       generateServiceError(Status.ABORTED),
     ];
     serviceErrors.forEach(e => {
-      const res = cacheServiceErrorMapper.mapError(e);
-      expect(res).toBeInstanceOf(InternalServerError);
+      cacheServiceErrorMapper.handleError(
+        e,
+        errorResponseFactoryFn,
+        resolveFn,
+        rejectFn
+      );
+      expect(resolved).toBeInstanceOf(InternalServerError);
     });
   });
   it('should return cancelled error when grpc status is CANCELLED', () => {
     const serviceError = generateServiceError(Status.CANCELLED);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(CancelledError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(CancelledError);
   });
   it('should return timeout error when grpc status is DEADLINE_EXCEEDED', () => {
     const serviceError = generateServiceError(Status.DEADLINE_EXCEEDED);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(TimeoutError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(TimeoutError);
   });
   it('should return authentication error when grpc status is UNAUTHENTICATED', () => {
     const serviceError = generateServiceError(Status.UNAUTHENTICATED);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(AuthenticationError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(AuthenticationError);
   });
   it('should return limit exceeded error when grpc status is RESOURCE_EXHAUSTED', () => {
     const serviceError = generateServiceError(Status.RESOURCE_EXHAUSTED);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(LimitExceededError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(LimitExceededError);
   });
   it('should return already exists error when grpc status is ALREADY_EXISTS', () => {
     const serviceError = generateServiceError(Status.ALREADY_EXISTS);
-    const res = cacheServiceErrorMapper.mapError(serviceError);
-    expect(res).toBeInstanceOf(AlreadyExistsError);
+    cacheServiceErrorMapper.handleError(
+      serviceError,
+      errorResponseFactoryFn,
+      resolveFn,
+      rejectFn
+    );
+    expect(resolved).toBeInstanceOf(AlreadyExistsError);
   });
 
   describe('when throwOnErrors is true', () => {
@@ -112,8 +194,13 @@ describe('CacheServiceErrorMapper', () => {
 
     it('should throw LimitExceeded when grpc status is RESOURCE_EXHAUSTED', () => {
       const serviceError = generateServiceError(Status.RESOURCE_EXHAUSTED);
-      const f = () => mapperWithThrowOnErrors.mapError(serviceError);
-      expect(f).toThrow(LimitExceededError);
+      mapperWithThrowOnErrors.handleError(
+        serviceError,
+        errorResponseFactoryFn,
+        resolveFn,
+        rejectFn
+      );
+      expect(rejected).toBeInstanceOf(LimitExceededError);
     });
   });
 });

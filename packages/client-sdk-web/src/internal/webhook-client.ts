@@ -86,16 +86,17 @@ export class WebhookClient implements IWebhookClient {
     request.setWebhookId(webhookId);
     this.logger.debug('issuing "DeleteWebhook" request');
 
-    return await new Promise<DeleteWebhook.Response>(resolve => {
+    return await new Promise<DeleteWebhook.Response>((resolve, reject) => {
       this.webhookClient.deleteWebhook(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, _resp) => {
           if (err) {
-            resolve(
-              new DeleteWebhook.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new DeleteWebhook.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new DeleteWebhook.Success());
@@ -115,14 +116,17 @@ export class WebhookClient implements IWebhookClient {
     request.setCacheName(cache);
     this.logger.debug('issuing "ListWebhooks" request');
 
-    return await new Promise<ListWebhooks.Response>(resolve => {
+    return await new Promise<ListWebhooks.Response>((resolve, reject) => {
       this.webhookClient.listWebhooks(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new ListWebhooks.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new ListWebhooks.Error(e),
+              resolve,
+              reject
             );
           } else {
             const webhooks = resp.getWebhookList().map(wh => {
@@ -171,14 +175,17 @@ export class WebhookClient implements IWebhookClient {
     request.setWebhook(_webhook);
     this.logger.debug('issuing "PutWebhook" request');
 
-    return await new Promise<PutWebhook.Response>(resolve => {
+    return await new Promise<PutWebhook.Response>((resolve, reject) => {
       this.webhookClient.putWebhook(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new PutWebhook.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new PutWebhook.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new PutWebhook.Success(resp.getSecretString()));
@@ -201,16 +208,17 @@ export class WebhookClient implements IWebhookClient {
     request.setWebhookName(id.webhookName);
     this.logger.debug('issuing "GetWebhookSecret" request');
 
-    return await new Promise<GetWebhookSecret.Response>(resolve => {
+    return await new Promise<GetWebhookSecret.Response>((resolve, reject) => {
       this.webhookClient.getWebhookSecret(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new GetWebhookSecret.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new GetWebhookSecret.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(
@@ -243,28 +251,31 @@ export class WebhookClient implements IWebhookClient {
     request.setWebhookId(webhookId);
     this.logger.debug('issuing "RotateWebhookSecret" request');
 
-    return await new Promise<RotateWebhookSecret.Response>(resolve => {
-      this.webhookClient.rotateWebhookSecret(
-        request,
-        this.clientMetadataProvider.createClientMetadata(),
-        (err, resp) => {
-          if (err || !resp) {
-            resolve(
-              new RotateWebhookSecret.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
-            );
-          } else {
-            resolve(
-              new RotateWebhookSecret.Success({
-                secret: resp.getSecretString(),
-                webhookName: id.webhookName,
-                cacheName: id.cacheName,
-              })
-            );
+    return await new Promise<RotateWebhookSecret.Response>(
+      (resolve, reject) => {
+        this.webhookClient.rotateWebhookSecret(
+          request,
+          this.clientMetadataProvider.createClientMetadata(),
+          (err, resp) => {
+            if (err || !resp) {
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new RotateWebhookSecret.Error(e),
+                resolve,
+                reject
+              );
+            } else {
+              resolve(
+                new RotateWebhookSecret.Success({
+                  secret: resp.getSecretString(),
+                  webhookName: id.webhookName,
+                  cacheName: id.cacheName,
+                })
+              );
+            }
           }
-        }
-      );
-    });
+        );
+      }
+    );
   }
 }

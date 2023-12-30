@@ -120,7 +120,7 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
     }
     request.similarity_metric = similarityMetricPb;
 
-    return await new Promise<CreateVectorIndex.Response>(resolve => {
+    return await new Promise<CreateVectorIndex.Response>((resolve, reject) => {
       this.clientWrapper.getClient().CreateIndex(
         request,
         {interceptors: this.interceptors},
@@ -130,10 +130,11 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
             if (err.code === Status.ALREADY_EXISTS) {
               resolve(new CreateVectorIndex.AlreadyExists());
             } else {
-              resolve(
-                new CreateVectorIndex.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new CreateVectorIndex.Error(e),
+                resolve,
+                reject
               );
             }
           } else {
@@ -147,7 +148,7 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
   public async listIndexes(): Promise<ListVectorIndexes.Response> {
     const request = new grpcControl._ListIndexesRequest();
     this.logger.debug("Issuing 'listIndexes' request");
-    return await new Promise<ListVectorIndexes.Response>(resolve => {
+    return await new Promise<ListVectorIndexes.Response>((resolve, reject) => {
       this.clientWrapper
         .getClient()
         .ListIndexes(
@@ -157,10 +158,11 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
             if (err || !resp) {
               // TODO: `Argument of type 'unknown' is not assignable to parameter of type 'Error'.`
               //  I don't see how this is different from the other methods here. So, yeah, what?
-              resolve(
-                new ListVectorIndexes.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new ListVectorIndexes.Error(e),
+                resolve,
+                reject
               );
             } else {
               const indexes = resp.indexes.map(index => {
@@ -210,17 +212,18 @@ export class VectorIndexControlClient implements IVectorIndexControlClient {
       index_name: name,
     });
     this.logger.info(`Deleting index: ${name}`);
-    return await new Promise<DeleteVectorIndex.Response>(resolve => {
+    return await new Promise<DeleteVectorIndex.Response>((resolve, reject) => {
       this.clientWrapper.getClient().DeleteIndex(
         request,
         {interceptors: this.interceptors},
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (err, resp) => {
           if (err) {
-            resolve(
-              new DeleteVectorIndex.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new DeleteVectorIndex.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new DeleteVectorIndex.Success());

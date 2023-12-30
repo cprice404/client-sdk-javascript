@@ -78,7 +78,7 @@ export class CacheControlClient<
     const request = new _CreateCacheRequest();
     request.setCacheName(name);
 
-    return await new Promise<CreateCache.Response>(resolve => {
+    return await new Promise<CreateCache.Response>((resolve, reject) => {
       this.clientWrapper.createCache(
         request,
         this.clientMetadataProvider.createClientMetadata(),
@@ -87,10 +87,11 @@ export class CacheControlClient<
             if (err.code === StatusCode.ALREADY_EXISTS) {
               resolve(new CreateCache.AlreadyExists());
             } else {
-              resolve(
-                new CreateCache.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new CreateCache.Error(e),
+                resolve,
+                reject
               );
             }
           } else {
@@ -110,14 +111,17 @@ export class CacheControlClient<
     const request = new _DeleteCacheRequest();
     request.setCacheName(name);
     this.logger.debug(`Deleting cache: ${name}`);
-    return await new Promise<DeleteCache.Response>(resolve => {
+    return await new Promise<DeleteCache.Response>((resolve, reject) => {
       this.clientWrapper.deleteCache(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, _resp) => {
           if (err) {
-            resolve(
-              new DeleteCache.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new DeleteCache.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new DeleteCache.Success());
@@ -142,7 +146,7 @@ export class CacheControlClient<
   ): Promise<CacheFlush.Response> {
     const request = new _FlushCacheRequest();
     request.setCacheName(cacheName);
-    return await new Promise<CacheFlush.Response>(resolve => {
+    return await new Promise<CacheFlush.Response>((resolve, reject) => {
       this.clientWrapper.flushCache(
         request,
         this.clientMetadataProvider.createClientMetadata(),
@@ -150,8 +154,11 @@ export class CacheControlClient<
           if (resp) {
             resolve(new CacheFlush.Success());
           } else {
-            resolve(
-              new CacheFlush.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new CacheFlush.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -163,14 +170,17 @@ export class CacheControlClient<
     const request = new _ListCachesRequest();
     request.setNextToken('');
     this.logger.debug("Issuing 'listCaches' request");
-    return await new Promise<ListCaches.Response>(resolve => {
+    return await new Promise<ListCaches.Response>((resolve, reject) => {
       this.clientWrapper.listCaches(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err) {
-            resolve(
-              new ListCaches.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new ListCaches.Error(e),
+              resolve,
+              reject
             );
           } else {
             const caches = resp.getCacheList().map(cache => {

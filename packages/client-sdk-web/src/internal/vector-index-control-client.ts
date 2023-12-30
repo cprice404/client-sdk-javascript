@@ -120,7 +120,7 @@ export class VectorIndexControlClient<
     request.setSimilarityMetric(similarityMetricPb);
 
     this.logger.debug("Issuing 'createIndex' request");
-    return await new Promise<CreateVectorIndex.Response>(resolve => {
+    return await new Promise<CreateVectorIndex.Response>((resolve, reject) => {
       this.clientWrapper.createIndex(
         request,
         this.clientMetadataProvider.createClientMetadata(),
@@ -129,10 +129,11 @@ export class VectorIndexControlClient<
             if (err.code === StatusCode.ALREADY_EXISTS) {
               resolve(new CreateVectorIndex.AlreadyExists());
             } else {
-              resolve(
-                new CreateVectorIndex.Error(
-                  this.cacheServiceErrorMapper.mapError(err)
-                )
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new CreateVectorIndex.Error(e),
+                resolve,
+                reject
               );
             }
           } else {
@@ -146,16 +147,17 @@ export class VectorIndexControlClient<
   public async listIndexes(): Promise<ListVectorIndexes.Response> {
     const request = new _ListIndexesRequest();
     this.logger.debug("Issuing 'listIndexes' request");
-    return await new Promise<ListVectorIndexes.Response>(resolve => {
+    return await new Promise<ListVectorIndexes.Response>((resolve, reject) => {
       this.clientWrapper.listIndexes(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, resp) => {
           if (err) {
-            resolve(
-              new ListVectorIndexes.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new ListVectorIndexes.Error(e),
+              resolve,
+              reject
             );
           } else {
             const indexes: VectorIndexInfo[] = resp
@@ -213,16 +215,17 @@ export class VectorIndexControlClient<
     }
     request.setIndexName(indexName);
     this.logger.debug("Issuing 'deleteIndex' request");
-    return await new Promise<DeleteVectorIndex.Response>(resolve => {
+    return await new Promise<DeleteVectorIndex.Response>((resolve, reject) => {
       this.clientWrapper.deleteIndex(
         request,
         this.clientMetadataProvider.createClientMetadata(),
         (err, _resp) => {
           if (err) {
-            resolve(
-              new DeleteVectorIndex.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new DeleteVectorIndex.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new DeleteVectorIndex.Success());

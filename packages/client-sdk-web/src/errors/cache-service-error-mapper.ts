@@ -24,7 +24,22 @@ export class CacheServiceErrorMapper {
     this.throwOnErrors = throwOnErrors;
   }
 
-  mapError(err: RpcError | null): SdkError {
+  handleError(
+    err: RpcError | null,
+    errorResponseFactoryFn: (err: SdkError) => unknown,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolveFn: (result: any) => void,
+    rejectFn: (err: SdkError) => void
+  ): void {
+    const error = this.convertError(err);
+    if (this.throwOnErrors) {
+      rejectFn(error);
+    } else {
+      resolveFn(errorResponseFactoryFn(error));
+    }
+  }
+
+  convertError(err: RpcError | null): SdkError {
     const errParams: [
       string,
       number | undefined,
@@ -36,57 +51,38 @@ export class CacheServiceErrorMapper {
       err?.metadata,
       err?.stack,
     ];
-    let error: SdkError;
     switch (err?.code) {
       case StatusCode.PERMISSION_DENIED:
-        error = new PermissionError(...errParams);
-        break;
+        return new PermissionError(...errParams);
       case StatusCode.DATA_LOSS:
       case StatusCode.INTERNAL:
       case StatusCode.ABORTED:
-        error = new InternalServerError(...errParams);
-        break;
+        return new InternalServerError(...errParams);
       case StatusCode.UNKNOWN:
-        error = new UnknownServiceError(...errParams);
-        break;
+        return new UnknownServiceError(...errParams);
       case StatusCode.UNAVAILABLE:
-        error = new ServerUnavailableError(...errParams);
-        break;
+        return new ServerUnavailableError(...errParams);
       case StatusCode.NOT_FOUND:
-        error = new NotFoundError(...errParams);
-        break;
+        return new NotFoundError(...errParams);
       case StatusCode.OUT_OF_RANGE:
       case StatusCode.UNIMPLEMENTED:
-        error = new BadRequestError(...errParams);
-        break;
+        return new BadRequestError(...errParams);
       case StatusCode.FAILED_PRECONDITION:
-        error = new FailedPreconditionError(...errParams);
-        break;
+        return new FailedPreconditionError(...errParams);
       case StatusCode.INVALID_ARGUMENT:
-        error = new InvalidArgumentError(...errParams);
-        break;
+        return new InvalidArgumentError(...errParams);
       case StatusCode.CANCELLED:
-        error = new CancelledError(...errParams);
-        break;
+        return new CancelledError(...errParams);
       case StatusCode.DEADLINE_EXCEEDED:
-        error = new TimeoutError(...errParams);
-        break;
+        return new TimeoutError(...errParams);
       case StatusCode.UNAUTHENTICATED:
-        error = new AuthenticationError(...errParams);
-        break;
+        return new AuthenticationError(...errParams);
       case StatusCode.RESOURCE_EXHAUSTED:
-        error = new LimitExceededError(...errParams);
-        break;
+        return new LimitExceededError(...errParams);
       case StatusCode.ALREADY_EXISTS:
-        error = new AlreadyExistsError(...errParams);
-        break;
+        return new AlreadyExistsError(...errParams);
       default:
-        error = new UnknownError(...errParams);
-        break;
+        return new UnknownError(...errParams);
     }
-    if (this.throwOnErrors) {
-      throw error;
-    }
-    return error;
   }
 }

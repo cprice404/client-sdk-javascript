@@ -109,7 +109,7 @@ export class PubsubClient extends AbstractPubsubClient {
       value: topicValue,
     });
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
       this.client.Publish(
         request,
         {
@@ -119,8 +119,11 @@ export class PubsubClient extends AbstractPubsubClient {
           if (resp) {
             resolve(new TopicPublish.Success());
           } else {
-            resolve(
-              new TopicPublish.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new TopicPublish.Error(e),
+              resolve,
+              reject
             );
           }
         }
@@ -164,7 +167,7 @@ export class PubsubClient extends AbstractPubsubClient {
       call.cancel();
     };
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const prepareCallbackOptions: PrepareSubscribeCallbackOptions = {
         ...options,
         restartedDueToError: false,
@@ -250,7 +253,7 @@ export class PubsubClient extends AbstractPubsubClient {
         serviceError.code === Status.INTERNAL &&
         serviceError.details === PubsubClient.RST_STREAM_NO_ERROR_MESSAGE;
       const momentoError = new TopicSubscribe.Error(
-        this.cacheServiceErrorMapper.mapError(serviceError)
+        this.cacheServiceErrorMapper.convertError(serviceError)
       );
       this.handleSubscribeError(options, momentoError, isRstStreamNoError);
     };

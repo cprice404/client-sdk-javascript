@@ -71,16 +71,17 @@ export class WebhookClient implements IWebhookClient {
     });
     this.logger.debug('issuing "DeleteWebhook" request');
 
-    return await new Promise<DeleteWebhook.Response>(resolve => {
+    return await new Promise<DeleteWebhook.Response>((resolve, reject) => {
       this.webhookClient.DeleteWebhook(
         request,
         {interceptors: this.unaryInterceptors},
         (err, _resp) => {
           if (err) {
-            resolve(
-              new DeleteWebhook.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new DeleteWebhook.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new DeleteWebhook.Success());
@@ -99,14 +100,17 @@ export class WebhookClient implements IWebhookClient {
     const request = new grpcWebhook._ListWebhookRequest({cache_name: cache});
     this.logger.debug('issuing "ListWebhooks" request');
 
-    return await new Promise<ListWebhooks.Response>(resolve => {
+    return await new Promise<ListWebhooks.Response>((resolve, reject) => {
       this.webhookClient.ListWebhooks(
         request,
         {interceptors: this.unaryInterceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new ListWebhooks.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new ListWebhooks.Error(e),
+              resolve,
+              reject
             );
           } else {
             const webhooks = resp.webhook.map(wh => {
@@ -152,14 +156,17 @@ export class WebhookClient implements IWebhookClient {
     });
     this.logger.debug('issuing "PutWebhook" request');
 
-    return await new Promise<PutWebhook.Response>(resolve => {
+    return await new Promise<PutWebhook.Response>((resolve, reject) => {
       this.webhookClient.PutWebhook(
         request,
         {interceptors: this.unaryInterceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new PutWebhook.Error(this.cacheServiceErrorMapper.mapError(err))
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new PutWebhook.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(new PutWebhook.Success(resp.secret_string));
@@ -183,16 +190,17 @@ export class WebhookClient implements IWebhookClient {
     });
     this.logger.debug('issuing "GetWebhookSecret" request');
 
-    return await new Promise<GetWebhookSecret.Response>(resolve => {
+    return await new Promise<GetWebhookSecret.Response>((resolve, reject) => {
       this.webhookClient.GetWebhookSecret(
         request,
         {interceptors: this.unaryInterceptors},
         (err, resp) => {
           if (err || !resp) {
-            resolve(
-              new GetWebhookSecret.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
+            this.cacheServiceErrorMapper.handleError(
+              err,
+              e => new GetWebhookSecret.Error(e),
+              resolve,
+              reject
             );
           } else {
             resolve(
@@ -227,28 +235,31 @@ export class WebhookClient implements IWebhookClient {
     });
     this.logger.debug('issuing "RotateWebhookSecret" request');
 
-    return await new Promise<RotateWebhookSecret.Response>(resolve => {
-      this.webhookClient.RotateWebhookSecret(
-        request,
-        {interceptors: this.unaryInterceptors},
-        (err, resp) => {
-          if (err || !resp) {
-            resolve(
-              new RotateWebhookSecret.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
-            );
-          } else {
-            resolve(
-              new RotateWebhookSecret.Success({
-                secret: resp.secret_string,
-                webhookName: id.webhookName,
-                cacheName: id.cacheName,
-              })
-            );
+    return await new Promise<RotateWebhookSecret.Response>(
+      (resolve, reject) => {
+        this.webhookClient.RotateWebhookSecret(
+          request,
+          {interceptors: this.unaryInterceptors},
+          (err, resp) => {
+            if (err || !resp) {
+              this.cacheServiceErrorMapper.handleError(
+                err,
+                e => new RotateWebhookSecret.Error(e),
+                resolve,
+                reject
+              );
+            } else {
+              resolve(
+                new RotateWebhookSecret.Success({
+                  secret: resp.secret_string,
+                  webhookName: id.webhookName,
+                  cacheName: id.cacheName,
+                })
+              );
+            }
           }
-        }
-      );
-    });
+        );
+      }
+    );
   }
 }
