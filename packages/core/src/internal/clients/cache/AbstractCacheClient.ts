@@ -690,7 +690,12 @@ export abstract class AbstractCacheClient implements ICacheClient {
     options?: IncrementOptions
   ): Promise<CacheIncrement.Response> {
     const client = this.getNextDataClient();
-    return await client.increment(cacheName, field, amount, options?.ttl);
+    try {
+      return await client.increment(cacheName, field, amount, options?.ttl);
+    } catch (e) {
+      console.log('CAUGHT EXCEPTION IN ACC INCREMENT');
+      throw e;
+    }
   }
 
   /**

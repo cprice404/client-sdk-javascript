@@ -138,7 +138,9 @@ export function SetupIntegrationTest(): {
 
   beforeAll(async () => {
     // Use a fresh client to avoid test interference with setup.
+    console.log('CONSTRUCTING CLIENT FOR BEFOREALL');
     const momento = momentoClientForTesting();
+    console.log('DONE CONSTRUCTING CLIENT FOR BEFOREALL');
     await deleteCacheIfExists(momento, cacheName);
     const createResponse = await momento.createCache(cacheName);
     if (createResponse instanceof CreateCache.Error) {
@@ -148,15 +150,21 @@ export function SetupIntegrationTest(): {
 
   afterAll(async () => {
     // Use a fresh client to avoid test interference with teardown.
+    console.log('CONSTRUCTING CLIENT FOR AFTERALL');
     const momento = momentoClientForTesting();
+    console.log('DONE CONSTRUCTING CLIENT FOR AFTERALL');
     const deleteResponse = await momento.deleteCache(cacheName);
     if (deleteResponse instanceof DeleteCache.Error) {
       throw deleteResponse.innerException();
     }
   });
 
+  console.log('CONSTRUCTING MAIN TEST CLIENT');
   const client = momentoClientForTesting();
+  console.log('DONE CONSTRUCTING MAIN TEST CLIENT');
+  console.log('CONSTRUCTING TEST CLIENT FOR THROW ON ERRORS');
   const clientWithThrowOnErrors = momentoClientForTestingWithThrowOnErrors();
+  console.log('DONE CONSTRUCTING TEST CLIENT FOR THROW ON ERRORS');
   return {
     cacheClient: client,
     cacheClientWithThrowOnErrors: clientWithThrowOnErrors,

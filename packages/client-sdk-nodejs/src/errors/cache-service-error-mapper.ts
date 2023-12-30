@@ -23,12 +23,12 @@ export class CacheServiceErrorMapper {
 
   constructor(throwOnError: boolean) {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    console.error(`CONSTRUCTING CACHE SERVICE ERROR MAPPER: ${throwOnError}`);
+    console.log(`CONSTRUCTING CACHE SERVICE ERROR MAPPER: ${throwOnError}`);
     this.throwOnError = throwOnError;
   }
   mapError(err: ServiceError | null): SdkError {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    console.error(`MAPPING ERROR!!! ${err}`);
+    console.log(`MAPPING ERROR!!! ${err}`);
 
     const errParams: [
       string,
@@ -92,6 +92,10 @@ export class CacheServiceErrorMapper {
     if (this.throwOnError) {
       console.log(`THROWING ERROR: ${error.toString()}`);
       throw error;
+    } else {
+      console.log(
+        `THIS MAPPER IS NOT CONFIGURED TO THROW; RETURNING ERROR: ${error.toString()}`
+      );
     }
     return error;
   }

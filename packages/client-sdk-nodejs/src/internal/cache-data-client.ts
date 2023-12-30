@@ -119,7 +119,7 @@ export class CacheDataClient implements IDataClient {
    */
   constructor(props: CacheClientProps, dataClientID: string) {
     this.configuration = props.configuration;
-    console.error(
+    console.log(
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       `CACHE DATA CLIENT CONSTRUCTED WITH GET THROW ON ERRORS: ${this.configuration.getThrowOnErrors()}`
     );
@@ -1916,6 +1916,7 @@ export class CacheDataClient implements IDataClient {
     amount = 1,
     ttlMilliseconds: number
   ): Promise<CacheIncrement.Response> {
+    console.log('IN SENDINCREMENT');
     const request = new grpcCache._IncrementRequest({
       cache_key: field,
       amount,
@@ -1923,7 +1924,8 @@ export class CacheDataClient implements IDataClient {
     });
     const metadata = this.createMetadata(cacheName);
 
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
+      console.log('SENDINCREMENT PROMISE CALLING GRPC INCREMENT');
       this.clientWrapper.getClient().Increment(
         request,
         metadata,
@@ -1931,6 +1933,7 @@ export class CacheDataClient implements IDataClient {
           interceptors: this.interceptors,
         },
         (err, resp) => {
+          console.log('SENDINCREMENT GOT A RESPONSE FROM THE SERVER');
           if (resp) {
             if (resp.value) {
               resolve(new CacheIncrement.Success(resp.value));
@@ -1938,11 +1941,19 @@ export class CacheDataClient implements IDataClient {
               resolve(new CacheIncrement.Success(0));
             }
           } else {
-            resolve(
-              new CacheIncrement.Error(
-                this.cacheServiceErrorMapper.mapError(err)
-              )
-            );
+            try {
+              console.log(
+                'SENDINCREMENT GOT AN ERROR FROM THE SERVER, TRYING TO RESOLVE'
+              );
+              resolve(
+                new CacheIncrement.Error(
+                  this.cacheServiceErrorMapper.mapError(err)
+                )
+              );
+            } catch (err) {
+              console.log('SENDINCREMENT REJECTING!!');
+              reject(err);
+            }
           }
         }
       );

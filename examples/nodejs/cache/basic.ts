@@ -16,8 +16,13 @@ async function main() {
   const setResponse = await cacheClient.set('cache', 'foo', 'abcxyz');
   console.log(`SET RESPONSE: ${setResponse.toString()}`);
 
-  const incrementResponse = await cacheClient.increment('cache', 'foo', 1);
-  console.log(`INCREMENT RESPONSE: ${incrementResponse.toString()}`);
+  try {
+    const incrementResponse = await cacheClient.increment('cache', 'foo', 1);
+    console.log(`INCREMENT RESPONSE: ${incrementResponse.toString()}`);
+  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+    console.error(`BASIC CAUGHT AN EXCEPTION: ERROR INCREMENTING: ${(e as any).constructor.name} ${(e as any).toString()}`);
+  }
 
   //
   // const createCacheResponse = await momento.createCache('cache');
