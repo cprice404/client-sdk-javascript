@@ -74,7 +74,12 @@ export function middlewaresInterceptor(
                 (request: MiddlewareMessage | null) =>
                   h.onResponseBody(request),
               new MiddlewareMessage(message as Message),
-              (msg: MiddlewareMessage | null) => next(msg?._grpcMessage)
+              (msg: MiddlewareMessage | null) => {
+                console.log(
+                  'Middlewares interceptor.onResponseBody calling next'
+                );
+                next(msg?._grpcMessage);
+              }
             );
           },
           onReceiveStatus: function (
@@ -113,7 +118,12 @@ export function middlewaresInterceptor(
           (h: MiddlewareRequestHandler) => (m: MiddlewareMetadata) =>
             h.onRequestMetadata(m),
           new MiddlewareMetadata(metadata),
-          (m: MiddlewareMetadata) => next(m._grpcMetadata, newListener)
+          (m: MiddlewareMetadata) => {
+            console.log(
+              'Middlewares interceptor.onRequestMetadata calling next'
+            );
+            return next(m._grpcMetadata, newListener);
+          }
         );
       },
       // unfortunately grpc uses `any` in their type defs for these
@@ -129,6 +139,7 @@ export function middlewaresInterceptor(
         );
       },
     };
+    console.log(' Middlewares interceptor creating new InterceptingCall');
     return new InterceptingCall(nextCall(options), requester);
   };
 }

@@ -9,6 +9,7 @@ export const ClientTimeoutInterceptor = (
       deadline.setMilliseconds(deadline.getMilliseconds() + requestTimeoutMs);
       options.deadline = deadline;
     }
+    console.log('Client timeout interceptor creating new intercepting call');
     return new InterceptingCall(nextCall(options));
   };
 };

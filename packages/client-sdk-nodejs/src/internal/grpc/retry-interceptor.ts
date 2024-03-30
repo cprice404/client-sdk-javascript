@@ -51,6 +51,7 @@ export class RetryInterceptor {
       let savedSendMessage: unknown;
       let savedReceiveMessage: unknown;
       let savedMessageNext: (arg0: unknown) => void;
+      console.log('Retry interceptor creating new intercepting call');
       return new InterceptingCall(nextCall(options), {
         start: function (metadata, listener, next) {
           savedMetadata = metadata;
@@ -104,6 +105,9 @@ export class RetryInterceptor {
 
               if (status.code === Status.OK) {
                 savedMessageNext(savedReceiveMessage);
+                console.log(
+                  'Retry interceptor.start calling next after status == okay'
+                );
                 next(status);
               } else {
                 const whenToRetry = retryStrategy.determineWhenToRetryRequest({
@@ -116,6 +120,9 @@ export class RetryInterceptor {
                     `Request not eligible for retry: path: ${options.method_definition.path}; response status code: ${status.code}.`
                   );
                   savedMessageNext(savedReceiveMessage);
+                  console.log(
+                    'Retry interceptor.start calling next after ineligible for retry'
+                  );
                   next(status);
                 } else {
                   logger.debug(
@@ -129,10 +136,12 @@ export class RetryInterceptor {
               }
             },
           };
+          console.log('Retry interceptor.start calling next');
           next(metadata, newListener);
         },
         sendMessage: function (message, next) {
           savedSendMessage = message;
+          console.log('Retry interceptor.sendMessage calling next');
           next(message);
         },
       });

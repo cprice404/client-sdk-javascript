@@ -1,8 +1,49 @@
-import {CacheGet, CreateCache, CacheSet, CacheClient, Configurations, CredentialProvider} from '@gomomento/sdk';
+import {
+  CacheGet,
+  CreateCache,
+  CacheSet,
+  CacheClient,
+  Configurations,
+  CredentialProvider,
+  Middleware,
+  MiddlewareRequestHandler,
+} from '@gomomento/sdk';
+import {
+  MiddlewareMessage,
+  MiddlewareMetadata,
+  MiddlewareRequestHandlerContext,
+  MiddlewareStatus,
+} from '@gomomento/sdk/dist/src/config/middleware/middleware';
+
+class FooMiddlewareRequestHandler implements MiddlewareRequestHandler {
+  async onRequestMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata> {
+    console.log('FooMiddlewareRequestHandler.onRequestMetadata enter');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    return metadata;
+  }
+  onRequestBody(request: MiddlewareMessage): Promise<MiddlewareMessage> {
+    return Promise.resolve(request);
+  }
+  onResponseMetadata(metadata: MiddlewareMetadata): Promise<MiddlewareMetadata> {
+    return Promise.resolve(metadata);
+  }
+  onResponseBody(response: MiddlewareMessage | null): Promise<MiddlewareMessage | null> {
+    return Promise.resolve(response);
+  }
+  onResponseStatus(status: MiddlewareStatus): Promise<MiddlewareStatus> {
+    return Promise.resolve(status);
+  }
+}
+
+class FooMiddleware implements Middleware {
+  onNewRequest(context?: MiddlewareRequestHandlerContext): MiddlewareRequestHandler {
+    return new FooMiddlewareRequestHandler();
+  }
+}
 
 async function main() {
   const momento = await CacheClient.create({
-    configuration: Configurations.Laptop.v1(),
+    configuration: Configurations.Laptop.v1().withMiddlewares([new FooMiddleware()]),
     credentialProvider: CredentialProvider.fromEnvironmentVariable({
       environmentVariableName: 'MOMENTO_API_KEY',
     }),

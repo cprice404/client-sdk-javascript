@@ -34,6 +34,7 @@ export class HeaderInterceptorProvider {
 
   public createHeadersInterceptor(): Interceptor {
     return (options, nextCall) => {
+      console.log('Headers interceptor creating new call');
       return new InterceptingCall(nextCall(options), {
         start: (metadata, listener, next) => {
           this.headersToAddEveryTime.forEach(h =>
@@ -43,6 +44,7 @@ export class HeaderInterceptorProvider {
             HeaderInterceptorProvider.areOnlyOnceHeadersSent = true;
             this.headersToAddOnce.forEach(h => metadata.add(h.name, h.value));
           }
+          console.log("Headers interceptor.start calling 'next'");
           next(metadata, {});
         },
       });
