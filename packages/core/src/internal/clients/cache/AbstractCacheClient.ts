@@ -211,10 +211,7 @@ export abstract class AbstractCacheClient implements ICacheClient {
       );
     }
     const client = this.getNextDataClient();
-    if (options?.compressor) {
-      value = await options.compressor.compress(value);
-    }
-    return await client.set(cacheName, key, value, options?.ttl);
+    return await client.set(cacheName, key, value, options);
   }
 
   /**

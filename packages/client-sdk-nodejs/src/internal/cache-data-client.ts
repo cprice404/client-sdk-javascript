@@ -122,6 +122,13 @@ import Equal = common.Equal;
 import NotEqual = common.NotEqual;
 import PresentAndNotEqual = common.PresentAndNotEqual;
 import AbsentOrEqual = common.AbsentOrEqual;
+import {
+  loadZstdIfNotLoaded,
+  ZstdCompressor,
+  ZstdDecompressor,
+  ZstdModule,
+} from './compression/zstd-compression';
+import {SetCallOptions} from '@gomomento/sdk-core/dist/src/utils';
 
 export const CONNECTION_ID_KEY = Symbol('connectionID');
 
@@ -137,6 +144,9 @@ export class CacheDataClient implements IDataClient {
   private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly interceptors: Interceptor[];
   private readonly streamingInterceptors: Interceptor[];
+  private readonly zstd: ZstdModule | undefined;
+  private readonly valueCompressor: ZstdCompressor;
+  private readonly valueDecompressor: ZstdDecompressor;
 
   /**
    * @param {CacheClientProps} props
@@ -148,6 +158,15 @@ export class CacheDataClient implements IDataClient {
     this.logger = this.configuration.getLoggerFactory().getLogger(this);
     this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
       props.configuration.getThrowOnErrors()
+    );
+    this.zstd = loadZstdIfNotLoaded(this.configuration.getLoggerFactory());
+    this.valueCompressor = new ZstdCompressor(
+      this.zstd,
+      this.configuration.getLoggerFactory()
+    );
+    this.valueDecompressor = new ZstdDecompressor(
+      this.zstd,
+      this.configuration.getLoggerFactory()
     );
 
     const grpcConfig = this.configuration
@@ -329,12 +348,12 @@ export class CacheDataClient implements IDataClient {
     cacheName: string,
     key: string | Uint8Array,
     value: string | Uint8Array,
-    ttl?: number
+    options?: SetCallOptions
   ): Promise<CacheSet.Response> {
     try {
       validateCacheName(cacheName);
-      if (ttl !== undefined) {
-        validateTtlSeconds(ttl);
+      if (options?.ttl !== undefined) {
+        validateTtlSeconds(options.ttl);
       }
     } catch (err) {
       return this.cacheServiceErrorMapper.returnOrThrowError(
@@ -342,14 +361,24 @@ export class CacheDataClient implements IDataClient {
         err => new CacheSet.Error(err)
       );
     }
-    const ttlToUse = ttl || this.defaultTtlSeconds;
+    const ttlToUse = options?.ttl || this.defaultTtlSeconds;
     this.logger.trace(
       `Issuing 'set' request; key: ${key.toString()}, value length: ${
         value.length
       }, ttl: ${ttlToUse.toString()}`
     );
     const encodedKey = this.convert(key);
-    const encodedValue = this.convert(value);
+    let encodedValue = this.convert(value);
+    this.logger.info('CACHE DATA CLIENT.set; checking compression flag');
+    if (options?.compression) {
+      this.logger.info(
+        'CACHE DATA CLIENT.set; compression enabled, calling value compressor'
+      );
+      encodedValue = await this.valueCompressor.compress(
+        options.compression,
+        encodedValue
+      );
+    }
 
     return await this.sendSet(cacheName, encodedKey, encodedValue, ttlToUse);
   }
@@ -1320,9 +1349,12 @@ export class CacheDataClient implements IDataClient {
               case grpcCache.ECacheResult.Miss:
                 resolve(new CacheGet.Miss());
                 break;
-              case grpcCache.ECacheResult.Hit:
-                resolve(new CacheGet.Hit(resp.cache_body));
+              case grpcCache.ECacheResult.Hit: {
+                void this.valueDecompressor
+                  .decompressIfCompressed(resp.cache_body)
+                  .then(v => resolve(new CacheGet.Hit(v)));
                 break;
+              }
               case grpcCache.ECacheResult.Invalid:
               case grpcCache.ECacheResult.Ok:
                 resolve(new CacheGet.Error(new UnknownError(resp.message)));

@@ -178,6 +178,7 @@ import {
   RotateWebhookSecret,
   WebhookDestinationType,
   ReadConcern,
+  ValueCompression,
 } from '@gomomento/sdk-core';
 
 import {Configuration, CacheConfiguration} from './config/configuration';
@@ -417,4 +418,5 @@ export {
   BatchUtils,
   WebhookUtils,
   ReadConcern,
+  ValueCompression,
 };

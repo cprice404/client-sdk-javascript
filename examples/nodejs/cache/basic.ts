@@ -1,4 +1,12 @@
-import {CacheGet, CreateCache, CacheSet, CacheClient, Configurations, CredentialProvider} from '@gomomento/sdk';
+import {
+  CacheClient,
+  CacheGet,
+  CacheSet,
+  Configurations,
+  CreateCache,
+  CredentialProvider,
+  ValueCompression,
+} from '@gomomento/sdk';
 
 async function main() {
   const momento = await CacheClient.create({
@@ -17,7 +25,9 @@ async function main() {
   }
 
   console.log('Storing key=foo, value=FOO');
-  const setResponse = await momento.set('cache', 'foo', 'FOO');
+  const setResponse = await momento.set('cache', 'foo', 'FOO', {
+    compression: ValueCompression.Fast,
+  });
   if (setResponse instanceof CacheSet.Success) {
     console.log('Key stored successfully!');
   } else {
