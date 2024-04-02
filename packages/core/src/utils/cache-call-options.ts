@@ -1,10 +1,15 @@
 import {CollectionTtl} from './collection-ttl';
+import {ValueCompressor} from '../compression/value-compression';
 
 export interface ScalarCallOptions {
   /**
    * The time to live in seconds of the object being modified.
    */
   ttl?: number;
+}
+
+export interface SetCallOptions extends ScalarCallOptions {
+  compressor?: ValueCompressor;
 }
 
 export interface CollectionCallOptions {

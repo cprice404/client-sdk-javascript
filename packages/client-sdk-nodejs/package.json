@@ -61,5 +61,13 @@
   },
   "engines": {
     "node": ">= 14"
+  },
+  "peerDependencies": {
+    "@mongodb-js/zstd": "^1.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@mongodb-js/zstd": {
+      "optional": true
+    }
   }
 }
