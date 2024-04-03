@@ -76,7 +76,7 @@ export class Laptop extends CacheConfiguration {
       throwOnErrors: false,
       readConcern: ReadConcern.BALANCED,
       compression: {
-        compressor: undefined,
+        compressionExtensions: undefined,
         automaticDecompression: AutomaticDecompression.Disabled,
       },
     });
@@ -111,7 +111,7 @@ export class Lambda extends CacheConfiguration {
       throwOnErrors: false,
       readConcern: ReadConcern.BALANCED,
       compression: {
-        compressor: undefined,
+        compressionExtensions: undefined,
         automaticDecompression: AutomaticDecompression.Disabled,
       },
     });
@@ -160,7 +160,7 @@ class InRegionDefault extends CacheConfiguration {
       throwOnErrors: false,
       readConcern: ReadConcern.BALANCED,
       compression: {
-        compressor: undefined,
+        compressionExtensions: undefined,
         automaticDecompression: AutomaticDecompression.Disabled,
       },
     });
@@ -210,7 +210,7 @@ class InRegionLowLatency extends CacheConfiguration {
       throwOnErrors: false,
       readConcern: ReadConcern.BALANCED,
       compression: {
-        compressor: undefined,
+        compressionExtensions: undefined,
         automaticDecompression: AutomaticDecompression.Disabled,
       },
     });

@@ -122,31 +122,31 @@
 import {
   MomentoLogger,
   MomentoLoggerFactory,
-  ValueCompression,
+  CompressionMode,
+  Compression,
 } from '@gomomento/sdk';
 import * as zstd from '@mongodb-js/zstd';
 import {convert} from '@gomomento/sdk/dist/src/internal/utils';
-import {Compressor} from '@gomomento/sdk/dist/src/config/compression/compression';
 
-class ZtsdCompressor implements Compressor {
+class ZtsdCompressor implements Compression {
   private readonly logger;
   constructor(logger: MomentoLogger) {
     this.logger = logger;
   }
 
   async compress(
-    compression: ValueCompression,
+    compression: CompressionMode,
     value: Uint8Array
   ): Promise<Uint8Array> {
     let level;
     switch (compression) {
-      case ValueCompression.Default:
+      case CompressionMode.Default:
         level = 3;
         break;
-      case ValueCompression.Fast:
+      case CompressionMode.Fast:
         level = 1;
         break;
-      case ValueCompression.Smallest:
+      case CompressionMode.Smallest:
         level = 9;
         break;
     }
@@ -165,9 +165,9 @@ class ZtsdCompressor implements Compressor {
   }
 }
 
-export function loadCompressor(
+export function loadZstdCompression(
   loggerFactory: MomentoLoggerFactory
-): Compressor {
+): Compression {
   const logger = loggerFactory.getLogger('zstd-compression');
   logger.info('Zstd-compression module loading compressor');
   return new ZtsdCompressor(logger);

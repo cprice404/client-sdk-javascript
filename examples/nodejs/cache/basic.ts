@@ -1,16 +1,22 @@
 import {
+  AutomaticDecompression,
   CacheClient,
   CacheGet,
   CacheSet,
+  CompressionMode,
   Configurations,
   CreateCache,
   CredentialProvider,
-  ValueCompression,
 } from '@gomomento/sdk';
+// import {CompressionExtensions} from '@gomomento/sdk-nodejs-compression';
 
 async function main() {
   const momento = await CacheClient.create({
     configuration: Configurations.Laptop.v1(),
+    // configuration: Configurations.Laptop.v1().withCompression({
+    //   compressionExtensions: CompressionExtensions.load(),
+    //   automaticDecompression: AutomaticDecompression.Enabled,
+    // }),
     credentialProvider: CredentialProvider.fromEnvironmentVariable({
       environmentVariableName: 'MOMENTO_API_KEY',
     }),
@@ -26,7 +32,7 @@ async function main() {
 
   console.log('Storing key=foo, value=FOO');
   const setResponse = await momento.set('cache', 'foo', 'FOO', {
-    compression: ValueCompression.Fast,
+    compression: CompressionMode.Fast,
   });
   // const setResponse = await momento.set('cache', 'foo', 'FOO');
   if (setResponse instanceof CacheSet.Success) {

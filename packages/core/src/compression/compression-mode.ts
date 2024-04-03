@@ -6,7 +6,7 @@
 //   decompressIfCompressed(value: Uint8Array): Promise<Uint8Array>;
 // }
 
-export enum ValueCompression {
+export enum CompressionMode {
   Default = 'Default',
   Fast = 'Fast',
   Smallest = 'Smallest',

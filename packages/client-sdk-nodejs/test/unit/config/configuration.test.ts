@@ -34,7 +34,7 @@ describe('configuration.ts', () => {
     throwOnErrors: false,
     readConcern: ReadConcern.BALANCED,
     compression: {
-      compressor: undefined,
+      compressionExtensions: undefined,
       automaticDecompression: AutomaticDecompression.Disabled,
     },
   });

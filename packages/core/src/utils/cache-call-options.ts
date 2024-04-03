@@ -1,5 +1,5 @@
 import {CollectionTtl} from './collection-ttl';
-import {ValueCompression} from '../compression/value-compression';
+import {CompressionMode} from '../compression/compression-mode';
 
 export interface ScalarCallOptions {
   /**
@@ -9,7 +9,7 @@ export interface ScalarCallOptions {
 }
 
 export interface SetCallOptions extends ScalarCallOptions {
-  compression?: ValueCompression;
+  compression?: CompressionMode;
 }
 
 export interface CollectionCallOptions {

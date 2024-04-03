@@ -115,7 +115,7 @@ import {common} from '@gomomento/generated-types/dist/common';
 import {SetCallOptions} from '@gomomento/sdk-core/dist/src/utils';
 import {
   AutomaticDecompression,
-  Compressor,
+  Compression,
 } from '../config/compression/compression';
 import grpcCache = cache.cache_client;
 import ECacheResult = cache_client.ECacheResult;
@@ -143,7 +143,7 @@ export class CacheDataClient implements IDataClient {
   private readonly interceptors: Interceptor[];
   private readonly streamingInterceptors: Interceptor[];
   private readonly automaticDecompression: AutomaticDecompression;
-  private readonly valueCompressor?: Compressor;
+  private readonly valueCompressor?: Compression;
 
   /**
    * @param {CacheClientProps} props
@@ -156,8 +156,11 @@ export class CacheDataClient implements IDataClient {
     this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
       props.configuration.getThrowOnErrors()
     );
-    if (this.configuration.getCompression().compressor !== undefined) {
-      this.valueCompressor = this.configuration.getCompression().compressor;
+    if (
+      this.configuration.getCompression().compressionExtensions !== undefined
+    ) {
+      this.valueCompressor =
+        this.configuration.getCompression().compressionExtensions;
     }
     this.automaticDecompression =
       this.configuration.getCompression().automaticDecompression;

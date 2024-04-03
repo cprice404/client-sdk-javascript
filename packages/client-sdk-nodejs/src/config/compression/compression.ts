@@ -1,8 +1,8 @@
-import {ValueCompression} from '@gomomento/sdk-core';
+import {CompressionMode} from '@gomomento/sdk-core';
 
-export interface Compressor {
+export interface Compression {
   compress(
-    compression: ValueCompression,
+    compression: CompressionMode,
     value: Uint8Array
   ): Promise<Uint8Array>;
 
@@ -10,7 +10,7 @@ export interface Compressor {
 }
 
 export interface CompressionProps {
-  compressor?: Compressor;
+  compressionExtensions?: Compression;
   automaticDecompression: AutomaticDecompression;
 }
 
