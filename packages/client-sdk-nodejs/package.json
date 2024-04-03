@@ -10,7 +10,7 @@
   "types": "dist/src/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/momentohq/client-sdk-nodejs"
+    "url": "https://github.com/momentohq/client-sdk-javascript"
   },
   "scripts": {
     "prebuild": "eslint . --ext .ts",
@@ -61,13 +61,5 @@
   },
   "engines": {
     "node": ">= 14"
-  },
-  "peerDependencies": {
-    "@mongodb-js/zstd": "^1.2.0"
-  },
-  "peerDependenciesMeta": {
-    "@mongodb-js/zstd": {
-      "optional": true
-    }
   }
 }

@@ -28,6 +28,7 @@ async function main() {
   const setResponse = await momento.set('cache', 'foo', 'FOO', {
     compression: ValueCompression.Fast,
   });
+  // const setResponse = await momento.set('cache', 'foo', 'FOO');
   if (setResponse instanceof CacheSet.Success) {
     console.log('Key stored successfully!');
   } else {

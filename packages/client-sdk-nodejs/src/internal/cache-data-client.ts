@@ -43,13 +43,13 @@ import {
   CacheSet,
   CacheSetAddElements,
   CacheSetFetch,
-  CacheSetIfNotExists,
   CacheSetIfAbsent,
-  CacheSetIfPresent,
+  CacheSetIfAbsentOrEqual,
   CacheSetIfEqual,
   CacheSetIfNotEqual,
+  CacheSetIfNotExists,
+  CacheSetIfPresent,
   CacheSetIfPresentAndNotEqual,
-  CacheSetIfAbsentOrEqual,
   CacheSetRemoveElements,
   CacheSetSample,
   CacheSortedSetFetch,
@@ -66,14 +66,14 @@ import {
   CacheUpdateTtl,
   CollectionTtl,
   CredentialProvider,
+  GetBatch,
   InvalidArgumentError,
   ItemType,
   MomentoLogger,
   MomentoLoggerFactory,
+  SetBatch,
   SortedSetOrder,
   UnknownError,
-  GetBatch,
-  SetBatch,
 } from '..';
 import {version} from '../../package.json';
 import {IdleGrpcClientWrapper} from './grpc/idle-grpc-client-wrapper';
@@ -109,12 +109,17 @@ import {
 import {IDataClient} from '@gomomento/sdk-core/dist/src/internal/clients';
 import {ConnectivityState} from '@grpc/grpc-js/build/src/connectivity-state';
 import {CacheClientPropsWithConfig} from './cache-client-props-with-config';
-import grpcCache = cache.cache_client;
-import ECacheResult = cache_client.ECacheResult;
-import _ItemGetTypeResponse = cache_client._ItemGetTypeResponse;
 import {grpcChannelOptionsFromGrpcConfig} from './grpc/grpc-channel-options';
 import {ConnectionError} from '@gomomento/sdk-core/dist/src/errors';
 import {common} from '@gomomento/generated-types/dist/common';
+import {SetCallOptions} from '@gomomento/sdk-core/dist/src/utils';
+import {
+  AutomaticDecompression,
+  Compressor,
+} from '../config/compression/compression';
+import grpcCache = cache.cache_client;
+import ECacheResult = cache_client.ECacheResult;
+import _ItemGetTypeResponse = cache_client._ItemGetTypeResponse;
 import _Unbounded = common._Unbounded;
 import Absent = common.Absent;
 import Present = common.Present;
@@ -122,13 +127,6 @@ import Equal = common.Equal;
 import NotEqual = common.NotEqual;
 import PresentAndNotEqual = common.PresentAndNotEqual;
 import AbsentOrEqual = common.AbsentOrEqual;
-import {
-  loadZstdIfNotLoaded,
-  ZstdCompressor,
-  ZstdDecompressor,
-  ZstdModule,
-} from './compression/zstd-compression';
-import {SetCallOptions} from '@gomomento/sdk-core/dist/src/utils';
 
 export const CONNECTION_ID_KEY = Symbol('connectionID');
 
@@ -144,9 +142,8 @@ export class CacheDataClient implements IDataClient {
   private readonly cacheServiceErrorMapper: CacheServiceErrorMapper;
   private readonly interceptors: Interceptor[];
   private readonly streamingInterceptors: Interceptor[];
-  private readonly zstd: ZstdModule | undefined;
-  private readonly valueCompressor: ZstdCompressor;
-  private readonly valueDecompressor: ZstdDecompressor;
+  private readonly automaticDecompression: AutomaticDecompression;
+  private readonly valueCompressor?: Compressor;
 
   /**
    * @param {CacheClientProps} props
@@ -159,15 +156,16 @@ export class CacheDataClient implements IDataClient {
     this.cacheServiceErrorMapper = new CacheServiceErrorMapper(
       props.configuration.getThrowOnErrors()
     );
-    this.zstd = loadZstdIfNotLoaded(this.configuration.getLoggerFactory());
-    this.valueCompressor = new ZstdCompressor(
-      this.zstd,
-      this.configuration.getLoggerFactory()
-    );
-    this.valueDecompressor = new ZstdDecompressor(
-      this.zstd,
-      this.configuration.getLoggerFactory()
-    );
+    if (this.configuration.getCompression().compressor !== undefined) {
+      this.valueCompressor = this.configuration.getCompression().compressor;
+    }
+    this.automaticDecompression =
+      this.configuration.getCompression().automaticDecompression;
+    // this.valueDecompressor =
+    //   this.configuration.getAutomaticDecompression() ===
+    //   Compression.Enabled
+    //     ? loadOrGetDecompressor(this.configuration.getLoggerFactory())
+    //     : undefined;
 
     const grpcConfig = this.configuration
       .getTransportStrategy()
@@ -374,6 +372,14 @@ export class CacheDataClient implements IDataClient {
       this.logger.info(
         'CACHE DATA CLIENT.set; compression enabled, calling value compressor'
       );
+      if (this.valueCompressor === undefined) {
+        return this.cacheServiceErrorMapper.returnOrThrowError(
+          new InvalidArgumentError(
+            'Compression extension is not loaded; have you installed @gomomento/sdk-nodejs-compression'
+          ),
+          err => new CacheSet.Error(err)
+        );
+      }
       encodedValue = await this.valueCompressor.compress(
         options.compression,
         encodedValue
@@ -1350,9 +1356,26 @@ export class CacheDataClient implements IDataClient {
                 resolve(new CacheGet.Miss());
                 break;
               case grpcCache.ECacheResult.Hit: {
-                void this.valueDecompressor
-                  .decompressIfCompressed(resp.cache_body)
-                  .then(v => resolve(new CacheGet.Hit(v)));
+                if (
+                  this.automaticDecompression ===
+                  AutomaticDecompression.Disabled
+                ) {
+                  resolve(new CacheGet.Hit(resp.cache_body));
+                } else {
+                  if (this.valueCompressor === undefined) {
+                    resolve(
+                      new CacheGet.Error(
+                        new InvalidArgumentError(
+                          'Compression extension is not loaded; have you installed @gomomento/sdk-nodejs-compression ?'
+                        )
+                      )
+                    );
+                  } else {
+                    void this.valueCompressor
+                      .decompressIfCompressed(resp.cache_body)
+                      .then(v => resolve(new CacheGet.Hit(v)));
+                  }
+                }
                 break;
               }
               case grpcCache.ECacheResult.Invalid:
