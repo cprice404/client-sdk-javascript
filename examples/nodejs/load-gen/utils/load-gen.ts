@@ -43,6 +43,7 @@ export interface BasicLoadGenContext {
   globalResourceExhaustedCount: number;
   globalRstStreamCount: number;
   globalCancelledCount: number;
+  hasLoggedCompressionRatio: boolean;
 }
 
 export interface RequestCoalescerContext {
@@ -143,6 +144,7 @@ export function initiateLoadGenContext(): BasicLoadGenContext {
     globalResourceExhaustedCount: 0,
     globalRstStreamCount: 0,
     globalCancelledCount: 0,
+    hasLoggedCompressionRatio: false,
   };
   return loadGenContext;
 }

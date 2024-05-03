@@ -32,7 +32,11 @@ export function logStats(
   logger: MomentoLogger,
   maxRequestsPerSecond: number
 ): void {
-  logger.info(`
+  logger.info(generateStatsString(loadGenContext, maxRequestsPerSecond));
+}
+
+export function generateStatsString(loadGenContext: BasicLoadGenContext, maxRequestsPerSecond: number): string {
+  return `
 cumulative stats:
 total requests: ${loadGenContext.globalRequestCount} (${tps(
     loadGenContext,
@@ -68,7 +72,7 @@ ${outputHistogramSummary(loadGenContext.setLatencies)}
 
 cumulative get latencies:
 ${outputHistogramSummary(loadGenContext.getLatencies)}
-`);
+`;
 }
 
 export function logCoalescingStats(
