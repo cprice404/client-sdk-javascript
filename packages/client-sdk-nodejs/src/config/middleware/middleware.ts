@@ -56,9 +56,9 @@ export class MiddlewareMessage {
         const request = this._grpcMessage as cache.cache_client._SetRequest;
         return `SetRequest with key "${TEXT_DECODER.decode(
           request.cache_key
-        )}" and value "${TEXT_DECODER.decode(
-          request.cache_body
-        )}" and ttl (ms) "${request.ttl_milliseconds}"`;
+        )}" and value "${TEXT_DECODER.decode(request.cache_body)}" and ttl ${
+          request.ttl_milliseconds
+        } ms`;
       }
       case cache.cache_client._GetBatchRequest: {
         const request = this
@@ -87,9 +87,9 @@ export class MiddlewareMessage {
               acc +
               `(key "${TEXT_DECODER.decode(
                 item.cache_key
-              )}" | value "${TEXT_DECODER.decode(
-                item.cache_body
-              )}" | ttl (ms) ${item.ttl_milliseconds}), `,
+              )}" | value "${TEXT_DECODER.decode(item.cache_body)}" | ttl ${
+                item.ttl_milliseconds
+              } ms), `,
             ''
           )
         );
@@ -118,9 +118,9 @@ export class MiddlewareMessage {
           ._grpcMessage as cache.cache_client._IncrementRequest;
         return `IncrementRequest with key "${TEXT_DECODER.decode(
           request.cache_key
-        )}" and amount "${request.amount}" and ttl (ms) "${
+        )}" and amount "${request.amount}" and ttl ${
           request.ttl_milliseconds
-        }"`;
+        } ms`;
       }
       case cache.cache_client._UpdateTtlRequest: {
         const request = this
@@ -173,7 +173,7 @@ export class MiddlewareMessage {
         return (
           `DictionarySetRequest with dictionary name "${TEXT_DECODER.decode(
             request.dictionary_name
-          )}" and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
             request.refresh_ttl ? 'true' : 'false'
           } and fields ` +
           request.items.reduce(
@@ -193,7 +193,7 @@ export class MiddlewareMessage {
           request.dictionary_name
         )}" and field ${TEXT_DECODER.decode(request.field)} and amount ${
           request.amount
-        } and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+        } and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
           request.refresh_ttl ? 'true' : 'false'
         }`;
       }
@@ -237,7 +237,7 @@ export class MiddlewareMessage {
         return (
           `SetUnionRequest with set name "${TEXT_DECODER.decode(
             request.set_name
-          )}" and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
             request.refresh_ttl ? 'true' : 'false'
           } and elements ` +
           request.elements.reduce(
@@ -291,7 +291,7 @@ export class MiddlewareMessage {
         return (
           `ListConcatenateFrontRequest with list name "${TEXT_DECODER.decode(
             request.list_name
-          )}" and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
             request.refresh_ttl ? 'true' : 'false'
           } and truncate back to size ${
             request.truncate_back_to_size
@@ -308,7 +308,7 @@ export class MiddlewareMessage {
         return (
           `ListConcatenateBackRequest with list name "${TEXT_DECODER.decode(
             request.list_name
-          )}" and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
             request.refresh_ttl ? 'true' : 'false'
           } and truncate front to size ${
             request.truncate_front_to_size
@@ -324,9 +324,9 @@ export class MiddlewareMessage {
           ._grpcMessage as cache.cache_client._ListPushFrontRequest;
         return `ListPushFrontRequest with list name "${TEXT_DECODER.decode(
           request.list_name
-        )}" and value ${TEXT_DECODER.decode(request.value)} and ttl (ms) ${
+        )}" and value ${TEXT_DECODER.decode(request.value)} and ttl ${
           request.ttl_milliseconds
-        } and refresh ttl ${
+        } ms and refresh ttl ${
           request.refresh_ttl ? 'true' : 'false'
         } and truncate back to size ${request.truncate_back_to_size}`;
       }
@@ -335,9 +335,9 @@ export class MiddlewareMessage {
           ._grpcMessage as cache.cache_client._ListPushBackRequest;
         return `ListPushBackRequest with list name "${TEXT_DECODER.decode(
           request.list_name
-        )}" and value ${TEXT_DECODER.decode(request.value)} and ttl (ms) ${
+        )}" and value ${TEXT_DECODER.decode(request.value)} and ttl ${
           request.ttl_milliseconds
-        } and refresh ttl ${
+        } ms and refresh ttl ${
           request.refresh_ttl ? 'true' : 'false'
         } and truncate front to size ${request.truncate_front_to_size}`;
       }
@@ -380,7 +380,7 @@ export class MiddlewareMessage {
           ._grpcMessage as cache.cache_client._ListRetainRequest;
         return `ListRetainRequest with list name "${TEXT_DECODER.decode(
           request.list_name
-        )}" and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+        )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
           request.refresh_ttl ? 'true' : 'false'
         } and inclusive start index ${
           request.unbounded_start ? 'unbounded' : request.inclusive_start
@@ -401,7 +401,7 @@ export class MiddlewareMessage {
         return (
           `SortedSetPutRequest with set name "${TEXT_DECODER.decode(
             request.set_name
-          )}" and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
             request.refresh_ttl ? 'true' : 'false'
           } and elements ` +
           request.elements.reduce(
@@ -471,7 +471,7 @@ export class MiddlewareMessage {
           request.set_name
         )}" and value ${TEXT_DECODER.decode(request.value)} and amount ${
           request.amount
-        } and ttl (ms) ${request.ttl_milliseconds} and refresh ttl ${
+        } and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
           request.refresh_ttl ? 'true' : 'false'
         }`;
       }
