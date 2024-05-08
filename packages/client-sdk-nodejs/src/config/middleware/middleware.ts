@@ -100,7 +100,9 @@ export class MiddlewareMessage {
           request.cache_key
         )}" and value "${TEXT_DECODER.decode(
           request.cache_body
-        )}" and condition "${request.condition}"`;
+        )}" and condition "${request.condition}" and ttl ${
+          request.ttl_milliseconds
+        } ms`;
       }
       case cache.cache_client._KeysExistRequest: {
         const request = this
