@@ -1,8 +1,54 @@
 import {Metadata, StatusObject} from '@grpc/grpc-js';
 import {Message} from 'google-protobuf';
 import {cache, leaderboard} from '@gomomento/generated-types';
-
-const TEXT_DECODER = new TextDecoder();
+import {
+  convertLeaderboardDeleteRequest,
+  convertDictionaryDeleteRequest,
+  convertDictionaryFetchRequest,
+  convertDictionaryGetRequest,
+  convertDictionaryIncrementRequest,
+  convertDictionaryLengthRequest,
+  convertDictionarySetRequest,
+  convertGetBatchRequest,
+  convertLeaderboardLengthRequest,
+  convertIncrementRequest,
+  convertKeysExistRequest,
+  convertListConcatenateBackRequest,
+  convertListConcatenateFrontRequest,
+  convertListFetchRequest,
+  convertListLengthRequest,
+  convertListPopBackRequest,
+  convertListPopFrontRequest,
+  convertListPushBackRequest,
+  convertListPushFrontRequest,
+  convertListRemoveValueRequest,
+  convertListRetainRequest,
+  convertSetBatchRequest,
+  convertSetContainsRequest,
+  convertSetDifferenceRequest,
+  convertSetFetchRequest,
+  convertSetIfRequest,
+  convertSetLengthRequest,
+  convertSetPopRequest,
+  convertSetRequest,
+  convertSetSampleRequest,
+  convertSetUnionRequest,
+  convertSingleKeyRequest,
+  convertSortedSetFetchRequest,
+  convertSortedSetGetRankRequest,
+  convertSortedSetGetScoreRequest,
+  convertSortedSetIncrementRequest,
+  convertSortedSetLengthByScoreRequest,
+  convertSortedSetLengthRequest,
+  convertSortedSetPutRequest,
+  convertSortedSetRemoveRequest,
+  convertUpdateTtlRequest,
+  convertLeaderboardUpsertRequest,
+  convertLeaderboardGetByRankRequest,
+  convertLeaderboardGetRankRequest,
+  convertLeaderboardRemoveRequest,
+  convertLeaderboardGetByScoreRequest,
+} from './request-logging-formats';
 
 export class MiddlewareMetadata {
   readonly _grpcMetadata: Metadata;
@@ -47,534 +93,350 @@ export class MiddlewareMessage {
   toString(): string {
     switch (this._grpcMessage.constructor) {
       case cache.cache_client._GetRequest: {
-        const request = this._grpcMessage as cache.cache_client._GetRequest;
-        return `GetRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}"`;
+        return JSON.stringify(
+          convertSingleKeyRequest(
+            (this._grpcMessage as cache.cache_client._GetRequest).cache_key
+          )
+        );
       }
       case cache.cache_client._SetRequest: {
-        const request = this._grpcMessage as cache.cache_client._SetRequest;
-        return `SetRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}" and value "${TEXT_DECODER.decode(request.cache_body)}" and ttl ${
-          request.ttl_milliseconds
-        } ms`;
+        return JSON.stringify(
+          convertSetRequest(this._grpcMessage as cache.cache_client._SetRequest)
+        );
       }
       case cache.cache_client._GetBatchRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._GetBatchRequest;
-        return (
-          'GetBatchRequest with keys ' +
-          request.items.reduce(
-            (acc, item) => acc + TEXT_DECODER.decode(item.cache_key) + ', ',
-            ''
+        return JSON.stringify(
+          convertGetBatchRequest(
+            this._grpcMessage as cache.cache_client._GetBatchRequest
           )
         );
       }
       case cache.cache_client._DeleteRequest: {
-        const request = this._grpcMessage as cache.cache_client._DeleteRequest;
-        return `DeleteRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}"`;
+        return JSON.stringify(
+          convertSingleKeyRequest(
+            (this._grpcMessage as cache.cache_client._DeleteRequest).cache_key
+          )
+        );
       }
       case cache.cache_client._SetBatchRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetBatchRequest;
-        return (
-          'SetBatchRequest with items ' +
-          request.items.reduce(
-            (acc, item) =>
-              acc +
-              `(key "${TEXT_DECODER.decode(
-                item.cache_key
-              )}" | value "${TEXT_DECODER.decode(item.cache_body)}" | ttl ${
-                item.ttl_milliseconds
-              } ms), `,
-            ''
+        return JSON.stringify(
+          convertSetBatchRequest(
+            this._grpcMessage as cache.cache_client._SetBatchRequest
           )
         );
       }
       case cache.cache_client._SetIfRequest: {
-        const request = this._grpcMessage as cache.cache_client._SetIfRequest;
-        return `SetIfRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}" and value "${TEXT_DECODER.decode(
-          request.cache_body
-        )}" and condition "${request.condition}" and ttl ${
-          request.ttl_milliseconds
-        } ms`;
+        return JSON.stringify(
+          convertSetIfRequest(
+            this._grpcMessage as cache.cache_client._SetIfRequest
+          )
+        );
       }
       case cache.cache_client._KeysExistRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._KeysExistRequest;
-        return (
-          'KeysExistRequest with keys ' +
-          request.cache_keys.reduce(
-            (acc, key) => acc + TEXT_DECODER.decode(key) + ', ',
-            ''
+        return JSON.stringify(
+          convertKeysExistRequest(
+            this._grpcMessage as cache.cache_client._KeysExistRequest
           )
         );
       }
       case cache.cache_client._IncrementRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._IncrementRequest;
-        return `IncrementRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}" and amount "${request.amount}" and ttl ${
-          request.ttl_milliseconds
-        } ms`;
+        return JSON.stringify(
+          convertIncrementRequest(
+            this._grpcMessage as cache.cache_client._IncrementRequest
+          )
+        );
       }
       case cache.cache_client._UpdateTtlRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._UpdateTtlRequest;
-        return `UpdateTtlRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}" and amount "${
-          String(request.increase_to_milliseconds) + ' (increase)' ||
-          String(request.decrease_to_milliseconds) + ' (decrease)' ||
-          String(request.overwrite_to_milliseconds) + ' (overwrite)'
-        }"`;
+        return JSON.stringify(
+          convertUpdateTtlRequest(
+            this._grpcMessage as cache.cache_client._UpdateTtlRequest
+          )
+        );
       }
       case cache.cache_client._ItemGetTtlRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ItemGetTtlRequest;
-        return `ItemGetTtlRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}"`;
+        return JSON.stringify(
+          convertSingleKeyRequest(
+            (this._grpcMessage as cache.cache_client._ItemGetTtlRequest)
+              .cache_key
+          )
+        );
       }
       case cache.cache_client._ItemGetTypeRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ItemGetTypeRequest;
-        return `ItemGetTypeRequest with key "${TEXT_DECODER.decode(
-          request.cache_key
-        )}"`;
+        return JSON.stringify(
+          convertSingleKeyRequest(
+            (this._grpcMessage as cache.cache_client._ItemGetTypeRequest)
+              .cache_key
+          )
+        );
       }
       case cache.cache_client._DictionaryGetRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._DictionaryGetRequest;
-        return (
-          `DictionaryGetRequest with dictionary name "${TEXT_DECODER.decode(
-            request.dictionary_name
-          )}" and fields ` +
-          request.fields.reduce(
-            (acc, field) => acc + TEXT_DECODER.decode(field) + ', ',
-            ''
+        return JSON.stringify(
+          convertDictionaryGetRequest(
+            this._grpcMessage as cache.cache_client._DictionaryGetRequest
           )
         );
       }
       case cache.cache_client._DictionaryFetchRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._DictionaryFetchRequest;
-        return `DictionaryFetchRequest with dictionary name "${TEXT_DECODER.decode(
-          request.dictionary_name
-        )}"`;
+        return JSON.stringify(
+          convertDictionaryFetchRequest(
+            this._grpcMessage as cache.cache_client._DictionaryFetchRequest
+          )
+        );
       }
       case cache.cache_client._DictionarySetRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._DictionarySetRequest;
-        return (
-          `DictionarySetRequest with dictionary name "${TEXT_DECODER.decode(
-            request.dictionary_name
-          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-            request.refresh_ttl ? 'true' : 'false'
-          } and fields ` +
-          request.items.reduce(
-            (acc, item) =>
-              acc +
-              `(field "${TEXT_DECODER.decode(
-                item.field
-              )}" | value "${TEXT_DECODER.decode(item.value)}"), `,
-            ''
+        return JSON.stringify(
+          convertDictionarySetRequest(
+            this._grpcMessage as cache.cache_client._DictionarySetRequest
           )
         );
       }
       case cache.cache_client._DictionaryIncrementRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._DictionaryIncrementRequest;
-        return `DictionaryIncrementRequest with dictionary name "${TEXT_DECODER.decode(
-          request.dictionary_name
-        )}" and field ${TEXT_DECODER.decode(request.field)} and amount ${
-          request.amount
-        } and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-          request.refresh_ttl ? 'true' : 'false'
-        }`;
+        return JSON.stringify(
+          convertDictionaryIncrementRequest(
+            this._grpcMessage as cache.cache_client._DictionaryIncrementRequest
+          )
+        );
       }
       case cache.cache_client._DictionaryDeleteRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._DictionaryDeleteRequest;
-        return (
-          `DictionaryDeleteRequest with dictionary name "${TEXT_DECODER.decode(
-            request.dictionary_name
-          )}" and fields ` +
-          request.some.fields.reduce(
-            (acc, field) => acc + TEXT_DECODER.decode(field) + ', ',
-            ''
+        return JSON.stringify(
+          convertDictionaryDeleteRequest(
+            this._grpcMessage as cache.cache_client._DictionaryDeleteRequest
           )
         );
       }
       case cache.cache_client._DictionaryLengthRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._DictionaryLengthRequest;
-        return `DictionaryLengthRequest with dictionary name "${TEXT_DECODER.decode(
-          request.dictionary_name
-        )}"`;
+        return JSON.stringify(
+          convertDictionaryLengthRequest(
+            this._grpcMessage as cache.cache_client._DictionaryLengthRequest
+          )
+        );
       }
       case cache.cache_client._SetFetchRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetFetchRequest;
-        return `SetFetchRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}"`;
+        return JSON.stringify(
+          convertSetFetchRequest(
+            this._grpcMessage as cache.cache_client._SetFetchRequest
+          )
+        );
       }
       case cache.cache_client._SetSampleRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetSampleRequest;
-        return `SetSampleRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}" and sample size (limit) ${request.limit}`;
+        return JSON.stringify(
+          convertSetSampleRequest(
+            this._grpcMessage as cache.cache_client._SetSampleRequest
+          )
+        );
       }
       case cache.cache_client._SetUnionRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetUnionRequest;
-        return (
-          `SetUnionRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-            request.refresh_ttl ? 'true' : 'false'
-          } and elements ` +
-          request.elements.reduce(
-            (acc, element) => acc + TEXT_DECODER.decode(element) + ', ',
-            ''
+        return JSON.stringify(
+          convertSetUnionRequest(
+            this._grpcMessage as cache.cache_client._SetUnionRequest
           )
         );
       }
       case cache.cache_client._SetDifferenceRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetDifferenceRequest;
-        return (
-          `SetDifferenceRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and elements ` +
-          request.subtrahend.set.elements.reduce(
-            (acc, element) => acc + TEXT_DECODER.decode(element) + ', ',
-            ''
+        return JSON.stringify(
+          convertSetDifferenceRequest(
+            this._grpcMessage as cache.cache_client._SetDifferenceRequest
           )
         );
       }
       case cache.cache_client._SetContainsRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetContainsRequest;
-        return (
-          `SetContainsRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and elements ` +
-          request.elements.reduce(
-            (acc, element) => acc + TEXT_DECODER.decode(element) + ', ',
-            ''
+        return JSON.stringify(
+          convertSetContainsRequest(
+            this._grpcMessage as cache.cache_client._SetContainsRequest
           )
         );
       }
       case cache.cache_client._SetLengthRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SetLengthRequest;
-        return `SetLengthRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}"`;
+        return JSON.stringify(
+          convertSetLengthRequest(
+            this._grpcMessage as cache.cache_client._SetLengthRequest
+          )
+        );
       }
       case cache.cache_client._SetPopRequest: {
-        const request = this._grpcMessage as cache.cache_client._SetPopRequest;
-        return `SetPopRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}" and count ${request.count}`;
+        return JSON.stringify(
+          convertSetPopRequest(
+            this._grpcMessage as cache.cache_client._SetPopRequest
+          )
+        );
       }
       case cache.cache_client._ListConcatenateFrontRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListConcatenateFrontRequest;
-        return (
-          `ListConcatenateFrontRequest with list name "${TEXT_DECODER.decode(
-            request.list_name
-          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-            request.refresh_ttl ? 'true' : 'false'
-          } and truncate back to size ${
-            request.truncate_back_to_size
-          } and values ` +
-          request.values.reduce(
-            (acc, value) => acc + TEXT_DECODER.decode(value) + ', ',
-            ''
+        return JSON.stringify(
+          convertListConcatenateFrontRequest(
+            this._grpcMessage as cache.cache_client._ListConcatenateFrontRequest
           )
         );
       }
       case cache.cache_client._ListConcatenateBackRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListConcatenateBackRequest;
-        return (
-          `ListConcatenateBackRequest with list name "${TEXT_DECODER.decode(
-            request.list_name
-          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-            request.refresh_ttl ? 'true' : 'false'
-          } and truncate front to size ${
-            request.truncate_front_to_size
-          } and values ` +
-          request.values.reduce(
-            (acc, value) => acc + TEXT_DECODER.decode(value) + ', ',
-            ''
+        return JSON.stringify(
+          convertListConcatenateBackRequest(
+            this._grpcMessage as cache.cache_client._ListConcatenateBackRequest
           )
         );
       }
       case cache.cache_client._ListPushFrontRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListPushFrontRequest;
-        return `ListPushFrontRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}" and value ${TEXT_DECODER.decode(request.value)} and ttl ${
-          request.ttl_milliseconds
-        } ms and refresh ttl ${
-          request.refresh_ttl ? 'true' : 'false'
-        } and truncate back to size ${request.truncate_back_to_size}`;
+        return JSON.stringify(
+          convertListPushFrontRequest(
+            this._grpcMessage as cache.cache_client._ListPushFrontRequest
+          )
+        );
       }
       case cache.cache_client._ListPushBackRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListPushBackRequest;
-        return `ListPushBackRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}" and value ${TEXT_DECODER.decode(request.value)} and ttl ${
-          request.ttl_milliseconds
-        } ms and refresh ttl ${
-          request.refresh_ttl ? 'true' : 'false'
-        } and truncate front to size ${request.truncate_front_to_size}`;
+        return JSON.stringify(
+          convertListPushBackRequest(
+            this._grpcMessage as cache.cache_client._ListPushBackRequest
+          )
+        );
       }
       case cache.cache_client._ListPopFrontRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListPopFrontRequest;
-        return `ListPopFrontRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}"`;
+        return JSON.stringify(
+          convertListPopFrontRequest(
+            this._grpcMessage as cache.cache_client._ListPopFrontRequest
+          )
+        );
       }
       case cache.cache_client._ListPopBackRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListPopBackRequest;
-        return `ListPopBackRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}"`;
+        return JSON.stringify(
+          convertListPopBackRequest(
+            this._grpcMessage as cache.cache_client._ListPopBackRequest
+          )
+        );
       }
       case cache.cache_client._ListRemoveRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListRemoveRequest;
-        return `ListRemoveRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}" and remove value ${TEXT_DECODER.decode(
-          request.all_elements_with_value
-        )}`;
+        return JSON.stringify(
+          convertListRemoveValueRequest(
+            this._grpcMessage as cache.cache_client._ListRemoveRequest
+          )
+        );
       }
       case cache.cache_client._ListFetchRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListFetchRequest;
-        return `ListFetchRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}" and inclusive start index ${
-          request.unbounded_start ? 'unbounded' : request.inclusive_start
-        } and exclusive end index ${
-          request.unbounded_end ? 'unbounded' : request.exclusive_end
-        }`;
+        return JSON.stringify(
+          convertListFetchRequest(
+            this._grpcMessage as cache.cache_client._ListFetchRequest
+          )
+        );
       }
       case cache.cache_client._ListRetainRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListRetainRequest;
-        return `ListRetainRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-          request.refresh_ttl ? 'true' : 'false'
-        } and inclusive start index ${
-          request.unbounded_start ? 'unbounded' : request.inclusive_start
-        } and exclusive end index ${
-          request.unbounded_end ? 'unbounded' : request.exclusive_end
-        }`;
+        return JSON.stringify(
+          convertListRetainRequest(
+            this._grpcMessage as cache.cache_client._ListRetainRequest
+          )
+        );
       }
       case cache.cache_client._ListLengthRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._ListLengthRequest;
-        return `ListLengthRequest with list name "${TEXT_DECODER.decode(
-          request.list_name
-        )}"`;
+        return JSON.stringify(
+          convertListLengthRequest(
+            this._grpcMessage as cache.cache_client._ListLengthRequest
+          )
+        );
       }
       case cache.cache_client._SortedSetPutRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetPutRequest;
-        return (
-          `SortedSetPutRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-            request.refresh_ttl ? 'true' : 'false'
-          } and elements ` +
-          request.elements.reduce(
-            (acc, element) =>
-              acc +
-              `(value ${TEXT_DECODER.decode(element.value)} | score ${
-                element.score
-              }), `,
-            ''
+        return JSON.stringify(
+          convertSortedSetPutRequest(
+            this._grpcMessage as cache.cache_client._SortedSetPutRequest
           )
         );
       }
       case cache.cache_client._SortedSetFetchRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetFetchRequest;
-        if (request.has_by_index) {
-          return `SortedSetFetchRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and sort order ${
-            request.order ? 'DESCENDING' : 'ASCENDING'
-          } and inclusive start index ${
-            request.by_index.inclusive_start_index ?? 'unbounded'
-          } and exclusive end index ${
-            request.by_index.exclusive_end_index ?? 'unbounded'
-          }`;
-        }
-        return `SortedSetFetchRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}" and sort order ${
-          request.order ? 'DESCENDING' : 'ASCENDING'
-        } and inclusive min score ${
-          request.by_score.min_score?.score ?? 'unbounded'
-        } and inclusive max score ${
-          request.by_score.max_score?.score ?? 'unbounded'
-        }`;
+        return JSON.stringify(
+          convertSortedSetFetchRequest(
+            this._grpcMessage as cache.cache_client._SortedSetFetchRequest
+          )
+        );
       }
       case cache.cache_client._SortedSetGetScoreRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetGetScoreRequest;
-        return (
-          `SortedSetGetScoreRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and values ` +
-          request.values.reduce(
-            (acc, value) => acc + TEXT_DECODER.decode(value) + ', ',
-            ''
+        return JSON.stringify(
+          convertSortedSetGetScoreRequest(
+            this._grpcMessage as cache.cache_client._SortedSetGetScoreRequest
           )
         );
       }
       case cache.cache_client._SortedSetRemoveRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetRemoveRequest;
-        return (
-          `SortedSetRemoveRequest with set name "${TEXT_DECODER.decode(
-            request.set_name
-          )}" and values ` +
-          request.some.values.reduce(
-            (acc, value) => acc + TEXT_DECODER.decode(value) + ', ',
-            ''
+        return JSON.stringify(
+          convertSortedSetRemoveRequest(
+            this._grpcMessage as cache.cache_client._SortedSetRemoveRequest
           )
         );
       }
       case cache.cache_client._SortedSetIncrementRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetIncrementRequest;
-        return `SortedSetIncrementRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}" and value ${TEXT_DECODER.decode(request.value)} and amount ${
-          request.amount
-        } and ttl ${request.ttl_milliseconds} ms and refresh ttl ${
-          request.refresh_ttl ? 'true' : 'false'
-        }`;
+        return JSON.stringify(
+          convertSortedSetIncrementRequest(
+            this._grpcMessage as cache.cache_client._SortedSetIncrementRequest
+          )
+        );
       }
       case cache.cache_client._SortedSetGetRankRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetGetRankRequest;
-        return `SortedSetGetRankRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}" and value ${TEXT_DECODER.decode(request.value)} and sort order ${
-          request.order ? 'DESCENDING' : 'ASCENDING'
-        }`;
+        return JSON.stringify(
+          convertSortedSetGetRankRequest(
+            this._grpcMessage as cache.cache_client._SortedSetGetRankRequest
+          )
+        );
       }
       case cache.cache_client._SortedSetLengthRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetLengthRequest;
-        return `SortedSetLengthRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}"`;
+        return JSON.stringify(
+          convertSortedSetLengthRequest(
+            this._grpcMessage as cache.cache_client._SortedSetLengthRequest
+          )
+        );
       }
       case cache.cache_client._SortedSetLengthByScoreRequest: {
-        const request = this
-          ._grpcMessage as cache.cache_client._SortedSetLengthByScoreRequest;
-        return `SortedSetLengthByScoreRequest with set name "${TEXT_DECODER.decode(
-          request.set_name
-        )}" and min score ${
-          String(request.inclusive_min) + ' (inclusive)' ||
-          String(request.exclusive_min) + ' (exclusive)' ||
-          'unbounded'
-        } and max score ${
-          String(request.inclusive_max) + ' (inclusive)' ||
-          String(request.exclusive_max) + ' (exclusive)' ||
-          'unbounded'
-        }`;
+        return JSON.stringify(
+          convertSortedSetLengthByScoreRequest(
+            this
+              ._grpcMessage as cache.cache_client._SortedSetLengthByScoreRequest
+          )
+        );
       }
       case leaderboard.leaderboard._DeleteLeaderboardRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._DeleteLeaderboardRequest;
-        return `DeleteLeaderboardRequest with cache name "${request.cache_name}" and leaderboard name "${request.leaderboard}"`;
+        return JSON.stringify(
+          convertLeaderboardDeleteRequest(
+            this
+              ._grpcMessage as leaderboard.leaderboard._DeleteLeaderboardRequest
+          )
+        );
       }
       case leaderboard.leaderboard._GetLeaderboardLengthRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._GetLeaderboardLengthRequest;
-        return `GetLeaderboardLengthRequest with cache name "${request.cache_name}" and leaderboard name "${request.leaderboard}"`;
+        return JSON.stringify(
+          convertLeaderboardLengthRequest(
+            this
+              ._grpcMessage as leaderboard.leaderboard._GetLeaderboardLengthRequest
+          )
+        );
       }
       case leaderboard.leaderboard._UpsertElementsRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._UpsertElementsRequest;
-        return (
-          `UpsertElementsRequest with cache name "${request.cache_name}" and leaderboard name "${request.leaderboard}" and elements ` +
-          request.elements.reduce(
-            (acc, element) =>
-              acc + `(id "${element.id}" | score ${element.score}), `,
-            ''
+        return JSON.stringify(
+          convertLeaderboardUpsertRequest(
+            this._grpcMessage as leaderboard.leaderboard._UpsertElementsRequest
           )
         );
       }
       case leaderboard.leaderboard._GetByRankRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._GetByRankRequest;
-        return `GetByRankRequest with cache name "${
-          request.cache_name
-        }" and leaderboard name "${request.leaderboard}" and order ${
-          request.order ? 'DESCENDING' : 'ASCENDING'
-        } and inclusive start rank ${
-          request.rank_range.start_inclusive
-        } and exclusive end rank ${request.rank_range.end_exclusive}`;
+        return JSON.stringify(
+          convertLeaderboardGetByRankRequest(
+            this._grpcMessage as leaderboard.leaderboard._GetByRankRequest
+          )
+        );
       }
       case leaderboard.leaderboard._GetRankRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._GetRankRequest;
-        return (
-          `GetRankRequest with cache name "${
-            request.cache_name
-          }" and leaderboard name "${request.leaderboard}" and order ${
-            request.order ? 'DESCENDING' : 'ASCENDING'
-          } for IDs ` +
-          request.ids.reduce((acc, id) => acc + String(id) + ', ', '')
+        return JSON.stringify(
+          convertLeaderboardGetRankRequest(
+            this._grpcMessage as leaderboard.leaderboard._GetRankRequest
+          )
         );
       }
       case leaderboard.leaderboard._RemoveElementsRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._RemoveElementsRequest;
-        return (
-          `RemoveElementsRequest with cache name "${request.cache_name}" and leaderboard name "${request.leaderboard}" for IDs ` +
-          request.ids.reduce((acc, id) => acc + String(id) + ', ', '')
+        return JSON.stringify(
+          convertLeaderboardRemoveRequest(
+            this._grpcMessage as leaderboard.leaderboard._RemoveElementsRequest
+          )
         );
       }
       case leaderboard.leaderboard._GetByScoreRequest: {
-        const request = this
-          ._grpcMessage as leaderboard.leaderboard._GetByScoreRequest;
-        return `GetByScoreRequest with cache name "${
-          request.cache_name
-        }" and leaderboard name "${request.leaderboard}" and order ${
-          request.order ? 'DESCENDING' : 'ASCENDING'
-        } and offset ${request.offset} and limit ${
-          request.limit_elements
-        } and inclusive min score ${
-          request.score_range.min_inclusive ?? 'unbounded'
-        } and exclusive max score ${
-          request.score_range.max_exclusive ?? 'unbounded'
-        }`;
+        return JSON.stringify(
+          convertLeaderboardGetByScoreRequest(
+            this._grpcMessage as leaderboard.leaderboard._GetByScoreRequest
+          )
+        );
       }
       default: {
         return this.constructorName();
