@@ -50,10 +50,5 @@ build({
     minify: false,
     tsconfig: './tsconfig.json',
     keepNames: true,
-    // external: ['@mongodb-js/*'],
-    loader: {
-        '.node': 'file',
-    },
-    // plugins: [nativeNodeModulesPlugin],
-    // eslint-disable-next-line no-process-exit
-}).catch(() => process.exit(1));
+    plugins: [nativeNodeModulesPlugin],
+}).catch(e => { throw e; });

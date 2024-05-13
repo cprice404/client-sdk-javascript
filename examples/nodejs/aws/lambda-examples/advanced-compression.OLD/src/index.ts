@@ -10,7 +10,7 @@ import {
     EnvMomentoTokenProvider,
 } from '@gomomento/sdk';
 import {CompressorFactory} from "@gomomento/sdk-nodejs-compression";
-
+  
 const cacheName = 'cache';
 const cacheKey = 'key';
 const cacheValue = 'value';
