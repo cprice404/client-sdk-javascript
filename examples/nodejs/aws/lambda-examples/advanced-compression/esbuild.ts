@@ -51,6 +51,6 @@ build({
     tsconfig: './tsconfig.json',
     keepNames: true,
     loader: {
-        '.node': 'file',
+        '.node': 'copy',
     },
 }).catch(() => process.exit(1));
