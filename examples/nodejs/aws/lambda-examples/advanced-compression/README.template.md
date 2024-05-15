@@ -10,32 +10,56 @@ For advanced use cases, the `@gomomento/sdk-nodejs-compression-zstd` library off
 
 Unless you are certain that the extra performance is important, we recommend that you stick with the simpler `@gomomento/sdk-nodejs-compression` package. For advanced use cases, this directory contains an example of how to deploy the `@gomomento/sdk-nodejs-compression-zstd` dependency in your lambda.
 
-The key element to note in this example project is the code in the esbuild.ts file that provides special handling for the `.node` directory. This `.node` directory is where the `npm` build will place the native `zstd` binary, and it must be included in the lambda deployment package.
+**NOTE: this binary will increase the size of your deployed lambda by approximately 1MB.**
 
-NOTE: this binary will increase the size of your deployed lambda by approximately 1MB.
+## Packaging Notes
 
-```typescript
-// If a ".node" file is imported within a module in the "node-file" namespace, put
-// it in the "file" namespace where esbuild's default loading behavior will handle
-// it. It is already an absolute path since we resolved it to one above.
-build.onResolve({ filter: /\.node$/, namespace: 'node-file' }, args => ({
-    path: args.path,
-    namespace: 'file',
-}))
+### `package.json`: Specifying the dependency for the target platform
 
-// Tell esbuild's default loading behavior to use the "file" loader for
-// these ".node" files.
-let opts = build.initialOptions
-opts.loader = opts.loader || {}
-opts.loader['.node'] = 'file'
+The key to successfully packaging your lambda when using `@gomomento/sdk-nodejs-compression-zstd` is to make sure that you
+package the appropriate native `zstd` binary for your target environment. This example project targets a Linux, x64 Lambda
+runtime, but assumes that you may be building / deploying the code from MacOS or another non-linux platform.
+
+The `zstd` binaries are installed into the `node_modules` directory by `npm`. By default, `npm` will only install the appropriate
+binary for the platform that you are running the build from. To ensure that the correct binary for the target platform is
+also installed, you need to explicitly reference it in the `package.json` file. In this example, this is done via
+the following line in the `dependencies` section of our `package.json`:
+
+```json
+"@mongodb-js/zstd-linux-x64-gnu": "^1.2.0",
 ```
+
+If you were targeting a different platform, you could specify the appropriate dependency for your target platform here instead of
+the `linux-x64-gnu` version.
+
+### `esbuild.ts`: Special handling for `.node` files
+
+This project uses `esbuild` to create the final files that we will deploy to the lambda. `npm` installs the native binaries
+into the `node_modules` with a file extension of `.node`, and by default, `esbuild` will not include these files in the
+build output. Therefore we need to configure `esbuild` to include these files.
+
+For example code on how to achieve this, see the `esbuild.ts` file. If you are using another build system besides esbuild,
+you will need to take similar steps to ensure that the `.node` files are included and accessible in your final lambda package.
 
 ## Building the Example
 
-To build and deploy the lambda directly via `esbuild`, and deploy via the `aws` cli:
+**NOTE: the `--force` flag is necessary on the `npm install` command if you are building from a different platform than
+the lambda target platform. Otherwise `npm` will error out and indicate that your platform and arch are not suitable
+for the `zstd-linux-x64-gnu` dependency that is listed in the `package.json` file.**
+
+To build and deploy the lambda directly via `esbuild`
+
+TODO everything below this line needs updates
+
+npm run build && sam build && AWS_PROFILE=dev sam deploy --stack-name zstd-stack --resolve-s3 --capabilities CAPABILITY_IAM --parameter-overrides MomentoApiKey=xxxx
+
+
+
+
+, and deploy via the `aws` cli:
 
 ```bash
-npm i
+npm install --force
 npm run build
 aws lambda update-function-code --function-name <function name> --zip-file fileb://function.zip
 aws lambda invoke --function-name <function name> --log-type Tail result.json | jq -r .LogResult | base64 -d
@@ -44,9 +68,24 @@ aws lambda invoke --function-name <function name> --log-type Tail result.json | 
 To build and deploy the lambda via AWS `sam`:
 
 ```bash
-npm i
+npm install --force
 sam build
 sam deploy
 ```
+
+
+    Metadata:
+      SkipBuild: True
+      BuildMethod: esbuild
+      BuildProperties:
+        UseNpmCi: true
+        Minify: false
+        Target: "es2020"
+        Sourcemap: true
+        Loader:
+          - ".node=copy"
+        EntryPoints:
+          - src/index.ts
+
 
 {{ ossFooter }}

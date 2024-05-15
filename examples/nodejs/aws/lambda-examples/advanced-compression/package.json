@@ -18,6 +18,7 @@
   },
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "ts-node esbuild.ts"
+    "build": "ts-node esbuild.ts",
+    "postbuild": "ts-node postbuild.ts"
   }
 }
