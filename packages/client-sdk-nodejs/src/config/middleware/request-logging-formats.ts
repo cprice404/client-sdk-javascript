@@ -341,26 +341,27 @@ interface SetSampleRequestLoggingFormat
   limit: number;
 }
 
-export function convertSetSampleRequest(
-  request: cache.cache_client._SetSampleRequest
-): SetSampleRequestLoggingFormat {
+const convertSetSampleRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetSampleRequest,
+  SetSampleRequestLoggingFormat
+> = (request: cache.cache_client._SetSampleRequest) => {
   return {
     requestType: 'setSample',
     setName: convertBytesToString(request.set_name),
     limit: request.limit,
   };
-}
+};
 
 interface SetUnionRequestLoggingFormat
   extends SetCollectionRequestLoggingFormat,
     CollectionWriteRequestLogInterfaceBase {
-  setName: string;
   elements: string[];
 }
 
-export function convertSetUnionRequest(
-  request: cache.cache_client._SetUnionRequest
-): SetUnionRequestLoggingFormat {
+const convertSetUnionRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetUnionRequest,
+  SetUnionRequestLoggingFormat
+> = (request: cache.cache_client._SetUnionRequest) => {
   return {
     requestType: 'setUnion',
     setName: convertBytesToString(request.set_name),
@@ -368,7 +369,269 @@ export function convertSetUnionRequest(
     refreshTtl: request.refresh_ttl,
     elements: request.elements.map(element => convertBytesToString(element)),
   };
+};
+
+interface SetDifferenceRequestLoggingFormat
+  extends SetCollectionRequestLoggingFormat {
+  action: 'minuend' | 'subtrahend_set' | 'subtrahend_identity';
+  elements?: string[];
 }
+
+const convertSetDifferenceRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetDifferenceRequest,
+  SetDifferenceRequestLoggingFormat
+> = (request: cache.cache_client._SetDifferenceRequest) => {
+  return {
+    requestType: 'setDifference',
+    setName: convertBytesToString(request.set_name),
+    action: request.minuend
+      ? 'minuend'
+      : request.subtrahend.set
+      ? 'subtrahend_set'
+      : 'subtrahend_identity',
+    elements: request.minuend
+      ? request.minuend.elements.map(element => convertBytesToString(element))
+      : request.subtrahend.set
+      ? request.subtrahend.set.elements.map(element =>
+          convertBytesToString(element)
+        )
+      : undefined,
+  };
+};
+
+interface SetContainsRequestLoggingFormat
+  extends SetCollectionRequestLoggingFormat {
+  elements: string[];
+}
+
+const convertSetContainsRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetContainsRequest,
+  SetContainsRequestLoggingFormat
+> = (request: cache.cache_client._SetContainsRequest) => {
+  return {
+    requestType: 'setContains',
+    setName: convertBytesToString(request.set_name),
+    elements: request.elements.map(element => convertBytesToString(element)),
+  };
+};
+
+const convertSetLengthRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetLengthRequest,
+  SetCollectionRequestLoggingFormat
+> = (request: cache.cache_client._SetLengthRequest) => {
+  return {
+    requestType: 'setLength',
+    setName: convertBytesToString(request.set_name),
+  };
+};
+
+interface SetPopRequestLoggingFormat extends SetCollectionRequestLoggingFormat {
+  count: number;
+}
+
+const convertSetPopRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetPopRequest,
+  SetPopRequestLoggingFormat
+> = (request: cache.cache_client._SetPopRequest) => {
+  return {
+    requestType: 'setPop',
+    setName: convertBytesToString(request.set_name),
+    count: request.count,
+  };
+};
+
+interface ListRequestLoggingFormat extends RequestLogInterfaceBase {
+  listName: string;
+}
+
+interface ListConcatenateFrontRequestLoggingFormat
+  extends ListRequestLoggingFormat,
+    WriteRequestLogInterfaceBase {
+  truncateBackToSize: number;
+  values: string[];
+}
+
+const convertListConcatenateFrontRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListConcatenateFrontRequest,
+  ListConcatenateFrontRequestLoggingFormat
+> = (request: cache.cache_client._ListConcatenateFrontRequest) => {
+  return {
+    requestType: 'listConcatenateFront',
+    listName: convertBytesToString(request.list_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    truncateBackToSize: request.truncate_back_to_size,
+    values: request.values.map(value => convertBytesToString(value)),
+  };
+};
+
+interface ListConcatenateBackRequestLoggingFormat
+  extends ListRequestLoggingFormat,
+    WriteRequestLogInterfaceBase {
+  truncateFrontToSize: number;
+  values: string[];
+}
+
+const convertListConcatenateBackRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListConcatenateBackRequest,
+  ListConcatenateBackRequestLoggingFormat
+> = (request: cache.cache_client._ListConcatenateBackRequest) => {
+  return {
+    requestType: 'listConcatenateBack',
+    listName: convertBytesToString(request.list_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    truncateFrontToSize: request.truncate_front_to_size,
+    values: request.values.map(value => convertBytesToString(value)),
+  };
+};
+
+interface ListPushFrontRequestLoggingFormat
+  extends ListRequestLoggingFormat,
+    WriteRequestLogInterfaceBase {
+  truncateBackToSize: number;
+  value: string;
+}
+
+const convertListPushFrontRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListPushFrontRequest,
+  ListPushFrontRequestLoggingFormat
+> = (request: cache.cache_client._ListPushFrontRequest) => {
+  return {
+    requestType: 'listPushFront',
+    listName: convertBytesToString(request.list_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    truncateBackToSize: request.truncate_back_to_size,
+    value: convertBytesToString(request.value),
+  };
+};
+
+interface ListPushBackRequestLoggingFormat
+  extends ListRequestLoggingFormat,
+    WriteRequestLogInterfaceBase {
+  truncateFrontToSize: number;
+  value: string;
+}
+
+const convertListPushBackRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListPushBackRequest,
+  ListPushBackRequestLoggingFormat
+> = (request: cache.cache_client._ListPushBackRequest) => {
+  return {
+    requestType: 'listPushBack',
+    listName: convertBytesToString(request.list_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    truncateFrontToSize: request.truncate_front_to_size,
+    value: convertBytesToString(request.value),
+  };
+};
+
+const convertListPopFrontRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListPopFrontRequest,
+  ListRequestLoggingFormat
+> = (request: cache.cache_client._ListPopFrontRequest) => {
+  return {
+    requestType: 'listPopFront',
+    listName: convertBytesToString(request.list_name),
+  };
+};
+
+const convertListPopBackRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListPopBackRequest,
+  ListRequestLoggingFormat
+> = (request: cache.cache_client._ListPopBackRequest) => {
+  return {
+    requestType: 'listPopBack',
+    listName: convertBytesToString(request.list_name),
+  };
+};
+
+interface ListRemoveValueRequestLoggingFormat extends ListRequestLoggingFormat {
+  value: string;
+}
+
+const convertListRemoveRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListRemoveRequest,
+  ListRemoveValueRequestLoggingFormat
+> = (request: cache.cache_client._ListRemoveRequest) => {
+  return {
+    requestType: 'listRemove',
+    listName: convertBytesToString(request.list_name),
+    value: convertBytesToString(request.all_elements_with_value),
+  };
+};
+
+interface ListFetchRequestLoggingFormat extends ListRequestLoggingFormat {
+  inclusiveStart: number;
+  exclusiveEnd: number;
+}
+
+const convertListFetchRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListFetchRequest,
+  ListFetchRequestLoggingFormat
+> = (request: cache.cache_client._ListFetchRequest) => {
+  return {
+    requestType: 'listFetch',
+    listName: convertBytesToString(request.list_name),
+    inclusiveStart: request.inclusive_start,
+    exclusiveEnd: request.exclusive_end,
+  };
+};
+
+interface ListEraseRequestLoggingFormat extends ListRequestLoggingFormat {
+  all: boolean;
+  some: {beginIndex: number; count: number}[];
+}
+
+const convertListEraseRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListEraseRequest,
+  ListEraseRequestLoggingFormat
+> = (request: cache.cache_client._ListEraseRequest) => {
+  return {
+    requestType: 'listErase',
+    listName: convertBytesToString(request.list_name),
+    all: request.all !== undefined,
+    some: request.some.ranges.map(range => {
+      return {
+        beginIndex: range.begin_index,
+        count: range.count,
+      };
+    }),
+  };
+};
+
+interface ListRetainRequestLoggingFormat
+  extends ListRequestLoggingFormat,
+    WriteRequestLogInterfaceBase {
+  inclusiveStart: number;
+  exclusiveEnd: number;
+}
+
+const convertListRetainRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListRetainRequest,
+  ListRetainRequestLoggingFormat
+> = (request: cache.cache_client._ListRetainRequest) => {
+  return {
+    requestType: 'listRetain',
+    listName: convertBytesToString(request.list_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    inclusiveStart: request.inclusive_start,
+    exclusiveEnd: request.exclusive_end,
+  };
+};
+
+const convertListLengthRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ListLengthRequest,
+  ListRequestLoggingFormat
+> = (request: cache.cache_client._ListLengthRequest) => {
+  return {
+    requestType: 'listLength',
+    listName: convertBytesToString(request.list_name),
+  };
+};
 
 export const RequestToLogInterfaceConverter = new Map<
   string,
@@ -396,240 +659,23 @@ export const RequestToLogInterfaceConverter = new Map<
   ['_SetFetchRequest', convertSetFetchRequest],
   ['_SetSampleRequest', convertSetSampleRequest],
   ['_SetUnionRequest', convertSetUnionRequest],
+  ['_SetDifferenceRequest', convertSetDifferenceRequest],
+  ['_SetContainsRequest', convertSetContainsRequest],
+  ['_SetLengthRequest', convertSetLengthRequest],
+  ['_SetPopRequest', convertSetPopRequest],
+  ['_ListConcatenateFrontRequest', convertListConcatenateFrontRequest],
+  ['_ListConcatenateBackRequest', convertListConcatenateBackRequest],
+  ['_ListPushFrontRequest', convertListPushFrontRequest],
+  ['_ListPushBackRequest', convertListPushBackRequest],
+  ['_ListPopFrontRequest', convertListPopFrontRequest],
+  ['_ListPopBackRequest', convertListPopBackRequest],
+  ['_ListRemoveRequest', convertListRemoveRequest],
+  ['_ListFetchRequest', convertListFetchRequest],
+  ['_ListEraseRequest', convertListEraseRequest],
+  ['_ListRetainRequest', convertListRetainRequest],
+  ['_ListLengthRequest', convertListLengthRequest],
 ]);
 
-// interface SetDifferenceRequestLoggingFormat {
-//   set_name: string;
-//   action: 'minuend' | 'subtrahend_set' | 'subtrahend_identity';
-//   elements?: string[];
-// }
-//
-// export function convertSetDifferenceRequest(
-//   request: cache.cache_client._SetDifferenceRequest
-// ): SetDifferenceRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     action: request.minuend
-//       ? 'minuend'
-//       : request.subtrahend.set
-//       ? 'subtrahend_set'
-//       : 'subtrahend_identity',
-//     elements: request.minuend
-//       ? request.minuend.elements.map(element => convertBytesToString(element))
-//       : request.subtrahend.set
-//       ? request.subtrahend.set.elements.map(element =>
-//           convertBytesToString(element)
-//         )
-//       : undefined,
-//   };
-// }
-//
-// interface SetContainsRequestLoggingFormat {
-//   set_name: string;
-//   elements: string[];
-// }
-//
-// export function convertSetContainsRequest(
-//   request: cache.cache_client._SetContainsRequest
-// ): SetContainsRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     elements: request.elements.map(element => convertBytesToString(element)),
-//   };
-// }
-//
-// interface SetLengthRequestLoggingFormat {
-//   set_name: string;
-// }
-//
-// export function convertSetLengthRequest(
-//   request: cache.cache_client._SetLengthRequest
-// ): SetLengthRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//   };
-// }
-//
-// interface SetPopRequestLoggingFormat {
-//   set_name: string;
-//   count: number;
-// }
-//
-// export function convertSetPopRequest(
-//   request: cache.cache_client._SetPopRequest
-// ): SetPopRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     count: request.count,
-//   };
-// }
-//
-// interface ListConcatenateFrontRequestLoggingFormat {
-//   list_name: string;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-//   truncate_back_to_size: number;
-//   values: string[];
-// }
-//
-// export function convertListConcatenateFrontRequest(
-//   request: cache.cache_client._ListConcatenateFrontRequest
-// ): ListConcatenateFrontRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     truncate_back_to_size: request.truncate_back_to_size,
-//     values: request.values.map(value => convertBytesToString(value)),
-//   };
-// }
-//
-// interface ListConcatenateBackRequestLoggingFormat {
-//   list_name: string;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-//   truncate_front_to_size: number;
-//   values: string[];
-// }
-//
-// export function convertListConcatenateBackRequest(
-//   request: cache.cache_client._ListConcatenateBackRequest
-// ): ListConcatenateBackRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     truncate_front_to_size: request.truncate_front_to_size,
-//     values: request.values.map(value => convertBytesToString(value)),
-//   };
-// }
-//
-// interface ListPushFrontRequestLoggingFormat {
-//   list_name: string;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-//   truncate_back_to_size: number;
-//   value: string;
-// }
-//
-// export function convertListPushFrontRequest(
-//   request: cache.cache_client._ListPushFrontRequest
-// ): ListPushFrontRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     truncate_back_to_size: request.truncate_back_to_size,
-//     value: convertBytesToString(request.value),
-//   };
-// }
-//
-// interface ListPushBackRequestLoggingFormat {
-//   list_name: string;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-//   truncate_front_to_size: number;
-//   value: string;
-// }
-//
-// export function convertListPushBackRequest(
-//   request: cache.cache_client._ListPushBackRequest
-// ): ListPushBackRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     truncate_front_to_size: request.truncate_front_to_size,
-//     value: convertBytesToString(request.value),
-//   };
-// }
-//
-// interface ListPopFrontRequestLoggingFormat {
-//   list_name: string;
-// }
-//
-// export function convertListPopFrontRequest(
-//   request: cache.cache_client._ListPopFrontRequest
-// ): ListPopFrontRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//   };
-// }
-//
-// interface ListPopBackRequestLoggingFormat {
-//   list_name: string;
-// }
-//
-// export function convertListPopBackRequest(
-//   request: cache.cache_client._ListPopBackRequest
-// ): ListPopBackRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//   };
-// }
-//
-// interface ListRemoveValueRequestLoggingFormat {
-//   list_name: string;
-//   value: string;
-// }
-//
-// export function convertListRemoveValueRequest(
-//   request: cache.cache_client._ListRemoveRequest
-// ): ListRemoveValueRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     value: convertBytesToString(request.all_elements_with_value),
-//   };
-// }
-//
-// interface ListFetchRequestLoggingFormat {
-//   list_name: string;
-//   inclusive_start: number | 'unbounded';
-//   exclusive_end: number | 'unbounded';
-// }
-//
-// export function convertListFetchRequest(
-//   request: cache.cache_client._ListFetchRequest
-// ): ListFetchRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     inclusive_start: request.inclusive_start ?? 'unbounded',
-//     exclusive_end: request.exclusive_end ?? 'unbounded',
-//   };
-// }
-//
-// interface ListRetainRequestLoggingFormat {
-//   list_name: string;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-//   inclusive_start: number | 'unbounded';
-//   exclusive_end: number | 'unbounded';
-// }
-//
-// export function convertListRetainRequest(
-//   request: cache.cache_client._ListRetainRequest
-// ): ListRetainRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     inclusive_start: request.inclusive_start ?? 'unbounded',
-//     exclusive_end: request.exclusive_end ?? 'unbounded',
-//   };
-// }
-//
-// interface ListLengthRequestLoggingFormat {
-//   list_name: string;
-// }
-//
-// export function convertListLengthRequest(
-//   request: cache.cache_client._ListLengthRequest
-// ): ListLengthRequestLoggingFormat {
-//   return {
-//     list_name: convertBytesToString(request.list_name),
-//   };
-// }
-//
 // interface SortedSetPutRequestLoggingFormat {
 //   set_name: string;
 //   elements: {value: string; score: number}[];
