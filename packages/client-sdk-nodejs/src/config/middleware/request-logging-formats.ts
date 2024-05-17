@@ -1,5 +1,5 @@
 import {cache} from '@gomomento/generated-types';
-import {SetBatchItem} from "@gomomento/sdk-core";
+import {SetBatchItem} from '@gomomento/sdk-core';
 
 const TEXT_DECODER = new TextDecoder();
 
@@ -24,6 +24,11 @@ interface RequestLogInterfaceBase {
 
 interface WriteRequestLogInterfaceBase extends RequestLogInterfaceBase {
   ttlMillis: number;
+}
+
+interface CollectionWriteRequestLogInterfaceBase
+  extends WriteRequestLogInterfaceBase {
+  refreshTtl: boolean;
 }
 
 // Current used for GetBatch and KeysExist requests
@@ -104,7 +109,171 @@ const convertSetBatchRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
+interface SetIfRequestLoggingFormat extends WriteRequestLogInterfaceBase {
+  key: string;
+  value: string;
+  condition: string;
+  present: boolean;
+  presentAndNotEqual: string | undefined;
+  absent: boolean;
+  equal: string | undefined;
+  absentOrEqual: string | undefined;
+  notEqual: string | undefined;
+}
 
+const convertSetIfRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetIfRequest,
+  SetIfRequestLoggingFormat
+> = (request: cache.cache_client._SetIfRequest) => {
+  return {
+    requestType: 'setIf',
+    key: convertBytesToString(request.cache_key),
+    value: convertBytesToString(request.cache_body),
+    ttlMillis: request.ttl_milliseconds,
+    condition: request.condition,
+    present: request.present !== undefined,
+    presentAndNotEqual: request.present_and_not_equal
+      ? convertBytesToString(request.present_and_not_equal.value_to_check)
+      : undefined,
+    absent: request.absent !== undefined,
+    equal: request.equal
+      ? convertBytesToString(request.equal.value_to_check)
+      : undefined,
+    absentOrEqual: request.absent_or_equal
+      ? convertBytesToString(request.absent_or_equal.value_to_check)
+      : undefined,
+    notEqual: request.not_equal
+      ? convertBytesToString(request.not_equal.value_to_check)
+      : undefined,
+  };
+};
+
+const convertSetIfNotExistsRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetIfNotExistsRequest,
+  SetRequestLoggingFormat
+> = (request: cache.cache_client._SetIfNotExistsRequest) => {
+  return {
+    requestType: 'setIfNotExists',
+    key: convertBytesToString(request.cache_key),
+    value: convertBytesToString(request.cache_body),
+    ttlMillis: request.ttl_milliseconds,
+  };
+};
+
+const convertKeysExistRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._KeysExistRequest,
+  RequestMultipleKeysLoggingFormat
+> = (request: cache.cache_client._KeysExistRequest) => {
+  return {
+    requestType: 'keysExist',
+    keys: request.cache_keys.map(key => convertBytesToString(key)),
+  };
+};
+
+interface IncrementRequestLoggingFormat extends WriteRequestLogInterfaceBase {
+  key: string;
+  amount: number;
+}
+
+const convertIncrementRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._IncrementRequest,
+  IncrementRequestLoggingFormat
+> = (request: cache.cache_client._IncrementRequest) => {
+  return {
+    requestType: 'increment',
+    key: convertBytesToString(request.cache_key),
+    amount: request.amount,
+    ttlMillis: request.ttl_milliseconds,
+  };
+};
+
+interface UpdateTtlRequestLoggingFormat extends RequestLogInterfaceBase {
+  key: string;
+  increaseToMillis: number;
+  decreaseToMillis: number;
+  overwriteToMillis: number;
+}
+
+const convertUpdateTtlRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._UpdateTtlRequest,
+  UpdateTtlRequestLoggingFormat
+> = (request: cache.cache_client._UpdateTtlRequest) => {
+  return {
+    requestType: 'updateTtl',
+    key: convertBytesToString(request.cache_key),
+    increaseToMillis: request.increase_to_milliseconds,
+    decreaseToMillis: request.decrease_to_milliseconds,
+    overwriteToMillis: request.overwrite_to_milliseconds,
+  };
+};
+
+const convertItemGetTtlRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ItemGetTtlRequest,
+  RequestSingleKeyLoggingFormat
+> = (request: cache.cache_client._ItemGetTtlRequest) => {
+  return convertSingleKeyRequest('itemGetTtl', request.cache_key);
+};
+
+const convertItemGetTypeRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._ItemGetTypeRequest,
+  RequestSingleKeyLoggingFormat
+> = (request: cache.cache_client._ItemGetTypeRequest) => {
+  return convertSingleKeyRequest('itemGetType', request.cache_key);
+};
+
+interface DictionaryRequestLoggingFormat extends RequestLogInterfaceBase {
+  dictionaryName: string;
+}
+
+interface DictionaryGetRequestLoggingFormat
+  extends DictionaryRequestLoggingFormat {
+  fields: string[];
+}
+
+const convertDictionaryGetRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._DictionaryGetRequest,
+  DictionaryGetRequestLoggingFormat
+> = (request: cache.cache_client._DictionaryGetRequest) => {
+  return {
+    requestType: 'dictionaryGet',
+    dictionaryName: convertBytesToString(request.dictionary_name),
+    fields: request.fields.map(field => convertBytesToString(field)),
+  };
+};
+
+const convertDictionaryFetchRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._DictionaryFetchRequest,
+  DictionaryRequestLoggingFormat
+> = (request: cache.cache_client._DictionaryFetchRequest) => {
+  return {
+    requestType: 'dictionaryFetch',
+    dictionaryName: convertBytesToString(request.dictionary_name),
+  };
+};
+
+interface DictionarySetRequestLoggingFormat
+  extends DictionaryRequestLoggingFormat,
+    CollectionWriteRequestLogInterfaceBase {
+  items: {field: string; value: string}[];
+}
+
+const convertDictionarySetRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._DictionarySetRequest,
+  DictionarySetRequestLoggingFormat
+> = (request: cache.cache_client._DictionarySetRequest) => {
+  return {
+    requestType: 'dictionarySet',
+    dictionaryName: convertBytesToString(request.dictionary_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    items: request.items.map(item => {
+      return {
+        field: convertBytesToString(item.field),
+        value: convertBytesToString(item.value),
+      };
+    }),
+  };
+};
 
 export const RequestToLogInterfaceConverter = new Map<
   string,
@@ -116,124 +285,18 @@ export const RequestToLogInterfaceConverter = new Map<
   ['_DeleteRequest', convertDeleteRequest],
   ['_SetRequest', convertSetRequest],
   ['_SetBatchRequest', convertSetBatchRequest],
+  ['_SetIfRequest', convertSetIfRequest],
+  ['_SetIfNotExistsRequest', convertSetIfNotExistsRequest],
+  ['_KeysExistRequest', convertKeysExistRequest],
+  ['_IncrementRequest', convertIncrementRequest],
+  ['_UpdateTtlRequest', convertUpdateTtlRequest],
+  ['_ItemGetTtlRequest', convertItemGetTtlRequest],
+  ['_ItemGetTypeRequest', convertItemGetTypeRequest],
+  ['_DictionaryGetRequest', convertDictionaryGetRequest],
+  ['_DictionaryFetchRequest', convertDictionaryFetchRequest],
+  ['_DictionarySetRequest', convertDictionarySetRequest],
 ]);
 
-//
-// interface SetIfRequestLoggingFormat {
-//   key: string;
-//   value: string;
-//   condition: string;
-//   ttl_milliseconds: number;
-// }
-//
-// export function convertSetIfRequest(
-//   request: cache.cache_client._SetIfRequest
-// ): SetIfRequestLoggingFormat {
-//   return {
-//     key: convertBytesToString(request.cache_key),
-//     value: convertBytesToString(request.cache_body),
-//     condition: request.condition,
-//     ttl_milliseconds: request.ttl_milliseconds,
-//   };
-// }
-//
-// type KeysExistRequestLoggingFormat = RequestMultipleKeysLoggingFormat;
-//
-// export function convertKeysExistRequest(
-//   request: cache.cache_client._KeysExistRequest
-// ): KeysExistRequestLoggingFormat {
-//   return {
-//     keys: request.cache_keys.map(key => convertBytesToString(key)),
-//   };
-// }
-//
-// interface IncrementRequestLoggingFormat {
-//   key: string;
-//   amount: number;
-//   ttl_milliseconds: number;
-// }
-//
-// export function convertIncrementRequest(
-//   request: cache.cache_client._IncrementRequest
-// ): IncrementRequestLoggingFormat {
-//   return {
-//     key: convertBytesToString(request.cache_key),
-//     amount: request.amount,
-//     ttl_milliseconds: request.ttl_milliseconds,
-//   };
-// }
-//
-// interface UpdateTtlRequestLoggingFormat {
-//   key: string;
-//   amount: number;
-//   action: 'increase' | 'decrease' | 'overwrite';
-// }
-//
-// export function convertUpdateTtlRequest(
-//   request: cache.cache_client._UpdateTtlRequest
-// ): UpdateTtlRequestLoggingFormat {
-//   return {
-//     key: convertBytesToString(request.cache_key),
-//     amount:
-//       request.increase_to_milliseconds ||
-//       request.decrease_to_milliseconds ||
-//       request.overwrite_to_milliseconds,
-//     action: request.increase_to_milliseconds
-//       ? 'increase'
-//       : request.decrease_to_milliseconds
-//       ? 'decrease'
-//       : 'overwrite',
-//   };
-// }
-//
-// interface DictionaryGetRequestLoggingFormat {
-//   dictionary_name: string;
-//   fields: string[];
-// }
-//
-// export function convertDictionaryGetRequest(
-//   request: cache.cache_client._DictionaryGetRequest
-// ): DictionaryGetRequestLoggingFormat {
-//   return {
-//     dictionary_name: convertBytesToString(request.dictionary_name),
-//     fields: request.fields.map(field => convertBytesToString(field)),
-//   };
-// }
-//
-// interface DictionaryFetchRequestLoggingFormat {
-//   dictionary_name: string;
-// }
-//
-// export function convertDictionaryFetchRequest(
-//   request: cache.cache_client._DictionaryFetchRequest
-// ): DictionaryFetchRequestLoggingFormat {
-//   return {
-//     dictionary_name: convertBytesToString(request.dictionary_name),
-//   };
-// }
-//
-// interface DictionarySetRequestLoggingFormat {
-//   dictionary_name: string;
-//   items: {field: string; value: string}[];
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-// }
-//
-// export function convertDictionarySetRequest(
-//   request: cache.cache_client._DictionarySetRequest
-// ): DictionarySetRequestLoggingFormat {
-//   return {
-//     dictionary_name: convertBytesToString(request.dictionary_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     items: request.items.map(item => {
-//       return {
-//         field: convertBytesToString(item.field),
-//         value: convertBytesToString(item.value),
-//       };
-//     }),
-//   };
-// }
 //
 // interface DictionaryIncrementRequestLoggingFormat {
 //   dictionary_name: string;
