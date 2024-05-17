@@ -11,53 +11,49 @@ function convertBytesToString(bytes: Uint8Array) {
 export function convertSingleKeyRequest(
   requestType: string,
   key: Uint8Array
-): RequestSingleKeyLoggingFormat {
+): RequestSingleKeyLog {
   return {
     requestType: requestType,
     key: convertBytesToString(key),
   };
 }
 
-interface RequestLogInterfaceBase {
+export interface RequestLog {
   requestType: string;
 }
 
-interface WriteRequestLogInterfaceBase extends RequestLogInterfaceBase {
+interface WriteRequestLog extends RequestLog {
   ttlMillis: number;
 }
 
-interface CollectionWriteRequestLogInterfaceBase
-  extends WriteRequestLogInterfaceBase {
+interface CollectionWriteRequestLog extends WriteRequestLog {
   refreshTtl: boolean;
 }
 
 // Current used for GetBatch and KeysExist requests
-interface RequestMultipleKeysLoggingFormat extends RequestLogInterfaceBase {
+interface RequestMultipleKeysLog extends RequestLog {
   keys: string[];
 }
 
 // Currently used for Get, Delete, ItemGetTtl, and ItemGetType requests
-interface RequestSingleKeyLoggingFormat extends RequestLogInterfaceBase {
+interface RequestSingleKeyLog extends RequestLog {
   key: string;
 }
 
-interface RequestToLogInterfaceConverterFn<
-  TRequest,
-  TLog extends RequestLogInterfaceBase
-> {
+interface RequestToLogInterfaceConverterFn<TRequest, TLog extends RequestLog> {
   (request: TRequest): TLog;
 }
 
 const convertGetRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._GetRequest,
-  RequestSingleKeyLoggingFormat
+  RequestSingleKeyLog
 > = (request: cache.cache_client._GetRequest) => {
   return convertSingleKeyRequest('get', request.cache_key);
 };
 
 const convertGetBatchRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._GetBatchRequest,
-  RequestMultipleKeysLoggingFormat
+  RequestMultipleKeysLog
 > = (request: cache.cache_client._GetBatchRequest) => {
   return {
     requestType: 'getBatch',
@@ -67,19 +63,19 @@ const convertGetBatchRequest: RequestToLogInterfaceConverterFn<
 
 const convertDeleteRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DeleteRequest,
-  RequestSingleKeyLoggingFormat
+  RequestSingleKeyLog
 > = (request: cache.cache_client._DeleteRequest) => {
   return convertSingleKeyRequest('delete', request.cache_key);
 };
 
-interface SetRequestLoggingFormat extends WriteRequestLogInterfaceBase {
+interface SetRequestLog extends WriteRequestLog {
   key: string;
   value: string;
 }
 
 const convertSetRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetRequest,
-  SetRequestLoggingFormat
+  SetRequestLog
 > = (request: cache.cache_client._SetRequest) => {
   return {
     requestType: 'set',
@@ -89,13 +85,13 @@ const convertSetRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetBatchRequestLoggingFormat extends RequestLogInterfaceBase {
+interface SetBatchRequestLog extends RequestLog {
   items: SetBatchItem[];
 }
 
 const convertSetBatchRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetBatchRequest,
-  SetBatchRequestLoggingFormat
+  SetBatchRequestLog
 > = (request: cache.cache_client._SetBatchRequest) => {
   return {
     requestType: 'setBatch',
@@ -109,7 +105,7 @@ const convertSetBatchRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetIfRequestLoggingFormat extends WriteRequestLogInterfaceBase {
+interface SetIfRequestLog extends WriteRequestLog {
   key: string;
   value: string;
   condition: string;
@@ -123,7 +119,7 @@ interface SetIfRequestLoggingFormat extends WriteRequestLogInterfaceBase {
 
 const convertSetIfRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetIfRequest,
-  SetIfRequestLoggingFormat
+  SetIfRequestLog
 > = (request: cache.cache_client._SetIfRequest) => {
   return {
     requestType: 'setIf',
@@ -150,7 +146,7 @@ const convertSetIfRequest: RequestToLogInterfaceConverterFn<
 
 const convertSetIfNotExistsRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetIfNotExistsRequest,
-  SetRequestLoggingFormat
+  SetRequestLog
 > = (request: cache.cache_client._SetIfNotExistsRequest) => {
   return {
     requestType: 'setIfNotExists',
@@ -162,7 +158,7 @@ const convertSetIfNotExistsRequest: RequestToLogInterfaceConverterFn<
 
 const convertKeysExistRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._KeysExistRequest,
-  RequestMultipleKeysLoggingFormat
+  RequestMultipleKeysLog
 > = (request: cache.cache_client._KeysExistRequest) => {
   return {
     requestType: 'keysExist',
@@ -170,14 +166,14 @@ const convertKeysExistRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface IncrementRequestLoggingFormat extends WriteRequestLogInterfaceBase {
+interface IncrementRequestLog extends WriteRequestLog {
   key: string;
   amount: number;
 }
 
 const convertIncrementRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._IncrementRequest,
-  IncrementRequestLoggingFormat
+  IncrementRequestLog
 > = (request: cache.cache_client._IncrementRequest) => {
   return {
     requestType: 'increment',
@@ -187,7 +183,7 @@ const convertIncrementRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface UpdateTtlRequestLoggingFormat extends RequestLogInterfaceBase {
+interface UpdateTtlRequestLog extends RequestLog {
   key: string;
   increaseToMillis: number;
   decreaseToMillis: number;
@@ -196,7 +192,7 @@ interface UpdateTtlRequestLoggingFormat extends RequestLogInterfaceBase {
 
 const convertUpdateTtlRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._UpdateTtlRequest,
-  UpdateTtlRequestLoggingFormat
+  UpdateTtlRequestLog
 > = (request: cache.cache_client._UpdateTtlRequest) => {
   return {
     requestType: 'updateTtl',
@@ -209,30 +205,29 @@ const convertUpdateTtlRequest: RequestToLogInterfaceConverterFn<
 
 const convertItemGetTtlRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ItemGetTtlRequest,
-  RequestSingleKeyLoggingFormat
+  RequestSingleKeyLog
 > = (request: cache.cache_client._ItemGetTtlRequest) => {
   return convertSingleKeyRequest('itemGetTtl', request.cache_key);
 };
 
 const convertItemGetTypeRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ItemGetTypeRequest,
-  RequestSingleKeyLoggingFormat
+  RequestSingleKeyLog
 > = (request: cache.cache_client._ItemGetTypeRequest) => {
   return convertSingleKeyRequest('itemGetType', request.cache_key);
 };
 
-interface DictionaryRequestLoggingFormat extends RequestLogInterfaceBase {
+interface DictionaryRequestLog extends RequestLog {
   dictionaryName: string;
 }
 
-interface DictionaryGetRequestLoggingFormat
-  extends DictionaryRequestLoggingFormat {
+interface DictionaryGetRequestLog extends DictionaryRequestLog {
   fields: string[];
 }
 
 const convertDictionaryGetRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DictionaryGetRequest,
-  DictionaryGetRequestLoggingFormat
+  DictionaryGetRequestLog
 > = (request: cache.cache_client._DictionaryGetRequest) => {
   return {
     requestType: 'dictionaryGet',
@@ -243,7 +238,7 @@ const convertDictionaryGetRequest: RequestToLogInterfaceConverterFn<
 
 const convertDictionaryFetchRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DictionaryFetchRequest,
-  DictionaryRequestLoggingFormat
+  DictionaryRequestLog
 > = (request: cache.cache_client._DictionaryFetchRequest) => {
   return {
     requestType: 'dictionaryFetch',
@@ -251,15 +246,15 @@ const convertDictionaryFetchRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface DictionarySetRequestLoggingFormat
-  extends DictionaryRequestLoggingFormat,
-    CollectionWriteRequestLogInterfaceBase {
+interface DictionarySetRequestLog
+  extends DictionaryRequestLog,
+    CollectionWriteRequestLog {
   items: {field: string; value: string}[];
 }
 
 const convertDictionarySetRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DictionarySetRequest,
-  DictionarySetRequestLoggingFormat
+  DictionarySetRequestLog
 > = (request: cache.cache_client._DictionarySetRequest) => {
   return {
     requestType: 'dictionarySet',
@@ -275,16 +270,16 @@ const convertDictionarySetRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface DictionaryIncrementRequestLoggingFormat
-  extends DictionaryRequestLoggingFormat,
-    CollectionWriteRequestLogInterfaceBase {
+interface DictionaryIncrementRequestLog
+  extends DictionaryRequestLog,
+    CollectionWriteRequestLog {
   field: string;
   amount: number;
 }
 
 const convertDictionaryIncrementRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DictionaryIncrementRequest,
-  DictionaryIncrementRequestLoggingFormat
+  DictionaryIncrementRequestLog
 > = (request: cache.cache_client._DictionaryIncrementRequest) => {
   return {
     requestType: 'dictionaryIncrement',
@@ -296,14 +291,13 @@ const convertDictionaryIncrementRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface DictionaryDeleteRequestLoggingFormat
-  extends DictionaryRequestLoggingFormat {
+interface DictionaryDeleteRequestLog extends DictionaryRequestLog {
   fields: string[];
 }
 
 const convertDictionaryDeleteRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DictionaryDeleteRequest,
-  DictionaryDeleteRequestLoggingFormat
+  DictionaryDeleteRequestLog
 > = (request: cache.cache_client._DictionaryDeleteRequest) => {
   return {
     requestType: 'dictionaryDelete',
@@ -314,7 +308,7 @@ const convertDictionaryDeleteRequest: RequestToLogInterfaceConverterFn<
 
 const convertDictionaryLengthRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._DictionaryLengthRequest,
-  DictionaryRequestLoggingFormat
+  DictionaryRequestLog
 > = (request: cache.cache_client._DictionaryLengthRequest) => {
   return {
     requestType: 'dictionaryLength',
@@ -322,13 +316,13 @@ const convertDictionaryLengthRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetCollectionRequestLoggingFormat extends RequestLogInterfaceBase {
+interface SetCollectionRequestLog extends RequestLog {
   setName: string;
 }
 
 const convertSetFetchRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetFetchRequest,
-  SetCollectionRequestLoggingFormat
+  SetCollectionRequestLog
 > = (request: cache.cache_client._SetFetchRequest) => {
   return {
     requestType: 'setFetch',
@@ -336,14 +330,13 @@ const convertSetFetchRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetSampleRequestLoggingFormat
-  extends SetCollectionRequestLoggingFormat {
+interface SetSampleRequestLog extends SetCollectionRequestLog {
   limit: number;
 }
 
 const convertSetSampleRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetSampleRequest,
-  SetSampleRequestLoggingFormat
+  SetSampleRequestLog
 > = (request: cache.cache_client._SetSampleRequest) => {
   return {
     requestType: 'setSample',
@@ -352,15 +345,15 @@ const convertSetSampleRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetUnionRequestLoggingFormat
-  extends SetCollectionRequestLoggingFormat,
-    CollectionWriteRequestLogInterfaceBase {
+interface SetUnionRequestLog
+  extends SetCollectionRequestLog,
+    CollectionWriteRequestLog {
   elements: string[];
 }
 
 const convertSetUnionRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetUnionRequest,
-  SetUnionRequestLoggingFormat
+  SetUnionRequestLog
 > = (request: cache.cache_client._SetUnionRequest) => {
   return {
     requestType: 'setUnion',
@@ -371,15 +364,14 @@ const convertSetUnionRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetDifferenceRequestLoggingFormat
-  extends SetCollectionRequestLoggingFormat {
+interface SetDifferenceRequestLog extends SetCollectionRequestLog {
   action: 'minuend' | 'subtrahend_set' | 'subtrahend_identity';
   elements?: string[];
 }
 
 const convertSetDifferenceRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetDifferenceRequest,
-  SetDifferenceRequestLoggingFormat
+  SetDifferenceRequestLog
 > = (request: cache.cache_client._SetDifferenceRequest) => {
   return {
     requestType: 'setDifference',
@@ -399,14 +391,13 @@ const convertSetDifferenceRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetContainsRequestLoggingFormat
-  extends SetCollectionRequestLoggingFormat {
+interface SetContainsRequestLog extends SetCollectionRequestLog {
   elements: string[];
 }
 
 const convertSetContainsRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetContainsRequest,
-  SetContainsRequestLoggingFormat
+  SetContainsRequestLog
 > = (request: cache.cache_client._SetContainsRequest) => {
   return {
     requestType: 'setContains',
@@ -417,7 +408,7 @@ const convertSetContainsRequest: RequestToLogInterfaceConverterFn<
 
 const convertSetLengthRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetLengthRequest,
-  SetCollectionRequestLoggingFormat
+  SetCollectionRequestLog
 > = (request: cache.cache_client._SetLengthRequest) => {
   return {
     requestType: 'setLength',
@@ -425,13 +416,13 @@ const convertSetLengthRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface SetPopRequestLoggingFormat extends SetCollectionRequestLoggingFormat {
+interface SetPopRequestLog extends SetCollectionRequestLog {
   count: number;
 }
 
 const convertSetPopRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetPopRequest,
-  SetPopRequestLoggingFormat
+  SetPopRequestLog
 > = (request: cache.cache_client._SetPopRequest) => {
   return {
     requestType: 'setPop',
@@ -440,20 +431,20 @@ const convertSetPopRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListRequestLoggingFormat extends RequestLogInterfaceBase {
+interface ListRequestLog extends RequestLog {
   listName: string;
 }
 
-interface ListConcatenateFrontRequestLoggingFormat
-  extends ListRequestLoggingFormat,
-    WriteRequestLogInterfaceBase {
+interface ListConcatenateFrontRequestLog
+  extends ListRequestLog,
+    CollectionWriteRequestLog {
   truncateBackToSize: number;
   values: string[];
 }
 
 const convertListConcatenateFrontRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListConcatenateFrontRequest,
-  ListConcatenateFrontRequestLoggingFormat
+  ListConcatenateFrontRequestLog
 > = (request: cache.cache_client._ListConcatenateFrontRequest) => {
   return {
     requestType: 'listConcatenateFront',
@@ -465,16 +456,16 @@ const convertListConcatenateFrontRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListConcatenateBackRequestLoggingFormat
-  extends ListRequestLoggingFormat,
-    WriteRequestLogInterfaceBase {
+interface ListConcatenateBackRequestLog
+  extends ListRequestLog,
+    CollectionWriteRequestLog {
   truncateFrontToSize: number;
   values: string[];
 }
 
 const convertListConcatenateBackRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListConcatenateBackRequest,
-  ListConcatenateBackRequestLoggingFormat
+  ListConcatenateBackRequestLog
 > = (request: cache.cache_client._ListConcatenateBackRequest) => {
   return {
     requestType: 'listConcatenateBack',
@@ -486,16 +477,16 @@ const convertListConcatenateBackRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListPushFrontRequestLoggingFormat
-  extends ListRequestLoggingFormat,
-    WriteRequestLogInterfaceBase {
+interface ListPushFrontRequestLog
+  extends ListRequestLog,
+    CollectionWriteRequestLog {
   truncateBackToSize: number;
   value: string;
 }
 
 const convertListPushFrontRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListPushFrontRequest,
-  ListPushFrontRequestLoggingFormat
+  ListPushFrontRequestLog
 > = (request: cache.cache_client._ListPushFrontRequest) => {
   return {
     requestType: 'listPushFront',
@@ -507,16 +498,16 @@ const convertListPushFrontRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListPushBackRequestLoggingFormat
-  extends ListRequestLoggingFormat,
-    WriteRequestLogInterfaceBase {
+interface ListPushBackRequestLog
+  extends ListRequestLog,
+    CollectionWriteRequestLog {
   truncateFrontToSize: number;
   value: string;
 }
 
 const convertListPushBackRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListPushBackRequest,
-  ListPushBackRequestLoggingFormat
+  ListPushBackRequestLog
 > = (request: cache.cache_client._ListPushBackRequest) => {
   return {
     requestType: 'listPushBack',
@@ -530,7 +521,7 @@ const convertListPushBackRequest: RequestToLogInterfaceConverterFn<
 
 const convertListPopFrontRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListPopFrontRequest,
-  ListRequestLoggingFormat
+  ListRequestLog
 > = (request: cache.cache_client._ListPopFrontRequest) => {
   return {
     requestType: 'listPopFront',
@@ -540,7 +531,7 @@ const convertListPopFrontRequest: RequestToLogInterfaceConverterFn<
 
 const convertListPopBackRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListPopBackRequest,
-  ListRequestLoggingFormat
+  ListRequestLog
 > = (request: cache.cache_client._ListPopBackRequest) => {
   return {
     requestType: 'listPopBack',
@@ -548,13 +539,13 @@ const convertListPopBackRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListRemoveValueRequestLoggingFormat extends ListRequestLoggingFormat {
+interface ListRemoveValueRequestLog extends ListRequestLog {
   value: string;
 }
 
 const convertListRemoveRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListRemoveRequest,
-  ListRemoveValueRequestLoggingFormat
+  ListRemoveValueRequestLog
 > = (request: cache.cache_client._ListRemoveRequest) => {
   return {
     requestType: 'listRemove',
@@ -563,14 +554,14 @@ const convertListRemoveRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListFetchRequestLoggingFormat extends ListRequestLoggingFormat {
+interface ListFetchRequestLog extends ListRequestLog {
   inclusiveStart: number;
   exclusiveEnd: number;
 }
 
 const convertListFetchRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListFetchRequest,
-  ListFetchRequestLoggingFormat
+  ListFetchRequestLog
 > = (request: cache.cache_client._ListFetchRequest) => {
   return {
     requestType: 'listFetch',
@@ -580,14 +571,14 @@ const convertListFetchRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListEraseRequestLoggingFormat extends ListRequestLoggingFormat {
+interface ListEraseRequestLog extends ListRequestLog {
   all: boolean;
   some: {beginIndex: number; count: number}[];
 }
 
 const convertListEraseRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListEraseRequest,
-  ListEraseRequestLoggingFormat
+  ListEraseRequestLog
 > = (request: cache.cache_client._ListEraseRequest) => {
   return {
     requestType: 'listErase',
@@ -602,16 +593,16 @@ const convertListEraseRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
-interface ListRetainRequestLoggingFormat
-  extends ListRequestLoggingFormat,
-    WriteRequestLogInterfaceBase {
+interface ListRetainRequestLog
+  extends ListRequestLog,
+    CollectionWriteRequestLog {
   inclusiveStart: number;
   exclusiveEnd: number;
 }
 
 const convertListRetainRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListRetainRequest,
-  ListRetainRequestLoggingFormat
+  ListRetainRequestLog
 > = (request: cache.cache_client._ListRetainRequest) => {
   return {
     requestType: 'listRetain',
@@ -625,7 +616,7 @@ const convertListRetainRequest: RequestToLogInterfaceConverterFn<
 
 const convertListLengthRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._ListLengthRequest,
-  ListRequestLoggingFormat
+  ListRequestLog
 > = (request: cache.cache_client._ListLengthRequest) => {
   return {
     requestType: 'listLength',
@@ -633,10 +624,210 @@ const convertListLengthRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
+interface SortedSetRequestLog extends RequestLog {
+  sortedSetName: string;
+}
+
+interface SortedSetPutRequestLog
+  extends SortedSetRequestLog,
+    CollectionWriteRequestLog {
+  elements: {value: string; score: number}[];
+}
+
+const convertSortedSetPutRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetPutRequest,
+  SortedSetPutRequestLog
+> = (request: cache.cache_client._SortedSetPutRequest) => {
+  return {
+    requestType: 'sortedSetPut',
+    sortedSetName: convertBytesToString(request.set_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    elements: request.elements.map(item => {
+      return {
+        value: convertBytesToString(item.value),
+        score: item.score,
+      };
+    }),
+  };
+};
+
+interface SortedSetFetchRequestLog extends SortedSetRequestLog {
+  order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
+  byScore?: {
+    minScore: number | string;
+    minScoreExclusive?: boolean;
+    maxScore: number | string;
+    maxScoreExclusive?: boolean;
+    offset: number;
+    count: number;
+  };
+  byIndex?: {
+    inclusiveStartIndex: number | string;
+    exclusiveEndIndex: number | string;
+  };
+}
+
+const convertSortedSetFetchRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetFetchRequest,
+  SortedSetFetchRequestLog
+> = (request: cache.cache_client._SortedSetFetchRequest) => {
+  const byScore = request.by_score
+    ? {
+        minScore: request.by_score.unbounded_min
+          ? 'unbounded'
+          : request.by_score.min_score.score,
+        minScoreExclusive: request.by_score.min_score?.exclusive,
+        maxScore: request.by_score.unbounded_max
+          ? 'unbounded'
+          : request.by_score.max_score.score,
+        maxScoreExclusive: request.by_score.max_score?.exclusive,
+        offset: request.by_score.offset,
+        count: request.by_score.count,
+      }
+    : undefined;
+
+  const byIndex = request.by_index
+    ? {
+        inclusiveStartIndex: request.by_index.unbounded_start
+          ? 'unbounded'
+          : request.by_index.inclusive_start_index,
+        exclusiveEndIndex: request.by_index.unbounded_end
+          ? 'unbounded'
+          : request.by_index.exclusive_end_index,
+      }
+    : undefined;
+
+  return {
+    requestType: 'sortedSetFetch',
+    sortedSetName: convertBytesToString(request.set_name),
+    order:
+      request.order ===
+      cache.cache_client._SortedSetFetchRequest.Order.DESCENDING
+        ? 'descending'
+        : 'ascending',
+    byScore,
+    byIndex,
+  };
+};
+
+interface SortedSetValuesRequestLog extends SortedSetRequestLog {
+  values: string[];
+}
+
+const convertSortedSetGetScoreRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetGetScoreRequest,
+  SortedSetValuesRequestLog
+> = (request: cache.cache_client._SortedSetGetScoreRequest) => {
+  return {
+    requestType: 'sortedSetGetScore',
+    sortedSetName: convertBytesToString(request.set_name),
+    values: request.values.map(value => convertBytesToString(value)),
+  };
+};
+
+interface SortedSetRemoveRequestLog extends SortedSetRequestLog {
+  values: string[] | 'all';
+}
+
+const convertSortedSetRemoveRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetRemoveRequest,
+  SortedSetRemoveRequestLog
+> = (request: cache.cache_client._SortedSetRemoveRequest) => {
+  return {
+    requestType: 'sortedSetRemove',
+    sortedSetName: convertBytesToString(request.set_name),
+    values: request.all
+      ? 'all'
+      : request.some.values.map(value => convertBytesToString(value)),
+  };
+};
+
+interface SortedSetIncrementRequestLog
+  extends SortedSetRequestLog,
+    CollectionWriteRequestLog {
+  value: string;
+  amount: number;
+}
+
+const convertSortedSetIncrementRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetIncrementRequest,
+  SortedSetIncrementRequestLog
+> = (request: cache.cache_client._SortedSetIncrementRequest) => {
+  return {
+    requestType: 'sortedSetIncrement',
+    sortedSetName: convertBytesToString(request.set_name),
+    value: convertBytesToString(request.value),
+    amount: request.amount,
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+  };
+};
+
+interface SortedSetGetRankRequestLog extends SortedSetRequestLog {
+  value: string;
+  order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
+}
+
+const convertSortedSetGetRankRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetGetRankRequest,
+  SortedSetGetRankRequestLog
+> = (request: cache.cache_client._SortedSetGetRankRequest) => {
+  return {
+    requestType: 'sortedSetGetRank',
+    sortedSetName: convertBytesToString(request.set_name),
+    value: convertBytesToString(request.value),
+    order:
+      request.order ===
+      cache.cache_client._SortedSetGetRankRequest.Order.DESCENDING
+        ? 'descending'
+        : 'ascending',
+  };
+};
+
+const convertSortedSetLengthRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetLengthRequest,
+  SortedSetRequestLog
+> = (request: cache.cache_client._SortedSetLengthRequest) => {
+  return {
+    requestType: 'sortedSetLength',
+    sortedSetName: convertBytesToString(request.set_name),
+  };
+};
+
+interface SortedSetLengthByScoreRequestLog extends SortedSetRequestLog {
+  minScore: number | string;
+  minScoreExclusive?: boolean;
+  maxScore: number | string;
+  maxScoreExclusive?: boolean;
+}
+
+const convertSortedSetLengthByScoreRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SortedSetLengthByScoreRequest,
+  SortedSetLengthByScoreRequestLog
+> = (request: cache.cache_client._SortedSetLengthByScoreRequest) => {
+  return {
+    requestType: 'sortedSetLengthByScore',
+    sortedSetName: convertBytesToString(request.set_name),
+    minScore: request.unbounded_min
+      ? 'unbounded'
+      : request.inclusive_min ?? request.exclusive_min,
+    minScoreExclusive: request.unbounded_min
+      ? undefined
+      : request.has_exclusive_min,
+    maxScore: request.unbounded_max
+      ? 'unbounded'
+      : request.inclusive_max ?? request.exclusive_max,
+    maxScoreExclusive: request.unbounded_max
+      ? undefined
+      : request.has_exclusive_max,
+  };
+};
+
 export const RequestToLogInterfaceConverter = new Map<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RequestToLogInterfaceConverterFn<any, any>
+  RequestToLogInterfaceConverterFn<any, RequestLog>
 >([
   ['_GetRequest', convertGetRequest],
   ['_GetBatchRequest', convertGetBatchRequest],
@@ -674,220 +865,46 @@ export const RequestToLogInterfaceConverter = new Map<
   ['_ListEraseRequest', convertListEraseRequest],
   ['_ListRetainRequest', convertListRetainRequest],
   ['_ListLengthRequest', convertListLengthRequest],
+  ['_SortedSetPutRequest', convertSortedSetPutRequest],
+  ['_SortedSetFetchRequest', convertSortedSetFetchRequest],
+  ['_SortedSetGetScoreRequest', convertSortedSetGetScoreRequest],
+  ['_SortedSetRemoveRequest', convertSortedSetRemoveRequest],
+  ['_SortedSetIncrementRequest', convertSortedSetIncrementRequest],
+  ['_SortedSetGetRankRequest', convertSortedSetGetRankRequest],
+  ['_SortedSetLengthRequest', convertSortedSetLengthRequest],
+  ['_SortedSetLengthByScoreRequest', convertSortedSetLengthByScoreRequest],
 ]);
 
-// interface SortedSetPutRequestLoggingFormat {
-//   set_name: string;
-//   elements: {value: string; score: number}[];
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-// }
 //
-// export function convertSortedSetPutRequest(
-//   request: cache.cache_client._SortedSetPutRequest
-// ): SortedSetPutRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     elements: request.elements.map(item => {
-//       return {
-//         value: convertBytesToString(item.value),
-//         score: item.score,
-//       };
-//     }),
-//   };
-// }
-//
-// interface SortedSetFetchRequestLoggingFormat {
-//   set_name: string;
-//   order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
-//   by_score?: {
-//     min_score: number | string;
-//     min_score_exclusive?: boolean;
-//     max_score: number | string;
-//     max_score_exclusive?: boolean;
-//   };
-//   by_index?: {
-//     inclusive_start_index: number | string;
-//     exclusive_end_index: number | string;
-//   };
-// }
-//
-// export function convertSortedSetFetchRequest(
-//   request: cache.cache_client._SortedSetFetchRequest
-// ): SortedSetFetchRequestLoggingFormat {
-//   const by_score = request.by_score
-//     ? {
-//         min_score: request.by_score?.unbounded_min
-//           ? 'unbounded'
-//           : request.by_score?.min_score.score,
-//         min_score_exclusive: request.by_score?.min_score?.exclusive,
-//         max_score: request.by_score?.unbounded_max
-//           ? 'unbounded'
-//           : request.by_score?.max_score.score,
-//         max_score_exclusive: request.by_score?.max_score?.exclusive,
-//       }
-//     : undefined;
-//
-//   const by_index = request.by_index
-//     ? {
-//         inclusive_start_index: request.by_index.unbounded_start
-//           ? 'unbounded'
-//           : request.by_index?.inclusive_start_index,
-//         exclusive_end_index: request.by_index.unbounded_end
-//           ? 'unbounded'
-//           : request.by_index?.exclusive_end_index,
-//       }
-//     : undefined;
-//
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     order: request.order ? 'descending' : 'ascending',
-//     by_score,
-//     by_index,
-//   };
-// }
-//
-// interface SortedSetGetScoreRequestLoggingFormat {
-//   set_name: string;
-//   values: string[];
-// }
-//
-// export function convertSortedSetGetScoreRequest(
-//   request: cache.cache_client._SortedSetGetScoreRequest
-// ): SortedSetGetScoreRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     values: request.values.map(value => convertBytesToString(value)),
-//   };
-// }
-//
-// interface SortedSetRemoveRequestLoggingFormat {
-//   set_name: string;
-//   values: string[] | 'all';
-// }
-//
-// export function convertSortedSetRemoveRequest(
-//   request: cache.cache_client._SortedSetRemoveRequest
-// ): SortedSetRemoveRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     values: request.all
-//       ? 'all'
-//       : request.some.values.map(value => convertBytesToString(value)),
-//   };
-// }
-//
-// interface SortedSetIncrementRequestLoggingFormat {
-//   set_name: string;
-//   value: string;
-//   amount: number;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-// }
-//
-// export function convertSortedSetIncrementRequest(
-//   request: cache.cache_client._SortedSetIncrementRequest
-// ): SortedSetIncrementRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     value: convertBytesToString(request.value),
-//     amount: request.amount,
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//   };
-// }
-//
-// interface SortedSetGetRankRequestLoggingFormat {
-//   set_name: string;
-//   value: string;
-//   order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
-// }
-//
-// export function convertSortedSetGetRankRequest(
-//   request: cache.cache_client._SortedSetGetRankRequest
-// ): SortedSetGetRankRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     value: convertBytesToString(request.value),
-//     order: request.order ? 'descending' : 'ascending',
-//   };
-// }
-//
-// interface SortedSetLengthRequestLoggingFormat {
-//   set_name: string;
-// }
-//
-// export function convertSortedSetLengthRequest(
-//   request: cache.cache_client._SortedSetLengthRequest
-// ): SortedSetLengthRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//   };
-// }
-//
-// interface SortedSetLengthByScoreRequestLoggingFormat {
-//   set_name: string;
-//   min_score: number | string;
-//   min_score_exclusive?: boolean;
-//   max_score: number | string;
-//   max_score_exclusive?: boolean;
-// }
-//
-// export function convertSortedSetLengthByScoreRequest(
-//   request: cache.cache_client._SortedSetLengthByScoreRequest
-// ): SortedSetLengthByScoreRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     min_score: request.unbounded_min
-//       ? 'unbounded'
-//       : request.inclusive_min ?? request.exclusive_min,
-//     min_score_exclusive: request.unbounded_min
-//       ? undefined
-//       : request.inclusive_min
-//       ? false
-//       : true,
-//     max_score: request.unbounded_max
-//       ? 'unbounded'
-//       : request.inclusive_max ?? request.exclusive_max,
-//     max_score_exclusive: request.unbounded_max
-//       ? undefined
-//       : request.inclusive_max
-//       ? false
-//       : true,
-//   };
-// }
-//
-// interface LeaderboardDeleteRequestLoggingFormat {
+// interface LeaderboardDeleteRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 // }
 //
 // export function convertLeaderboardDeleteRequest(
 //   request: leaderboard.leaderboard._DeleteLeaderboardRequest
-// ): LeaderboardDeleteRequestLoggingFormat {
+// ): LeaderboardDeleteRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,
 //   };
 // }
 //
-// interface LeaderboardLengthRequestLoggingFormat {
+// interface LeaderboardLengthRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 // }
 //
 // export function convertLeaderboardLengthRequest(
 //   request: leaderboard.leaderboard._GetLeaderboardLengthRequest
-// ): LeaderboardLengthRequestLoggingFormat {
+// ): LeaderboardLengthRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,
 //   };
 // }
 //
-// interface LeaderboardUpsertRequestLoggingFormat {
+// interface LeaderboardUpsertRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 //   elements: {id: number; score: number}[];
@@ -895,7 +912,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //
 // export function convertLeaderboardUpsertRequest(
 //   request: leaderboard.leaderboard._UpsertElementsRequest
-// ): LeaderboardUpsertRequestLoggingFormat {
+// ): LeaderboardUpsertRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,
@@ -908,7 +925,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //   };
 // }
 //
-// interface LeaderboardGetByRankRequestLoggingFormat {
+// interface LeaderboardGetByRankRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 //   order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
@@ -918,7 +935,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //
 // export function convertLeaderboardGetByRankRequest(
 //   request: leaderboard.leaderboard._GetByRankRequest
-// ): LeaderboardGetByRankRequestLoggingFormat {
+// ): LeaderboardGetByRankRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,
@@ -928,7 +945,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //   };
 // }
 //
-// interface LeaderboardGetRankRequestLoggingFormat {
+// interface LeaderboardGetRankRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 //   order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
@@ -937,7 +954,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //
 // export function convertLeaderboardGetRankRequest(
 //   request: leaderboard.leaderboard._GetRankRequest
-// ): LeaderboardGetRankRequestLoggingFormat {
+// ): LeaderboardGetRankRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,
@@ -946,7 +963,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //   };
 // }
 //
-// interface LeaderboardRemoveRequestLoggingFormat {
+// interface LeaderboardRemoveRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 //   ids: number[];
@@ -954,7 +971,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //
 // export function convertLeaderboardRemoveRequest(
 //   request: leaderboard.leaderboard._RemoveElementsRequest
-// ): LeaderboardRemoveRequestLoggingFormat {
+// ): LeaderboardRemoveRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,
@@ -962,7 +979,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //   };
 // }
 //
-// interface LeaderboardGetByScoreRequestLoggingFormat {
+// interface LeaderboardGetByScoreRequestLog {
 //   cache_name: string;
 //   leaderboard_name: string;
 //   order: 'ascending' | 'descending'; // enum with 0 = ascending, 1 = descending
@@ -974,7 +991,7 @@ export const RequestToLogInterfaceConverter = new Map<
 //
 // export function convertLeaderboardGetByScoreRequest(
 //   request: leaderboard.leaderboard._GetByScoreRequest
-// ): LeaderboardGetByScoreRequestLoggingFormat {
+// ): LeaderboardGetByScoreRequestLog {
 //   return {
 //     cache_name: request.cache_name,
 //     leaderboard_name: request.leaderboard,

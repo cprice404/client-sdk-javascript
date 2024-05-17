@@ -612,6 +612,203 @@ describe('request-logging-formats.ts', () => {
         listName: 'taco',
       });
     });
+
+    it('should successfully convert a _SortedSetPutRequest', () => {
+      const request = new cache.cache_client._SortedSetPutRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.elements = ['burrito', 'habanero'].map(
+        element =>
+          new cache.cache_client._SortedSetElement({
+            value: TEXT_ENCODER.encode(element),
+            score: 41,
+          })
+      );
+      request.ttl_milliseconds = 42;
+      request.refresh_ttl = true;
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetPut',
+        sortedSetName: 'taco',
+        elements: [
+          {value: 'burrito', score: 41},
+          {value: 'habanero', score: 41},
+        ],
+        ttlMillis: 42,
+        refreshTtl: true,
+      });
+    });
+
+    it('should successfully convert a _SortedSetFetchRequest with ByScore', () => {
+      const request = new cache.cache_client._SortedSetFetchRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.order =
+        cache.cache_client._SortedSetFetchRequest.Order.DESCENDING;
+      request.by_score = new cache.cache_client._SortedSetFetchRequest._ByScore(
+        {
+          offset: 42,
+          count: 43,
+          min_score:
+            new cache.cache_client._SortedSetFetchRequest._ByScore._Score({
+              score: 44,
+              exclusive: true,
+            }),
+          unbounded_max: new common._Unbounded(),
+        }
+      );
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetFetch',
+        sortedSetName: 'taco',
+        byScore: {
+          offset: 42,
+          count: 43,
+          minScore: 44,
+          minScoreExclusive: true,
+          maxScore: 'unbounded',
+          maxScoreExclusive: undefined,
+        },
+        order: 'descending',
+      });
+    });
+
+    it('should successfully convert a _SortedSetFetchRequest with ByIndex', () => {
+      const request = new cache.cache_client._SortedSetFetchRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.order = cache.cache_client._SortedSetFetchRequest.Order.ASCENDING;
+      request.by_index = new cache.cache_client._SortedSetFetchRequest._ByIndex(
+        {
+          inclusive_start_index: 42,
+          unbounded_end: new common._Unbounded(),
+        }
+      );
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetFetch',
+        sortedSetName: 'taco',
+        byIndex: {
+          inclusiveStartIndex: 42,
+          exclusiveEndIndex: 'unbounded',
+        },
+        order: 'ascending',
+      });
+    });
+
+    it('should successfully convert a _SortedSetGetScoreRequest', () => {
+      const request = new cache.cache_client._SortedSetGetScoreRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.values = ['burrito', 'habanero'].map(value =>
+        TEXT_ENCODER.encode(value)
+      );
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetGetScore',
+        sortedSetName: 'taco',
+        values: ['burrito', 'habanero'],
+      });
+    });
+
+    it('should successfully convert a _SortedSetRemoveRequest', () => {
+      const request = new cache.cache_client._SortedSetRemoveRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.some = new cache.cache_client._SortedSetRemoveRequest._Some({
+        values: ['burrito', 'habanero'].map(value =>
+          TEXT_ENCODER.encode(value)
+        ),
+      });
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetRemove',
+        sortedSetName: 'taco',
+        values: ['burrito', 'habanero'],
+      });
+    });
+
+    it('should successfully convert a _SortedSetIncrementRequest', () => {
+      const request = new cache.cache_client._SortedSetIncrementRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.amount = 41;
+      request.value = TEXT_ENCODER.encode('burrito');
+      request.ttl_milliseconds = 42;
+      request.refresh_ttl = true;
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetIncrement',
+        sortedSetName: 'taco',
+        value: 'burrito',
+        amount: 41,
+        ttlMillis: 42,
+        refreshTtl: true,
+      });
+    });
+
+    it('should successfully convert a _SortedSetGetRankRequest', () => {
+      const request = new cache.cache_client._SortedSetGetRankRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      request.order =
+        cache.cache_client._SortedSetGetRankRequest.Order.DESCENDING;
+      request.value = TEXT_ENCODER.encode('burrito');
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetGetRank',
+        sortedSetName: 'taco',
+        value: 'burrito',
+        order: 'descending',
+      });
+    });
+
+    it('should successfully convert a _SortedSetLengthRequest', () => {
+      const request = new cache.cache_client._SortedSetLengthRequest();
+      request.set_name = TEXT_ENCODER.encode('taco');
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetLength',
+        sortedSetName: 'taco',
+      });
+    });
+
+    it('should successfully convert a _SortedSetLengthByScoreRequest', () => {
+      const request = new cache.cache_client._SortedSetLengthByScoreRequest({
+        set_name: TEXT_ENCODER.encode('taco'),
+        inclusive_min: 41,
+        unbounded_max: new common._Unbounded(),
+      });
+      const converter = RequestToLogInterfaceConverter.get(
+        request.constructor.name
+      );
+      expect(converter).toBeDefined();
+      expect(converter?.(request)).toEqual({
+        requestType: 'sortedSetLengthByScore',
+        sortedSetName: 'taco',
+        minScore: 41,
+        minScoreExclusive: false,
+        maxScore: 'unbounded',
+        maxScoreExclusive: undefined,
+      });
+    });
   });
 
   describe('supported cache request types', () => {
@@ -645,8 +842,6 @@ describe('request-logging-formats.ts', () => {
           );
         }
       }
-
-      expect(true).toEqual(false);
     });
   });
 });
