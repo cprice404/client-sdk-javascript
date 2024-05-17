@@ -66,6 +66,7 @@ describe('request-logging-formats.ts', () => {
       setRequest.cache_key = TEXT_ENCODER.encode(key);
       setRequest.cache_body = TEXT_ENCODER.encode('habanero');
       setRequest.ttl_milliseconds = 42;
+      return setRequest;
     });
     const converter = RequestToLogInterfaceConverter.get(
       request.constructor.name
@@ -73,9 +74,10 @@ describe('request-logging-formats.ts', () => {
     expect(converter).toBeDefined();
     expect(converter?.(request)).toEqual({
       requestType: 'setBatch',
-      key: 'taco',
-      value: 'burrito',
-      ttlMillis: 42,
+      items: [
+        {key: 'taco', value: 'habanero', ttlMillis: 42},
+        {key: 'burrito', value: 'habanero', ttlMillis: 42},
+      ],
     });
   });
 

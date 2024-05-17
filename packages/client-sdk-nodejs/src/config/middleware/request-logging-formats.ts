@@ -98,7 +98,7 @@ const convertSetBatchRequest: RequestToLogInterfaceConverterFn<
       return {
         key: convertBytesToString(item.cache_key),
         value: convertBytesToString(item.cache_body),
-        ttl: item.ttl_milliseconds,
+        ttlMillis: item.ttl_milliseconds,
       };
     }),
   };
