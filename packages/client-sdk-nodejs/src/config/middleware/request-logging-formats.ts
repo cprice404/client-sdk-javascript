@@ -275,6 +275,101 @@ const convertDictionarySetRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
+interface DictionaryIncrementRequestLoggingFormat
+  extends DictionaryRequestLoggingFormat,
+    CollectionWriteRequestLogInterfaceBase {
+  field: string;
+  amount: number;
+}
+
+const convertDictionaryIncrementRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._DictionaryIncrementRequest,
+  DictionaryIncrementRequestLoggingFormat
+> = (request: cache.cache_client._DictionaryIncrementRequest) => {
+  return {
+    requestType: 'dictionaryIncrement',
+    dictionaryName: convertBytesToString(request.dictionary_name),
+    field: convertBytesToString(request.field),
+    amount: request.amount,
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+  };
+};
+
+interface DictionaryDeleteRequestLoggingFormat
+  extends DictionaryRequestLoggingFormat {
+  fields: string[];
+}
+
+const convertDictionaryDeleteRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._DictionaryDeleteRequest,
+  DictionaryDeleteRequestLoggingFormat
+> = (request: cache.cache_client._DictionaryDeleteRequest) => {
+  return {
+    requestType: 'dictionaryDelete',
+    dictionaryName: convertBytesToString(request.dictionary_name),
+    fields: request.some.fields.map(field => convertBytesToString(field)),
+  };
+};
+
+const convertDictionaryLengthRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._DictionaryLengthRequest,
+  DictionaryRequestLoggingFormat
+> = (request: cache.cache_client._DictionaryLengthRequest) => {
+  return {
+    requestType: 'dictionaryLength',
+    dictionaryName: convertBytesToString(request.dictionary_name),
+  };
+};
+
+interface SetCollectionRequestLoggingFormat extends RequestLogInterfaceBase {
+  setName: string;
+}
+
+const convertSetFetchRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetFetchRequest,
+  SetCollectionRequestLoggingFormat
+> = (request: cache.cache_client._SetFetchRequest) => {
+  return {
+    requestType: 'setFetch',
+    setName: convertBytesToString(request.set_name),
+  };
+};
+
+interface SetSampleRequestLoggingFormat
+  extends SetCollectionRequestLoggingFormat {
+  limit: number;
+}
+
+export function convertSetSampleRequest(
+  request: cache.cache_client._SetSampleRequest
+): SetSampleRequestLoggingFormat {
+  return {
+    requestType: 'setSample',
+    setName: convertBytesToString(request.set_name),
+    limit: request.limit,
+  };
+}
+
+interface SetUnionRequestLoggingFormat
+  extends SetCollectionRequestLoggingFormat,
+    CollectionWriteRequestLogInterfaceBase {
+  setName: string;
+  elements: string[];
+}
+
+export function convertSetUnionRequest(
+  request: cache.cache_client._SetUnionRequest
+): SetUnionRequestLoggingFormat {
+  return {
+    requestType: 'setUnion',
+    setName: convertBytesToString(request.set_name),
+    ttlMillis: request.ttl_milliseconds,
+    refreshTtl: request.refresh_ttl,
+    elements: request.elements.map(element => convertBytesToString(element)),
+  };
+}
+
 export const RequestToLogInterfaceConverter = new Map<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -295,99 +390,14 @@ export const RequestToLogInterfaceConverter = new Map<
   ['_DictionaryGetRequest', convertDictionaryGetRequest],
   ['_DictionaryFetchRequest', convertDictionaryFetchRequest],
   ['_DictionarySetRequest', convertDictionarySetRequest],
+  ['_DictionaryIncrementRequest', convertDictionaryIncrementRequest],
+  ['_DictionaryDeleteRequest', convertDictionaryDeleteRequest],
+  ['_DictionaryLengthRequest', convertDictionaryLengthRequest],
+  ['_SetFetchRequest', convertSetFetchRequest],
+  ['_SetSampleRequest', convertSetSampleRequest],
+  ['_SetUnionRequest', convertSetUnionRequest],
 ]);
 
-//
-// interface DictionaryIncrementRequestLoggingFormat {
-//   dictionary_name: string;
-//   field: string;
-//   amount: number;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-// }
-//
-// export function convertDictionaryIncrementRequest(
-//   request: cache.cache_client._DictionaryIncrementRequest
-// ): DictionaryIncrementRequestLoggingFormat {
-//   return {
-//     dictionary_name: convertBytesToString(request.dictionary_name),
-//     field: convertBytesToString(request.field),
-//     amount: request.amount,
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//   };
-// }
-//
-// interface DictionaryDeleteRequestLoggingFormat {
-//   dictionary_name: string;
-//   fields: string[];
-// }
-//
-// export function convertDictionaryDeleteRequest(
-//   request: cache.cache_client._DictionaryDeleteRequest
-// ): DictionaryDeleteRequestLoggingFormat {
-//   return {
-//     dictionary_name: convertBytesToString(request.dictionary_name),
-//     fields: request.some.fields.map(field => convertBytesToString(field)),
-//   };
-// }
-//
-// interface DictionaryLengthRequestLoggingFormat {
-//   dictionary_name: string;
-// }
-//
-// export function convertDictionaryLengthRequest(
-//   request: cache.cache_client._DictionaryLengthRequest
-// ): DictionaryLengthRequestLoggingFormat {
-//   return {
-//     dictionary_name: convertBytesToString(request.dictionary_name),
-//   };
-// }
-//
-// interface SetFetchRequestLoggingFormat {
-//   set_name: string;
-// }
-//
-// export function convertSetFetchRequest(
-//   request: cache.cache_client._SetFetchRequest
-// ): SetFetchRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//   };
-// }
-//
-// interface SetSampleRequestLoggingFormat {
-//   set_name: string;
-//   limit: number;
-// }
-//
-// export function convertSetSampleRequest(
-//   request: cache.cache_client._SetSampleRequest
-// ): SetSampleRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     limit: request.limit,
-//   };
-// }
-//
-// interface SetUnionRequestLoggingFormat {
-//   set_name: string;
-//   ttl_milliseconds: number;
-//   refresh_ttl: boolean;
-//   elements: string[];
-// }
-//
-// export function convertSetUnionRequest(
-//   request: cache.cache_client._SetUnionRequest
-// ): SetUnionRequestLoggingFormat {
-//   return {
-//     set_name: convertBytesToString(request.set_name),
-//     ttl_milliseconds: request.ttl_milliseconds,
-//     refresh_ttl: request.refresh_ttl,
-//     elements: request.elements.map(element => convertBytesToString(element)),
-//   };
-// }
-//
 // interface SetDifferenceRequestLoggingFormat {
 //   set_name: string;
 //   action: 'minuend' | 'subtrahend_set' | 'subtrahend_identity';

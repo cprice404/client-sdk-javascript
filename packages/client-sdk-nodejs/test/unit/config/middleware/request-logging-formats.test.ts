@@ -257,6 +257,106 @@ describe('request-logging-formats.ts', () => {
     });
   });
 
+  it('should successfully convert a _DictionaryIncrementRequest', () => {
+    const request = new cache.cache_client._DictionaryIncrementRequest();
+    request.dictionary_name = TEXT_ENCODER.encode('taco');
+    request.field = TEXT_ENCODER.encode('burrito');
+    request.amount = 41;
+    request.ttl_milliseconds = 42;
+    request.refresh_ttl = true;
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'dictionaryIncrement',
+      dictionaryName: 'taco',
+      field: 'burrito',
+      amount: 41,
+      ttlMillis: 42,
+      refreshTtl: true,
+    });
+  });
+
+  it('should successfully convert a _DictionaryDeleteRequest', () => {
+    const request = new cache.cache_client._DictionaryDeleteRequest();
+    request.dictionary_name = TEXT_ENCODER.encode('taco');
+    request.some = new cache.cache_client._DictionaryDeleteRequest.Some({
+      fields: ['burrito', 'habanero'].map(field => TEXT_ENCODER.encode(field)),
+    });
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'dictionaryDelete',
+      dictionaryName: 'taco',
+      fields: ['burrito', 'habanero'],
+    });
+  });
+
+  it('should successfully convert a _DictionaryLengthRequest', () => {
+    const request = new cache.cache_client._DictionaryLengthRequest();
+    request.dictionary_name = TEXT_ENCODER.encode('taco');
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'dictionaryLength',
+      dictionaryName: 'taco',
+    });
+  });
+
+  it('should successfully convert a _SetFetchRequest', () => {
+    const request = new cache.cache_client._SetFetchRequest();
+    request.set_name = TEXT_ENCODER.encode('taco');
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'setFetch',
+      setName: 'taco',
+    });
+  });
+
+  it('should successfully convert a _SetSampleRequest', () => {
+    const request = new cache.cache_client._SetSampleRequest();
+    request.set_name = TEXT_ENCODER.encode('taco');
+    request.limit = 42;
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'setSample',
+      setName: 'taco',
+      limit: 42,
+    });
+  });
+
+  it('should successfully convert a _SetUnionRequest', () => {
+    const request = new cache.cache_client._SetUnionRequest();
+    request.set_name = TEXT_ENCODER.encode('taco');
+    request.elements = ['burrito', 'habanero'].map(element =>
+      TEXT_ENCODER.encode(element)
+    );
+    request.ttl_milliseconds = 42;
+    request.refresh_ttl = true;
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'setUnion',
+      setName: 'taco',
+      elements: ['burrito', 'habanero'],
+      ttlMillis: 42,
+      refreshTtl: true,
+    });
+  });
+
   it('should have a converter for all known cache request types', () => {
     const project = new Project();
     const cacheClientProtosSourceFile = project.addSourceFileAtPath(
