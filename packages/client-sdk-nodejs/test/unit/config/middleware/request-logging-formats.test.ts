@@ -59,6 +59,26 @@ describe('request-logging-formats.ts', () => {
     });
   });
 
+  it('should successfully convert a _SetBatchRequest', () => {
+    const request = new cache.cache_client._SetBatchRequest();
+    request.items = ['taco', 'burrito'].map(key => {
+      const setRequest = new cache.cache_client._SetRequest();
+      setRequest.cache_key = TEXT_ENCODER.encode(key);
+      setRequest.cache_body = TEXT_ENCODER.encode('habanero');
+      setRequest.ttl_milliseconds = 42;
+    });
+    const converter = RequestToLogInterfaceConverter.get(
+      request.constructor.name
+    );
+    expect(converter).toBeDefined();
+    expect(converter?.(request)).toEqual({
+      requestType: 'setBatch',
+      key: 'taco',
+      value: 'burrito',
+      ttlMillis: 42,
+    });
+  });
+
   it('should have a converter for all known cache request types', () => {
     const project = new Project();
     const cacheClientProtosSourceFile = project.addSourceFileAtPath(

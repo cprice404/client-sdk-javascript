@@ -1,4 +1,5 @@
 import {cache} from '@gomomento/generated-types';
+import {SetBatchItem} from "@gomomento/sdk-core";
 
 const TEXT_DECODER = new TextDecoder();
 
@@ -35,11 +36,6 @@ interface RequestSingleKeyLoggingFormat extends RequestLogInterfaceBase {
   key: string;
 }
 
-interface SetRequestLoggingFormat extends WriteRequestLogInterfaceBase {
-  key: string;
-  value: string;
-}
-
 interface RequestToLogInterfaceConverterFn<
   TRequest,
   TLog extends RequestLogInterfaceBase
@@ -71,6 +67,11 @@ const convertDeleteRequest: RequestToLogInterfaceConverterFn<
   return convertSingleKeyRequest('delete', request.cache_key);
 };
 
+interface SetRequestLoggingFormat extends WriteRequestLogInterfaceBase {
+  key: string;
+  value: string;
+}
+
 const convertSetRequest: RequestToLogInterfaceConverterFn<
   cache.cache_client._SetRequest,
   SetRequestLoggingFormat
@@ -83,6 +84,28 @@ const convertSetRequest: RequestToLogInterfaceConverterFn<
   };
 };
 
+interface SetBatchRequestLoggingFormat extends RequestLogInterfaceBase {
+  items: SetBatchItem[];
+}
+
+const convertSetBatchRequest: RequestToLogInterfaceConverterFn<
+  cache.cache_client._SetBatchRequest,
+  SetBatchRequestLoggingFormat
+> = (request: cache.cache_client._SetBatchRequest) => {
+  return {
+    requestType: 'setBatch',
+    items: request.items.map(item => {
+      return {
+        key: convertBytesToString(item.cache_key),
+        value: convertBytesToString(item.cache_body),
+        ttl: item.ttl_milliseconds,
+      };
+    }),
+  };
+};
+
+
+
 export const RequestToLogInterfaceConverter = new Map<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,29 +115,9 @@ export const RequestToLogInterfaceConverter = new Map<
   ['_GetBatchRequest', convertGetBatchRequest],
   ['_DeleteRequest', convertDeleteRequest],
   ['_SetRequest', convertSetRequest],
+  ['_SetBatchRequest', convertSetBatchRequest],
 ]);
 
-//
-// type GetBatchRequestLoggingFormat = RequestMultipleKeysLoggingFormat;
-//
-//
-// interface SetBatchRequestLoggingFormat {
-//   items: SetBatchItem[];
-// }
-//
-// export function convertSetBatchRequest(
-//   request: cache.cache_client._SetBatchRequest
-// ): SetBatchRequestLoggingFormat {
-//   return {
-//     items: request.items.map(item => {
-//       return {
-//         key: convertBytesToString(item.cache_key),
-//         value: convertBytesToString(item.cache_body),
-//         ttl: item.ttl_milliseconds,
-//       };
-//     }),
-//   };
-// }
 //
 // interface SetIfRequestLoggingFormat {
 //   key: string;
