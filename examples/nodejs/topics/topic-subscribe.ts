@@ -1,4 +1,12 @@
-import {TopicClient, TopicItem, TopicSubscribe, CredentialProvider, TopicConfigurations} from '@gomomento/sdk';
+import {
+  CredentialProvider,
+  DefaultMomentoLoggerFactory,
+  DefaultMomentoLoggerLevel,
+  TopicClient,
+  TopicConfigurations,
+  TopicItem,
+  TopicSubscribe
+} from '@gomomento/sdk';
 import {ensureCacheExists} from './utils/cache';
 
 async function main() {
@@ -8,8 +16,9 @@ async function main() {
     return;
   }
   const [cacheName, topicName] = clargs;
+  const loggerFactory = new DefaultMomentoLoggerFactory(DefaultMomentoLoggerLevel.TRACE);
   const momento = new TopicClient({
-    configuration: TopicConfigurations.Default.latest(),
+    configuration: TopicConfigurations.Default.latest(loggerFactory),
     credentialProvider: CredentialProvider.fromEnvironmentVariable('MOMENTO_API_KEY'),
   });
 
@@ -31,14 +40,14 @@ async function main() {
   const sleep = (seconds: number) => new Promise(r => setTimeout(r, seconds * 1000));
 
   // Wait a couple minutes to receive some items, then unsubscribe to finish the example.
-  await sleep(120);
+  await sleep(60 * 10 * 10);
 
   console.log('Unsubscribing from topic subscription. Restart the example to subscribe again.');
   response.unsubscribe();
 }
 
 function handleItem(item: TopicItem) {
-  console.log('Item received from topic subscription; %s', item);
+  console.log('Item received from topic subscription; %s', item.valueString());
 }
 
 function handleError(error: TopicSubscribe.Error) {
