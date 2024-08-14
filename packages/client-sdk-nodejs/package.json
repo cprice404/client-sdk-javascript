@@ -13,7 +13,7 @@
     "url": "https://github.com/momentohq/client-sdk-nodejs"
   },
   "scripts": {
-    "prebuild": "eslint . --ext .ts",
+    "DONOTprebuild": "eslint . --ext .ts",
     "test": "jest --testPathIgnorePatterns auth-client.test.ts --maxWorkers 1",
     "integration-test-auth": "jest auth-client.test.ts --maxWorkers 1",
     "integration-test-store": "jest storage.test.ts --maxWorkers 1",

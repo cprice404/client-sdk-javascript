@@ -6,6 +6,7 @@
   "scripts": {
     "prebuild": "eslint . --ext .ts",
     "build": "tsc",
+    "basic": "tsc && node dist/basic.js",
     "doc-examples": "tsc && node dist/doc-examples-js-apis.js",
     "validate-examples": "tsc && node dist/doc-examples-js-apis.js && node dist/cheat-sheet-main.js",
     "test": "jest",
@@ -27,7 +28,7 @@
     "typescript": "4.9.5"
   },
   "dependencies": {
-    "@gomomento/sdk": "^1.93.0"
+    "@gomomento/sdk": "file:../../../packages/client-sdk-nodejs"
   },
   "engines": {
     "node": ">=10.4.0"

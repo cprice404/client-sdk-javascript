@@ -25,6 +25,15 @@ export function createRetryInterceptorIfEnabled(
   ];
 }
 
+function metadataToString(metadata: Metadata): string {
+  return `THE METADATA KEYS ARE:\n\n\n${Object.keys(metadata.getMap())
+    .map(
+      key => `The metadata for key ${key} is ${metadata.get(key).join(', ')}`
+    )
+    .join('\n')}
+  \n\n\n`;
+}
+
 export class RetryInterceptor {
   private readonly logger: MomentoLogger;
   private readonly retryStrategy: RetryStrategy;
@@ -54,6 +63,7 @@ export class RetryInterceptor {
       return new InterceptingCall(nextCall(options), {
         start: function (metadata, listener, next) {
           savedMetadata = metadata;
+          logger.debug(`SAVED METADATA: ${metadataToString(savedMetadata)}`);
           const newListener: Listener = {
             onReceiveMessage: function (
               message: unknown,
@@ -70,6 +80,9 @@ export class RetryInterceptor {
             ) {
               let attempts = 1;
               const retry = function (message: unknown, metadata: Metadata) {
+                logger.debug(
+                  `RETRY FN CALLED; METADATA: ${metadataToString(metadata)}`
+                );
                 attempts++;
                 const newCall = nextCall(options);
                 newCall.start(metadata, {
@@ -101,6 +114,12 @@ export class RetryInterceptor {
                 newCall.sendMessage(savedSendMessage);
                 newCall.halfClose();
               };
+
+              logger.debug(
+                `ON RECEIVE STATUS: metadata: ${metadataToString(
+                  status.metadata
+                )}`
+              );
 
               if (status.code === Status.OK) {
                 savedMessageNext(savedReceiveMessage);
